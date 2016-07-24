@@ -1,0 +1,30 @@
+{
+  "project_type": "javascript",
+
+  "debugMode": 1,
+  "showFPS": true,
+  "frameRate": 60,
+  "noCache": true,
+  "id": "gameCanvas",
+  "renderMode": 0,
+  "engineDir": "frameworks/cocos2d-html5",
+
+  "modules": [ "cocos2d", "ccui", "editbox", "socketio" ],
+  "jsList": [
+    "src/resource.js",
+    "src/definitions.js",
+    "src/creator.js",
+    "src/lang.js",
+    "src/player.js",
+    "src/MainScene.js",
+    "src/MenuScene.js",
+    "src/OptionScene.js",
+    "src/LangOptionScene.js",
+    "src/AboutScene.js",
+    "src/ResultLayer.js",
+    "src/GameScene.js",
+    "src/DoubleGameScene.js",
+    "src/AIGameScene.js",
+    "src/OnlineGameScene.js"
+  ]
+}

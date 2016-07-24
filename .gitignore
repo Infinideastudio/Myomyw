@@ -1,0 +1,12 @@
+Thumbs.db
+
+client/frameworks
+client/publish
+client/simulator
+
+server/node_modules
+server/MyomywServer.sln
+server/MyomywServer.njsproj
+server/.vs
+server/obj
+server/.ntvs_analysis.dat

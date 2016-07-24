@@ -1,0 +1,47 @@
+{
+  "mainScene": {
+    "loginTitle": "请登录",
+    "enterName": "输入昵称",
+    "enterAddress": "输入服务器地址",
+    "login": "登录",
+    "loginAsGuest": "游客登录",
+    "logout": "注销",
+    "playWithAI": "人机对战",
+    "playDouble": "双人对战",
+    "serverName": "服务器名称 "
+  },
+  "options": {
+    "title": "选项",
+    "standaloneTimer": "在单机游戏中限时",
+    "lang": "语言",
+    "autoLang": "自动设置语言",
+    "about": "关于"
+  },
+  "names": {
+    "notLogged": "未登录",
+    "guest": "游客",
+    "left": "绿方",
+    "right": "蓝方",
+    "ai": "电脑"
+  },
+  "result": {
+    "leftWins": "绿方赢了",
+    "rightWins": "蓝方赢了",
+    "youWin": "你赢了",
+    "aiWins": "电脑赢了",
+    "win": "{0}赢了",
+    "leftOutOfTime": "绿方超时了",
+    "rightOutOfTime": "蓝方超时了",
+    "youOutOfTime": "你超时了",
+    "aiOutOfTime": "电脑超时了",
+    "outOfTime": "{0}超时了",
+    "opponentLeft": "对手已离开",
+    "unknownDisconnection": "服务器无故断开了连接",
+    "differentResult": "客户端与服务端的胜负判定不符"
+  },
+  "online": {
+    "connecting": "连接中",
+    "waiting": "等待中",
+    "room": "房间{0}"
+  }
+}

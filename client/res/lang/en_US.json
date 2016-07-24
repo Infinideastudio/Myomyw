@@ -1,0 +1,47 @@
+{
+  "mainScene": {
+    "loginTitle": "Please Login",
+    "enterName": "Enter your name",
+    "enterAddress": "Enter the server address",
+    "login": "Login",
+    "loginAsGuest": "Login as guest",
+    "logout": "Logout",
+    "playWithAI": "Play with Machine",
+    "playDouble": "Two Players",
+    "serverName": "Sever name: "
+  },
+  "options": {
+    "title": "Options",
+    "standaloneTimer": "Enable time limit in standalone games",
+    "lang": "Language",
+    "autoLang": "Automatically",
+    "about": "About"
+  },
+  "names": {
+    "notLogged": "Not Logged",
+    "guest": "Guest",
+    "left": "Green",
+    "right": "Blue",
+    "ai": "Machine"
+  },
+  "result": {
+    "leftWins": "Green wins",
+    "rightWins": "Blue wins",
+    "youWin": "You win",
+    "aiWins": "Machine wins",
+    "win": "{0} wins",
+    "leftOutOfTime": "Green is out of time",
+    "rightOutOfTime": "Blue is out of time",
+    "youOutOfTime": "You are out of time",
+    "aiOutOfTime": "Machine is out of time",
+    "outOfTime": "{0} is out of time",
+    "opponentLeft": "Your opponent has left",
+    "unknownDisconnection": "The server disconnected without any reason",
+    "differentResult": "The client and the server have different result"
+  },
+  "online": {
+    "connecting": "Connecting",
+    "waiting": "Waiting",
+    "room": "Room{0}"
+  }
+}
