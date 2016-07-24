@@ -12,7 +12,7 @@ Myomyw是一款半棋牌游戏。不同于其他对战游戏的是，你的操�
 * 如果一方把减列球推出棋盘，那么推出球的那一边就会减少一列(最少3列)。
 * 如果一方把翻转球推出棋盘，那么棋盘就会左右翻转，需要注意翻转后会立刻转入对手回合。
 
-顶部的一个格子是计时器，超时后对方胜利。（在联机对战中始终存在，在单机双人、人机对战中可进行设置。）
+最上面的格子是计时器，目前计时20秒，超时后对方直接胜利。（在联机对战中始终存在，在单机双人、人机对战中可进行设置。）
 
 目前有单机双人、人机对战和联机对战三个模式。
 ## 配置
@@ -33,6 +33,6 @@ Myomyw是一款半棋牌游戏。不同于其他对战游戏的是，你的操�
 #### Release
 在`client`目录下运行`cocos compile -p web -m release`，即可在`client/publish/html5`下生成打包后的Web发布包。修改服务端的`config.js`中的`clientPath`为`../client/publish/html5`，然后在`server`目录下使用脚本或运行`node src/server.js`启动服务器，用浏览器打开相应的地址。
 ### 原生平台
-使用cocos2d-console或该平台的编译工具编译`client/frameworks/runtime-src`下的对应项目。
+在`client`目录下运行`cocos compile -p (相应平台) -m [debug/release]`或用该平台的编译工具编译`client/frameworks/runtime-src`下的对应项目。你也可以使用CMake。
 ## 协议
 The MIT License
