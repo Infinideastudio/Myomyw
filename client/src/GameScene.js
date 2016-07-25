@@ -119,7 +119,7 @@ var GameScene = cc.Scene.extend({
     ejectorTouchBegan: function (touch, event) {
         if (this.controllableSide != both && this.controllableSide != this.turn) return false;
         if (!this.playing || this.action == Action.moving) return false;
-        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol) ; i++) {
+        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol); i++) {
             var ejector = this.gridNode.getChildByTag(this.turn == left ? i : this.lCol + i);
             if (!ejector) continue;
             var point = this.board.convertTouchToNodeSpace(touch);
@@ -270,9 +270,7 @@ var GameScene = cc.Scene.extend({
             this.timerStencilDrawNode.drawPoly(timerStencilPoly, cc.color(255, 255, 255), 0, cc.color(255, 255, 255));
         }
 
-        if (this.turn != null) {
-            this.setTurnFlag();
-        }
+        this.setTurnFlag();
         this.updateChessboard();
     },
 
@@ -302,10 +300,14 @@ var GameScene = cc.Scene.extend({
         this.leftNameLabel.color = this.turn == left ? cc.color(0, 200, 0) : cc.color(0, 0, 0);
         this.rightNameLabel.color = this.turn == right ? cc.color(0, 0, 200) : cc.color(0, 0, 0);
 
-        var scaleAction = cc.scaleTo(0.2, 1.2);
-        var resetAction = cc.scaleTo(0.2, 1.0);
-        this.leftNameLabel.runAction(this.turn == left ? scaleAction : resetAction);
-        this.rightNameLabel.runAction(this.turn == right ? scaleAction : resetAction);
+        if (this.turn != null) {
+            var scaleAction = cc.scaleTo(0.2, 1.2);
+            var resetAction = cc.scaleTo(0.2, 1.0);
+            this.leftNameLabel.runAction(this.turn == left ? scaleAction : resetAction);
+            this.rightNameLabel.runAction(this.turn == right ? scaleAction : resetAction);
+
+            this.timer.color = this.turn == left ? cc.color(0, 255, 0) : cc.color(0, 100, 255);
+        }
     },
 
     setTurn: function (turn) {
@@ -332,7 +334,7 @@ var GameScene = cc.Scene.extend({
             }
             this.action = Action.moving;
             this.totalMovements++;
-            var lastChessman;//暂存最底下的棋子
+            var lastChessman; //暂存最底下的棋子
             if (this.turn == left) {
                 lastChessman = this.chessmen[col][this.rCol - 1];
                 for (var i = this.rCol - 1; i > 0; i--) {
@@ -357,7 +359,7 @@ var GameScene = cc.Scene.extend({
             var movingAction = cc.moveBy(0.3,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
-            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
+            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol); i++) {
                 this.chessmanNode.getChildByTag(
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
@@ -403,7 +405,7 @@ var GameScene = cc.Scene.extend({
                 else {
                     this.action = Action.nothing;
                 }
-            }.bind(this), 300);
+            } .bind(this), 300);
             if (this.createNextChessman) {
                 this.setNextChessman(this.createNextChessman());
             }
@@ -467,13 +469,12 @@ var GameScene = cc.Scene.extend({
     startTimer: function () {
         this.stopTimer();
         this.timer.setPosition(this.topVertX, this.boardLength);
-        this.timer.color = this.turn == left ? cc.color(0, 255, 0) : cc.color(0, 100, 255);
         var moveAction = cc.moveBy(20, cc.p(0, -this.diagonal));
         this.timer.runAction(moveAction);
         this.timerTID = setTimeout(function () {
             this.playing = false;
             this.onWin(true);
-        }.bind(this), 20000);
+        } .bind(this), 20000);
     },
 
     stopTimer: function () {
