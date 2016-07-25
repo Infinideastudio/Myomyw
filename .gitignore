@@ -5,8 +5,8 @@ client/publish
 client/simulator
 
 server/node_modules
-server/MyomywServer.sln
-server/MyomywServer.njsproj
+server/*.sln
+server/*.njsproj
 server/.vs
 server/obj
 server/.ntvs_analysis.dat
