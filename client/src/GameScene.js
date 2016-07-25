@@ -99,10 +99,10 @@ var GameScene = cc.Scene.extend({
         }
 
         this.leftNameLabel = creator.createLabel(leftName, 25);
-        this.leftNameLabel.setPosition(this.leftNameLabel.width + 10, size.height - this.leftNameLabel.height - 10);
+        this.leftNameLabel.setPosition(this.leftNameLabel.width / 2 + 20, size.height - this.leftNameLabel.height / 2 - 20);
         this.addChild(this.leftNameLabel);
         this.rightNameLabel = creator.createLabel(rightName, 25);
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width - 10, size.height - this.rightNameLabel.height - 10);
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.addChild(this.rightNameLabel);
 
         cc.eventManager.addListener({

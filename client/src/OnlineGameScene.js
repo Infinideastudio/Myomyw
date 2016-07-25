@@ -12,7 +12,7 @@ var OnlineGameScene = GameScene.extend({
     ctor: function () {
         this._super(player.name, txt.names.opponent, left, null, true);
         this.roomLabel = creator.createLabel(txt.online.connecting, 25);
-        this.roomLabel.setPosition(size.width - this.roomLabel.width, this.roomLabel.height);
+        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);
 
         io = window.SocketIO || window.io;
@@ -114,7 +114,7 @@ var OnlineGameScene = GameScene.extend({
         this.connected = true;
         this.socket.emit("sendName", JSON.stringify({ name: player.name }));
         this.roomLabel.string = txt.online.waiting;
-        this.roomLabel.setPosition(size.width - this.roomLabel.width, this.roomLabel.height);
+        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
     },
 
     onError: function (data) {
@@ -125,13 +125,13 @@ var OnlineGameScene = GameScene.extend({
         data = parseJson(data);
         this.opponentName = data.name;
         this.rightNameLabel.string = this.opponentName;
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width - 10, size.height - this.rightNameLabel.height - 10);
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
     },
 
     onStart: function (data) {
         data = parseJson(data);
         this.roomLabel.string = format(txt.online.room, data.room);
-        this.roomLabel.setPosition(size.width - this.roomLabel.width, this.roomLabel.height);
+        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.start(data.side);
     },
 
