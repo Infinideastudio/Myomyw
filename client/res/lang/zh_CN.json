@@ -7,7 +7,7 @@
     "loginAsGuest": "游客登录",
     "logout": "注销",
     "playWithAI": "人机对战",
-    "playDouble": "双人对战",
+    "playDouble": "同屏对战",
     "serverName": "服务器名称 "
   },
   "options": {

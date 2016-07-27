@@ -44,6 +44,7 @@ var lang = {
 
 lang.langs[0] = ["English(US)", "en_US"];
 lang.langs[1] = ["简体中文", "zh_CN"];
+lang.langs[2] = ["正體中文", "zh_TW"]
 
 lang.autoLangList[cc.sys.LANGUAGE_ENGLISH] = 0;
 lang.autoLangList[cc.sys.LANGUAGE_CHINESE] = 1;
