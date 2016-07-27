@@ -35,21 +35,42 @@ var MainScene = cc.Scene.extend({
         }
 
         var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 40), function () {
-            player.login(nameBox.getString(), function () {
-                moveToMainUI();
-            }, function (error) {
-                cc.log(error);
-            })
+            var name = nameBox.getString();
+            if (name.length == 0) {
+                messageLabel.string = txt.mainScene.emptyName;
+                messageLabel.opacity = 255;
+                setTimeout(function () {
+                    messageLabel.runAction(cc.fadeOut(1));
+                }, 2000);
+            } else if (name.length > 15) {
+                messageLabel.string = txt.mainScene.nameTooLong;
+                messageLabel.opacity = 255;
+                setTimeout(function () {
+                    messageLabel.runAction(cc.fadeOut(1));
+                }, 2000);
+            } else {
+                player.login(nameBox.getString(), function () {
+                    moveToMainUI();
+                }, function (error) {
+                    cc.log(error);
+                })
+            }
         });
-        loginButton.setPosition(size.width / 2, size.height / 2 - 120);
+
+        loginButton.setPosition(size.width / 2, size.height / 2 - 80);
         loginUI.addChild(loginButton);
 
         guestButton = creator.createButton(txt.mainScene.loginAsGuest, cc.size(200, 40), function () {
             player.loginAsGuest();
             moveToMainUI();
         });
-        guestButton.setPosition(size.width / 2, size.height / 2 - 180);
+        guestButton.setPosition(size.width / 2, size.height / 2 - 140);
         loginUI.addChild(guestButton);
+
+        var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
+        messageLabel.setPosition(size.width / 2, size.height / 2 - 200);
+        messageLabel.opacity = 0;
+        this.addChild(messageLabel);
 
         //主界面层
         var mainUI = new ccui.Widget();

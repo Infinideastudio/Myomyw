@@ -2,7 +2,8 @@
   "mainScene": {
     "loginTitle": "请登录",
     "enterName": "输入昵称",
-    "enterAddress": "输入服务器地址",
+    "emptyName": "昵称不能为空",
+    "nameTooLong": "昵称最长15个字符",
     "login": "登录",
     "loginAsGuest": "游客登录",
     "logout": "注销",

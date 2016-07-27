@@ -2,7 +2,8 @@
   "mainScene": {
     "loginTitle": "Please Login",
     "enterName": "Enter your name",
-    "enterAddress": "Enter the server address",
+    "emptyName": "The name cannot be empty",
+    "nameTooLong": "The name is at most 15 characters",
     "login": "Login",
     "loginAsGuest": "Login as guest",
     "logout": "Logout",

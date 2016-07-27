@@ -62,14 +62,22 @@ Room.prototype.waitingPlayer = function () {
 Room.prototype.onSendName = function (side, data) {
     if (this.state != RoomState.waiting) return;
     data = parseJSON(data);
-    if (side == left && this.leftName == null) {
-        this.leftName = data.name;
+    if (data.name.length > 0 && data.name.length <= 15) {
+        if (side == left && this.leftName == null) {
+            this.leftName = data.name;
+        }
+        else if (this.rightName == null) {
+            this.rightName = data.name;
+            this.leftPlayer.emit('sendName', { name: this.rightName });
+            this.rightPlayer.emit('sendName', { name: this.leftName });
+            this.start(left);
+        }
     }
-    else if (this.rightName == null) {
-        this.rightName = data.name;
-        this.leftPlayer.emit('sendName', { name: this.rightName });
-        this.rightPlayer.emit('sendName', { name: this.leftName });
-        this.start(left);
+    else if (side == left) {
+        this.close();
+    } else {
+        this.rightPlayer.disconnect();
+        this.rightPlayer = null;
     }
 }
 
