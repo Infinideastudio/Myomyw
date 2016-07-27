@@ -19,7 +19,6 @@ var OnlineGameScene = GameScene.extend({
         this.socket = io.connect(cc.game.config["server"], { "force new connection": true });
         this.socket.on("connect", this.onConnect.bind(this));
         this.socket.on("error", this.onError.bind(this));
-        this.socket.on("sendName", this.onSendName.bind(this));
         this.socket.on("start", this.onStart.bind(this));
         this.socket.on("nextChessman", this.onNextChessman.bind(this));
         this.socket.on("move", this.onMove.bind(this));
@@ -112,7 +111,7 @@ var OnlineGameScene = GameScene.extend({
     //socket.io的回调
     onConnect: function () {
         this.connected = true;
-        this.socket.emit("sendName", JSON.stringify({ name: player.name }));
+        this.socket.emit("match", JSON.stringify({ name: player.name }));
         this.roomLabel.string = txt.online.waiting;
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
     },
@@ -121,17 +120,12 @@ var OnlineGameScene = GameScene.extend({
         cc.log(data);
     },
 
-    onSendName: function (data) {
-        data = parseJson(data);
-        this.opponentName = data.name;
-        this.rightNameLabel.string = this.opponentName;
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
-    },
-
     onStart: function (data) {
         data = parseJson(data);
         this.roomLabel.string = format(txt.online.room, data.room);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
+        this.rightNameLabel.string = data.opponentName;
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.start(data.side);
     },
 

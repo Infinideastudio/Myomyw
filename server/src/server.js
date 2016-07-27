@@ -1,13 +1,15 @@
-﻿var config = require('./config.js')
-var Room = require('./Room.js')
-var URL = require('url');
-var rooms = new Array();
-var left = 0, right = 1;
-var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
-
-var http = require('http');
+﻿var http = require('http');
 var app = http.createServer(httpHandler);
 var io = require('socket.io')(app);
+var URL = require('url');
+var config = require('./config.js')
+var Room = require('./Room.js')
+
+var rooms = new Array();
+var matchingPlayer = null;
+var matchingPlayerName = '';
+var left = 0, right = 1;
+var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
@@ -28,41 +30,65 @@ console.log('listening on port ' + config.port);
 
 io.on('connection', function (socket) {
     console.log('connected ' + socket.id);
-    //寻找可加入的房间
-    var found = false; //是否找到了可加入的房间
-    for (var i = 0; i < rooms.length; i++) {
-        //如果房间为空，则建立房间并将玩家设为左边的玩家
-        if (!rooms[i]) {
-            found = true;
-            console.log('opened room:' + i);
-            rooms[i] = new Room(i, closeRoom.bind(this, i));
-            rooms[i].setPlayer(left, socket);
-            break;
+    
+    socket.on('match', function (data) {
+        data = JSON.parse(data);
+        if (data.name.length > 0 && data.name.length <= 15) {
+            if (matchingPlayer) {
+                var newRoom = new Room(matchingPlayer, socket, closeRoom.bind(this, i));
+                if (socket.id != matchingPlayer.id) {
+                    //寻找空位
+                    var found = false;
+                    var i;
+                    for (i = 0; i < rooms.length; i++) {
+                        if (rooms[i] == null) {
+                            rooms[i] = newRoom;
+                            found = true;
+                            break;
+                        }
+                    }
+                    //如果没有找到空位，那么把新房间放在最后
+                    if (!found) {
+                        i = rooms.push(newRoom) - 1;
+                    }
+                    matchingPlayer.emit('start', { side: left, room: i, opponentName: data.name });
+                    socket.emit('start', { side: right, room: i, opponentName: matchingPlayerName });
+                    console.log('opened room:' + i);
+                }
+            }
+            else {
+                matchingPlayer = socket;
+                matchingPlayerName = data.name;
+            }
         }
-        //如果房间为等待中，则将玩家设为右边的玩家并开始游戏
-        if (!rooms[i].rightPlayer) {
-            found = true;
-            rooms[i].setPlayer(right, socket);
-            break;
+        else {
+            socket.disconnect();
         }
-    }
-    //如果没有找到可加入的房间，则新建一个房间
-    if (!found) {
-        console.log('opened room:' + i);
-        room = new Room(i, closeRoom.bind(this, i));
-        room.setPlayer(left, socket);
-        rooms.push(room);
-    }
+    });
+    
+    socket.on('disconnect', function () {
+        if (socket.id == matchingPlayer.id) {
+            matchingPlayer = null;
+        }
+    });
+
 });
 
 function closeRoom(id) {
     if (rooms[id]) {
+        if (rooms[id].leftPlayer) {
+            rooms[id].leftPlayer.disconnect();
+        }
+        if (rooms[id].rightPlayer) {
+            rooms[id].rightPlayer.disconnect();
+        }
+        rooms[id].ended = true;
         rooms[id] = null;
         console.log('closed room:' + id);
-        //如果房间位于结尾，则从数组里删除此房间，并向后删除可删除的房间
+        //如果房间位于末尾，则从数组里删除此房间，并向前删除可删除的房间
         if (id == rooms.length - 1) {
             var i = id;
-            while (i >= 0 && !rooms[i--]) {
+            while (i >= 0 && rooms[i--] == null) {
                 rooms.pop();
             }
         }
