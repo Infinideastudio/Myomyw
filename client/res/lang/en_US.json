@@ -4,11 +4,11 @@
     "enterName": "Enter your name",
     "enterAddress": "Enter the server address",
     "login": "Login",
-    "loginAsGuest": "Login as guest",
+    "loginAsGuest": "Login as a guest",
     "logout": "Logout",
-    "playWithAI": "Play with Machine",
+    "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
-    "serverName": "Sever name: "
+    "serverName": "Server name: "
   },
   "options": {
     "title": "Options",
@@ -22,18 +22,18 @@
     "guest": "Guest",
     "left": "Green",
     "right": "Blue",
-    "ai": "Machine"
+    "ai": "Computer"
   },
   "result": {
     "leftWins": "Green wins",
     "rightWins": "Blue wins",
     "youWin": "You win",
-    "aiWins": "Machine wins",
+    "aiWins": "Computer wins",
     "win": "{0} wins",
     "leftOutOfTime": "Green is out of time",
     "rightOutOfTime": "Blue is out of time",
     "youOutOfTime": "You are out of time",
-    "aiOutOfTime": "Machine is out of time",
+    "aiOutOfTime": "Computer is out of time",
     "outOfTime": "{0} is out of time",
     "opponentLeft": "Your opponent has left",
     "unknownDisconnection": "The server disconnected without any reason",

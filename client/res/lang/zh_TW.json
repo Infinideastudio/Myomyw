@@ -1,0 +1,47 @@
+{
+  "mainScene": {
+    "loginTitle": "請登入",
+    "enterName": "輸入昵稱",
+    "enterAddress": "輸入伺服器地址",
+    "login": "登入",
+    "loginAsGuest": "遊客登入",
+    "logout": "登出",
+    "playWithAI": "人機對戰",
+    "playDouble": "同屏對戰",
+    "serverName": "伺服器名稱 "
+  },
+  "options": {
+    "title": "設定",
+    "standaloneTimer": "在單機遊戲中限時",
+    "lang": "語言",
+    "autoLang": "自動選擇語言",
+    "about": "關於"
+  },
+  "names": {
+    "notLogged": "未登入",
+    "guest": "遊客",
+    "left": "綠方",
+    "right": "藍方",
+    "ai": "電腦"
+  },
+  "result": {
+    "leftWins": "綠方贏了",
+    "rightWins": "藍方贏了",
+    "youWin": "你赢了",
+    "aiWins": "電腦赢了",
+    "win": "{0}赢了",
+    "leftOutOfTime": "綠方超時了",
+    "rightOutOfTime": "藍方超時了",
+    "youOutOfTime": "你超時了",
+    "aiOutOfTime": "電腦超時了",
+    "outOfTime": "{0}超時了",
+    "opponentLeft": "對手已離開",
+    "unknownDisconnection": "與伺服器斷開了連接",
+    "differentResult": "與伺服器的勝負結果不同"
+  },
+  "online": {
+    "connecting": "連接中",
+    "waiting": "等待中",
+    "room": "房間{0}"
+  }
+}
