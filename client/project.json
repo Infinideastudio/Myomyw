@@ -26,5 +26,6 @@
     "src/DoubleGameScene.js",
     "src/AIGameScene.js",
     "src/OnlineGameScene.js"
-  ]
+  ],
+  "server": "127.0.0.1:8650"
 }

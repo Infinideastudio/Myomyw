@@ -5,15 +5,25 @@ var rooms = new Array();
 var left = 0, right = 1;
 var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
 
-var express = require('express');
-var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
-app.use(express.static(config.clientPath));
-app.get('/is_server', function (req, res) {
-    res.send(serverInfo);
-})
-server.listen(config.port);
+var http = require('http');
+var app = http.createServer(httpHandler);
+var io = require('socket.io')(app);
+
+function httpHandler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
+    switch (URL.parse(req.url).pathname) {
+        case "/is_server":
+            res.writeHead(200)
+            res.write(serverInfo);
+            break;
+        default:
+            res.writeHead(400);
+            break;
+    }
+    res.end();
+}
+
+app.listen(config.port);
 console.log('listening on port ' + config.port);
 
 io.on('connection', function (socket) {

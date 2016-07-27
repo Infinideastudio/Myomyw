@@ -10,7 +10,7 @@ var MainScene = cc.Scene.extend({
             y: size.height
         });
         this.addChild(background);
-        
+
         scrollableLayer = new cc.Layer();
         this.addChild(scrollableLayer);
 
@@ -25,12 +25,6 @@ var MainScene = cc.Scene.extend({
         nameBox.setPosition(size.width / 2, size.height / 2 + 20);
         loginUI.addChild(nameBox);
 
-        if (cc.sys.isNative) {
-            var addressBox = creator.createEditBox(txt.mainScene.enterAddress);
-            addressBox.setPosition(size.width / 2, size.height / 2 - 50);
-            loginUI.addChild(addressBox);
-        }
-
         function moveToMainUI() {
             loginUI.enabled = false;
             mainUI.enabled = true;
@@ -41,8 +35,7 @@ var MainScene = cc.Scene.extend({
         }
 
         var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 40), function () {
-            var address = cc.sys.isNative ? addressBox.getString() : "";
-            player.login(nameBox.getString(), address, function () {
+            player.login(nameBox.getString(), function () {
                 moveToMainUI();
             }, function (error) {
                 cc.log(error);

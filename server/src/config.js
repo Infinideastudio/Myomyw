@@ -1,6 +1,6 @@
 ﻿var config = {
-    port: 80,
-    clientPath: '../client',
+    port: 8650,
+    allowOrigin: 'http://127.0.0.1:8000',
     serverName: 'A Myomyw Server',
     version: '0.4',
 

@@ -16,7 +16,7 @@ var OnlineGameScene = GameScene.extend({
         this.addChild(this.roomLabel);
 
         io = window.SocketIO || window.io;
-        this.socket = io.connect(player.server, { "force new connection": true });
+        this.socket = io.connect(cc.game.config["server"], { "force new connection": true });
         this.socket.on("connect", this.onConnect.bind(this));
         this.socket.on("error", this.onError.bind(this));
         this.socket.on("sendName", this.onSendName.bind(this));
