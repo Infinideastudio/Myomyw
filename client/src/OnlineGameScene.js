@@ -124,6 +124,7 @@ var OnlineGameScene = GameScene.extend({
         data = parseJson(data);
         this.roomLabel.string = format(txt.online.room, data.room);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
+        this.opponentName = data.opponentName;
         this.rightNameLabel.string = data.opponentName;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.start(data.side);
