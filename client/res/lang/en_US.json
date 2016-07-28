@@ -43,6 +43,7 @@
   "online": {
     "connecting": "Connecting",
     "waiting": "Waiting",
-    "room": "Room{0}"
+    "room": "Room{0}",
+    "serverFull": "The server is full"
   }
 }

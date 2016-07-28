@@ -43,6 +43,7 @@
   "online": {
     "connecting": "连接中",
     "waiting": "等待中",
-    "room": "房间{0}"
+    "room": "房间{0}",
+    "serverFull": "服务器已满"
   }
 }
