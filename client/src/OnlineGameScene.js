@@ -166,6 +166,9 @@ var OnlineGameScene = GameScene.extend({
             this.stopTimer();
             this.win();
         }
+        else if (this.serverReason == EndReason.serverFull) {
+            this.addChild(new ResultLayer(txt.online.serverFull, cc.color(0, 0, 0)));
+        }
         else {
             if (this.clientReason != null) {
                 if (this.clientReason == this.serverReason)
@@ -188,3 +191,10 @@ var OnlineGameScene = GameScene.extend({
         }
     }
 });
+
+function parseJson(str) {
+    if (cc.sys.isNative)
+        return JSON.parse(str);
+    else
+        return str;
+}

@@ -1,5 +1,5 @@
 ﻿var config = require('./config.js');
-var EndReason = { opponentLeft: 0, youWin: 1, opponentWins: 2, youOutOfTime: 3, opponentOutOfTime: 4 };
+var EndReason = { opponentLeft: 0, youWin: 1, opponentWins: 2, youOutOfTime: 3, opponentOutOfTime: 4, serverFull: 5 };
 var Chessman = { common: 0, key: 1, addCol: 2, delCol: 3, flip: 4 };
 var left = 0, right = 1;
 

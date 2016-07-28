@@ -7,7 +7,7 @@ var Room = require('./Room.js');
 var app = http.createServer(httpHandler);
 var rooms = new Array();
 var matchingPlayer = null;
-var left = 0, right = 1;
+var EndReason = { serverFull: 5 };
 var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
 
 function httpHandler(req, res) {
@@ -30,34 +30,27 @@ console.log('listening on port ' + config.port);
 
 function connectHandler(player) {
     player.on('match', function (data) {
-        if (data.name.length > 0 && data.name.length <= 15) {
-            player.name = data.name;
-            console.log(player.getDescription() + " is matching");
-            if (matchingPlayer == null) {
-                matchingPlayer = player;
+        if (rooms.length < config.maxRooms) {
+            if (data.name.length > 0 && data.name.length <= 15) {
+                player.name = data.name;
+                console.log(player.getDescription() + " is matching");
+                if (matchingPlayer == null) {
+                    matchingPlayer = player;
+                }
+                else {
+                    if (player.id != matchingPlayer.id) {
+                        openRoom(matchingPlayer, player);
+                        matchingPlayer = null;
+                    }
+                }
             }
             else {
-                if (player.id != matchingPlayer.id) {
-                    //寻找空位
-                    var found = false;
-                    for (var i = 0; i < rooms.length; i++) {
-                        if (rooms[i] == null) {
-                            rooms[i] = new Room(matchingPlayer, player, closeRoom.bind(this, i), i);
-                            found = true;
-                            break;
-                        }
-                    }
-                    //如果没有找到空位，那么把新房间放在最后
-                    if (!found) {
-                        var newRoom = new Room(matchingPlayer, player, closeRoom.bind(this, rooms.length), rooms.length);
-                        rooms.push(newRoom);
-                    }
-                    console.log('opened room:' + i);
-                    matchingPlayer = null;
-                }
+                player.disconnect();
             }
         }
         else {
+            console.log("Server is full!");
+            player.send('endGame', { reason: EndReason.serverFull });
             player.disconnect();
         }
     });
@@ -68,6 +61,24 @@ function connectHandler(player) {
             matchingPlayer = null;
         }
     });
+}
+
+function openRoom(leftPlayer, rightPlayer) {
+    var found = false;
+    //寻找空位
+    for (var i = 0; i < rooms.length; i++) {
+        if (rooms[i] == null) {
+            rooms[i] = new Room(leftPlayer, rightPlayer, closeRoom.bind(this, i), i);
+            found = true;
+            break;
+        }
+    }
+    //如果没有找到空位，那么把新房间放在最后
+    if (!found) {
+        var newRoom = new Room(leftPlayer, rightPlayer, closeRoom.bind(this, rooms.length), rooms.length);
+        rooms.push(newRoom);
+    }
+    console.log('opened room:' + i);
 }
 
 function closeRoom(id) {
