@@ -21,7 +21,7 @@ var DoubleGameScene = GameScene.extend({
             color = cc.color(0, 100, 255);
         }
         else {
-            str += txt.result.rightWins;
+            str += txt.result.leftWins;
             color = cc.color(0, 255, 0);
         }
         this.addChild(new ResultLayer(str, color));
