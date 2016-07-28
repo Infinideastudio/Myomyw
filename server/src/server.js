@@ -32,7 +32,13 @@ io.on('connection', function (socket) {
     console.log('connected ' + socket.id);
     
     socket.on('match', function (data) {
-        data = JSON.parse(data);
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            console.log(socket.id + 'sent "match" with invalid data: ' + data);
+            return;
+        }
         if (data.name.length > 0 && data.name.length <= 15) {
             if (matchingPlayer != null) {
                 if (socket.id != matchingPlayer.id) {

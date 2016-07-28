@@ -22,7 +22,7 @@ function Room(leftPlayer, rightPlayer, closeHandler) {
     this.leftPlayer = leftPlayer;
     this.rightPlayer = rightPlayer;
     this.closeHandler = closeHandler;
-    
+
     this.setPlayer(leftPlayer, left);
     this.setPlayer(rightPlayer, right);
     this.createAndTellNextChessman();
@@ -51,9 +51,17 @@ Room.prototype.waitingPlayer = function () {
 //只有每回合的第一次移动才传递col
 Room.prototype.onMove = function (side, data) {
     if (side != this.turn) return;
-    data = parseJSON(data);
-    if ('col' in data && !this.movingCol) {
-        this.movingCol = data.col;
+    if (data != '') {
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            console.log((side == left ? this.leftPlayer : this.rightPlayer).id + 'sent "move" with invalid data: ' + data);
+            return;
+        }
+        if ('col' in data && !this.movingCol) {
+            this.movingCol = data.col;
+        }
     }
     if (this.movingCol != null && this.totalMovementTimes < config.maxMovementTimes) {
         this.totalMovementTimes++;
@@ -153,7 +161,7 @@ Room.prototype.move = function (col, chessman) {
         }
         this.chessmen[0][col] = this.nextChessman;
     }
-    
+
     switch (lastChessman) {
         case Chessman.key:
             return true;
@@ -209,21 +217,6 @@ Room.prototype.flip = function () {
     this.lCol ^= this.rCol;
     this.rCol ^= this.lCol;
     this.lCol ^= this.rCol;
-}
-
-function parseJSON(text) {
-    if (text != '') {
-        try {
-            var obj = JSON.parse(text);
-            return obj;
-        }
-        catch (e) {
-            console.log('json error' + e);
-            return {};
-        }
-    } else {
-        return {};
-    }
 }
 
 module.exports = Room;
