@@ -42,6 +42,7 @@
   "online": {
     "connecting": "連接中",
     "waiting": "等待中",
-    "room": "房間{0}"
+    "room": "房間{0}",
+    "serverFull": "伺服器已滿"
   }
 }
