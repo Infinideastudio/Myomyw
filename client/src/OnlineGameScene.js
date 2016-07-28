@@ -2,7 +2,7 @@ var OnlineGameScene = GameScene.extend({
     socket: null,
     roomLabel: null,
     opponentName: null,
-    connected: false,
+    disconnected: false,
     movingCol: null,
     firstMove: true,
     shouldChangeTurn: false,
@@ -30,9 +30,9 @@ var OnlineGameScene = GameScene.extend({
 
     onExit: function () {
         this._super();
-        if (this.connected) {
+        if (!this.disconnected) {
             this.socket.disconnect();
-            this.connected = false;
+            this.disconnected = true;
         }
     },
 
@@ -64,7 +64,7 @@ var OnlineGameScene = GameScene.extend({
 
     //GameScene的回调
     onBeganMoving: function (col) {
-        if (this.turn == left && this.connected) {
+        if (this.turn == left && !this.disconnected) {
             if (this.firstMove) {
                 this.socket.emit("move", JSON.stringify({ col: col }));
                 this.firstMove = false;
@@ -82,7 +82,7 @@ var OnlineGameScene = GameScene.extend({
 
     onChangedTurn: function () {
         this.shouldChangeTurn = false;
-        if (this.turn == right && this.connected) {
+        if (this.turn == right && !this.disconnected) {
             this.socket.emit("endTurn", "");
             this.movingCol = null;
         }
@@ -110,7 +110,6 @@ var OnlineGameScene = GameScene.extend({
 
     //socket.io的回调
     onConnect: function () {
-        this.connected = true;
         this.socket.emit("match", JSON.stringify({ name: player.name }));
         this.roomLabel.string = txt.online.waiting;
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
@@ -183,7 +182,7 @@ var OnlineGameScene = GameScene.extend({
     },
 
     onDisconnect: function () {
-        this.connected = false;
+        this.disconnected = true;
         if (this.serverReason == null) {
             this.socket.disconnect();
             this.playing = false;

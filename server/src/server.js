@@ -57,7 +57,7 @@ function connectHandler(player) {
 
     player.on('disconnect', function () {
         console.log(player.id + ' disconnected');
-        if (player.id == matchingPlayer.id) {
+        if (matchingPlayer && player.id == matchingPlayer.id) {
             matchingPlayer = null;
         }
     });
