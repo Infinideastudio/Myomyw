@@ -1,19 +1,18 @@
 ﻿var http = require('http');
-var app = http.createServer(httpHandler);
-var io = require('socket.io')(app);
-var URL = require('url');
-var config = require('./config.js')
-var Room = require('./Room.js')
+var url = require('url');
+var config = require('./config.js');
+var socket = require('./socket.js');
+var Room = require('./Room.js');
 
+var app = http.createServer(httpHandler);
 var rooms = new Array();
 var matchingPlayer = null;
-var matchingPlayerName = '';
 var left = 0, right = 1;
 var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
-    switch (URL.parse(req.url).pathname) {
+    switch (url.parse(req.url).pathname) {
         case "/is_server":
             res.writeHead(200)
             res.write(serverInfo);
@@ -26,62 +25,50 @@ function httpHandler(req, res) {
 }
 
 app.listen(config.port);
+socket.listen(app, connectHandler);
 console.log('listening on port ' + config.port);
 
-io.on('connection', function (socket) {
-    console.log('connected ' + socket.id);
-    
-    socket.on('match', function (data) {
-        try {
-            data = JSON.parse(data);
-        }
-        catch (e) {
-            console.log(socket.id + 'sent "match" with invalid data: ' + data);
-            return;
-        }
+function connectHandler(player) {
+    player.on('match', function (data) {
         if (data.name.length > 0 && data.name.length <= 15) {
-            if (matchingPlayer != null) {
-                if (socket.id != matchingPlayer.id) {
-                    matchingPlayer.removeAllListeners('disconnect');
-                    socket.removeAllListeners('disconnect');
+            player.name = data.name;
+            console.log(player.getDescription() + " is matching");
+            if (matchingPlayer == null) {
+                matchingPlayer = player;
+            }
+            else {
+                if (player.id != matchingPlayer.id) {
                     //寻找空位
                     var found = false;
                     for (var i = 0; i < rooms.length; i++) {
                         if (rooms[i] == null) {
-                            rooms[i] = new Room(matchingPlayer, socket, closeRoom.bind(this, i));
+                            rooms[i] = new Room(matchingPlayer, player, closeRoom.bind(this, i), i);
                             found = true;
                             break;
                         }
                     }
                     //如果没有找到空位，那么把新房间放在最后
                     if (!found) {
-                        var newRoom = new Room(matchingPlayer, socket, closeRoom.bind(this, rooms.length));
+                        var newRoom = new Room(matchingPlayer, player, closeRoom.bind(this, rooms.length), rooms.length);
                         rooms.push(newRoom);
                     }
-                    matchingPlayer.emit('start', { side: left, room: i, opponentName: data.name });
-                    socket.emit('start', { side: right, room: i, opponentName: matchingPlayerName });
-                    matchingPlayer = null;
                     console.log('opened room:' + i);
+                    matchingPlayer = null;
                 }
-            }
-            else {
-                matchingPlayer = socket;
-                matchingPlayerName = data.name;
             }
         }
         else {
-            socket.disconnect();
-        }
-    });
-    
-    socket.on('disconnect', function () {
-        console.log('disconnected ' + socket.id);
-        if (socket.id == matchingPlayer.id) {
-            matchingPlayer = null;
+            player.disconnect();
         }
     });
 
-});
+    player.on('disconnect', function () {
+        console.log(player.id + ' disconnected');
+        if (player.id == matchingPlayer.id) {
+            matchingPlayer = null;
+        }
+    });
+}
 
 function closeRoom(id) {
     if (rooms[id]) {
