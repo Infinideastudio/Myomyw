@@ -1,10 +1,9 @@
 ﻿var config = require('./config.js')
 var EndReason = { opponentLeft: 0, youWin: 1, opponentWins: 2, youOutOfTime: 3, opponentOutOfTime: 4 };
 var Chessman = { common: 0, key: 1, addCol: 2, delCol: 3, flip: 4 };
-//var RoomState = { waiting: 0, playing: 1, closed: 2 };
 var left = 0, right = 1;
 
-function Room(leftPlayer, rightPlayer, close) {
+function Room(leftPlayer, rightPlayer, closeHandler) {
     this.chessmen = new Array();
     for (var i = 0; i < config.maxLCol; i++) {
         this.chessmen[i] = new Array();
@@ -22,8 +21,8 @@ function Room(leftPlayer, rightPlayer, close) {
     this.ended = false;
     this.leftPlayer = leftPlayer;
     this.rightPlayer = rightPlayer;
-    this.close = close;
-
+    this.closeHandler = closeHandler;
+    
     this.setPlayer(leftPlayer, left);
     this.setPlayer(rightPlayer, right);
     this.createAndTellNextChessman();
@@ -84,12 +83,20 @@ Room.prototype.onEndTurn = function (side) {
 
 Room.prototype.onDisconnect = function (side) {
     console.log('disconnected ' + (side == right ? this.rightPlayer : this.leftPlayer).id);
-    if (this.ended) {
-        this.close();
-    }
-    else {
+    if (!this.ended) {
         (side == left ? this.rightPlayer : this.leftPlayer).emit('endGame', { reason: EndReason.opponentLeft });
         clearTimeout(this.timeOutTID);
+        this.close();
+    }
+}
+
+Room.prototype.close = function () {
+    if (!this.ended) {
+        this.ended = true;
+        this.leftPlayer.disconnect();
+        this.rightPlayer.disconnect();
+        this.closeHandler();
+
     }
 }
 
@@ -146,8 +153,7 @@ Room.prototype.move = function (col, chessman) {
         }
         this.chessmen[0][col] = this.nextChessman;
     }
-
-
+    
     switch (lastChessman) {
         case Chessman.key:
             return true;

@@ -34,25 +34,27 @@ io.on('connection', function (socket) {
     socket.on('match', function (data) {
         data = JSON.parse(data);
         if (data.name.length > 0 && data.name.length <= 15) {
-            if (matchingPlayer) {
-                var newRoom = new Room(matchingPlayer, socket, closeRoom.bind(this, i));
+            if (matchingPlayer != null) {
                 if (socket.id != matchingPlayer.id) {
+                    matchingPlayer.removeAllListeners('disconnect');
+                    socket.removeAllListeners('disconnect');
                     //寻找空位
                     var found = false;
-                    var i;
-                    for (i = 0; i < rooms.length; i++) {
+                    for (var i = 0; i < rooms.length; i++) {
                         if (rooms[i] == null) {
-                            rooms[i] = newRoom;
+                            rooms[i] = new Room(matchingPlayer, socket, closeRoom.bind(this, i));
                             found = true;
                             break;
                         }
                     }
                     //如果没有找到空位，那么把新房间放在最后
                     if (!found) {
-                        i = rooms.push(newRoom) - 1;
+                        var newRoom = new Room(matchingPlayer, socket, closeRoom.bind(this, rooms.length));
+                        rooms.push(newRoom);
                     }
                     matchingPlayer.emit('start', { side: left, room: i, opponentName: data.name });
                     socket.emit('start', { side: right, room: i, opponentName: matchingPlayerName });
+                    matchingPlayer = null;
                     console.log('opened room:' + i);
                 }
             }
@@ -67,6 +69,7 @@ io.on('connection', function (socket) {
     });
     
     socket.on('disconnect', function () {
+        console.log('disconnected ' + socket.id);
         if (socket.id == matchingPlayer.id) {
             matchingPlayer = null;
         }
@@ -76,13 +79,6 @@ io.on('connection', function (socket) {
 
 function closeRoom(id) {
     if (rooms[id]) {
-        if (rooms[id].leftPlayer) {
-            rooms[id].leftPlayer.disconnect();
-        }
-        if (rooms[id].rightPlayer) {
-            rooms[id].rightPlayer.disconnect();
-        }
-        rooms[id].ended = true;
         rooms[id] = null;
         console.log('closed room:' + id);
         //如果房间位于末尾，则从数组里删除此房间，并向前删除可删除的房间
