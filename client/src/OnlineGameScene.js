@@ -4,9 +4,9 @@ var OnlineGameScene = GameScene.extend({
     opponentName: null,
     disconnected: false,
     movingCol: null,
+    fliped: false,
     firstMove: true,
-    shouldChangeTurn: false,
-    serverReason: null,//null为未定胜负
+    serverReason: null, //null为未定胜负
     clientReason: null,
 
     ctor: function () {
@@ -63,7 +63,7 @@ var OnlineGameScene = GameScene.extend({
     },
 
     //GameScene的回调
-    onBeganMoving: function (col) {
+    onBeganMoving: function (col, last) {
         if (this.turn == left && !this.disconnected) {
             if (this.firstMove) {
                 this.socket.emit("move", JSON.stringify({ col: col }));
@@ -74,19 +74,21 @@ var OnlineGameScene = GameScene.extend({
         }
     },
 
-    onEndedMoving: function (col) {
-        if (this.turn == right && this.shouldChangeTurn) {
-            this.changeTurn();
+    onEndedMoving: function (col, last) {
+        //这里应该是this.turn == right，但翻转已经切换回合了
+        if (this.turn == left && last == Chessman.flip) {
+            this.fliped = true;
         }
     },
 
     onChangedTurn: function () {
-        this.shouldChangeTurn = false;
-        if (this.turn == right && !this.disconnected) {
-            this.socket.emit("endTurn", "");
+        if (this.turn == right) {
+            if (!this.disconnected) {
+                this.socket.emit("endTurn", "");
+            }
             this.movingCol = null;
         }
-        if (this.turn == left) {
+        else {
             this.firstMove = true;
         }
     },
@@ -140,18 +142,23 @@ var OnlineGameScene = GameScene.extend({
             if ("col" in data && this.movingCol === null) {
                 this.movingCol = data.col;
             }
+            if (this.action == Action.moving) {
+                this.endMovingAtOnce();
+            }
             this.move(this.movingCol);
         }
     },
 
     onEndTurn: function () {
         if (this.turn == right) {
-            //如果还在移动就设置shouldEndTurn为true，这样移动完成后就会切换回合
             if (this.action == Action.moving) {
-                this.shouldChangeTurn = true;
+                this.endMovingAtOnce();
+            }
+            if (!this.fliped) {
+                this.changeTurn();
             }
             else {
-                this.changeTurn();
+                this.fliped = false;
             }
         }
     },

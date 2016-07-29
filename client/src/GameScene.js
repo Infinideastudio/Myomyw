@@ -18,10 +18,12 @@ var GameScene = cc.Scene.extend({
     moveByTouching: false,
     touching: false,
     enableTimer: false,
-    time: null,
-    //TID Timeout ID
+    //TID = Timeout ID
     coolTID: null,
     timerTID: null,
+    handleMovingEndTID: null,
+    //TFN = Timeout function
+    handleMovingEndTFN: null,
 
     boardLength: null,
     halfDiagonal: null,
@@ -365,48 +367,10 @@ var GameScene = cc.Scene.extend({
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
 
-            //移动结束后的处理
-            setTimeout(function () {
-                switch (lastChessman) {
-                    case Chessman.key:
-                        this.updateChessboard();
-                        this.playing = false;
-                        this.onWin(false);
-                        return;
-                    case Chessman.addCol:
-                        if (this.turn == left)
-                            this.setBoardSize(this.lCol, this.rCol + 1);
-                        else
-                            this.setBoardSize(this.lCol + 1, this.rCol);
-                        break;
-                    case Chessman.delCol:
-                        if (this.turn == left)
-                            this.setBoardSize(this.lCol, this.rCol - 1);
-                        else
-                            this.setBoardSize(this.lCol - 1, this.rCol);
-                        break;
-                    case Chessman.flip:
-                        this.flip();
-                        this.changeTurn();
-                        break;
-                    default:
-                        this.updateChessboard();
-                        break;
-                }
-                this.onEndedMoving(col, lastChessman);
-                if (this.moveByTouching) {
-                    if (this.touching && this.totalMovements < maxMovements) {
-                        this.coolAndMove(col);
-                        this.action = Action.cooling;
-                    }
-                    else {
-                        this.changeTurn();
-                    }
-                }
-                else {
-                    this.action = Action.nothing;
-                }
-            }.bind(this), 300);
+            var func = this.handleMovingEnd.bind(this, col, lastChessman);
+            this.handleMovingEndTFN = func;
+            this.handleMovingEndTID = setTimeout(func, 300);
+
             if (this.createNextChessman) {
                 this.setNextChessman(this.createNextChessman());
             }
@@ -416,6 +380,59 @@ var GameScene = cc.Scene.extend({
 
     coolAndMove: function (col) {
         this.coolTID = setTimeout(this.move.bind(this, col), 400);
+    },
+
+    //移动结束后的处理
+    handleMovingEnd: function (col, lastChessman) {
+        switch (lastChessman) {
+            case Chessman.key:
+                this.updateChessboard();
+                this.playing = false;
+                this.onWin(false);
+                return;
+            case Chessman.addCol:
+                if (this.turn == left)
+                    this.setBoardSize(this.lCol, this.rCol + 1);
+                else
+                    this.setBoardSize(this.lCol + 1, this.rCol);
+                break;
+            case Chessman.delCol:
+                if (this.turn == left)
+                    this.setBoardSize(this.lCol, this.rCol - 1);
+                else
+                    this.setBoardSize(this.lCol - 1, this.rCol);
+                break;
+            case Chessman.flip:
+                this.flip();
+                this.changeTurn();
+                break;
+            default:
+                this.updateChessboard();
+                break;
+        }
+        this.onEndedMoving(col, lastChessman);
+        if (this.moveByTouching) {
+            if (this.touching && this.totalMovements < maxMovements) {
+                this.coolAndMove(col);
+                this.action = Action.cooling;
+            }
+            else {
+                this.changeTurn();
+            }
+        }
+        else {
+            this.action = Action.nothing;
+        }
+    },
+
+    endMovingAtOnce: function () {
+        var allChessmen = this.chessmanNode.getChildren();
+        for (var i = 0; i < allChessmen.length; i++) {
+            allChessmen[i].stopAllActions();
+        }
+        clearTimeout(this.handleMovingEndTID);
+        this.handleMovingEndTFN();
+        this.handleMovingEndTFN = null;
     },
 
     setBoardSize: function (lCol, rCol) {

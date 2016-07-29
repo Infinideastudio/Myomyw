@@ -69,8 +69,7 @@ Room.prototype.onMove = function (side, data) {
 }
 
 Room.prototype.onEndTurn = function (side) {
-    if (side != this.turn) return;
-    if (this.movingCol != null) {
+    if (side == this.turn && this.movingCol != null && this.totalMovementTimes <= config.maxMovementTimes) {
         this.movingCol = null;
         this.setTurn(this.turn == left ? right : left);
         this.currentPlayer().send('endTurn');
@@ -91,7 +90,6 @@ Room.prototype.close = function () {
         this.leftPlayer.disconnect();
         this.rightPlayer.disconnect();
         this.closeHandler();
-
     }
 }
 
