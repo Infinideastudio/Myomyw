@@ -37,22 +37,14 @@ var MainScene = cc.Scene.extend({
         var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 40), function () {
             var name = nameBox.getString();
             if (name.length == 0) {
-                messageLabel.string = txt.mainScene.emptyName;
-                messageLabel.opacity = 255;
-                setTimeout(function () {
-                    messageLabel.runAction(cc.fadeOut(1));
-                }, 2000);
+                showMessage(txt.mainScene.emptyName);
             } else if (name.length > 15) {
-                messageLabel.string = txt.mainScene.nameTooLong;
-                messageLabel.opacity = 255;
-                setTimeout(function () {
-                    messageLabel.runAction(cc.fadeOut(1));
-                }, 2000);
+                showMessage(txt.mainScene.nameTooLong);
             } else {
                 player.login(nameBox.getString(), function () {
                     moveToMainUI();
                 }, function (error) {
-                    cc.log(error);
+                    showMessage(error);
                 })
             }
         });
@@ -71,6 +63,17 @@ var MainScene = cc.Scene.extend({
         messageLabel.setPosition(size.width / 2, size.height / 2 - 200);
         messageLabel.opacity = 0;
         this.addChild(messageLabel);
+
+        var showMessageTID;
+        function showMessage(text) {
+            messageLabel.string = text;
+            messageLabel.opacity = 255;
+            clearTimeout(showMessageTID);
+            messageLabel.stopAllActions();
+            showMessageTID=setTimeout(function () {
+                messageLabel.runAction(cc.fadeOut(1));
+            }, 2000);
+        }
 
         //主界面层
         var mainUI = new ccui.Widget();

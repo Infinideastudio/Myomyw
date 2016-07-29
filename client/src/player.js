@@ -7,6 +7,13 @@ var player = {
     login: function (name, onConnect, onError) {
         var xhr = cc.loader.getXMLHttpRequest();
         xhr.open("GET", getNoCacheUrl("http://" + cc.game.config["server"] + "/is_server"));
+        xhr.timeout = 5000;
+        xhr.onerror = function (e) {
+            onError(txt.mainScene.error);
+        };
+        xhr.ontimeout = function (e) {
+            onError(txt.mainScene.timeout);
+        }
         xhr.onreadystatechange = function () {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 var response = xhr.responseText;
@@ -18,7 +25,7 @@ var player = {
                     player.logged = true;
                     onConnect();
                 } else {
-                    onError("Wrong server or the versions are not compatible.");
+                    onError(txt.mainScene.wrongReply);
                 }
             }
         }
