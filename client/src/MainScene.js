@@ -26,6 +26,9 @@ var MainScene = cc.Scene.extend({
         loginUI.addChild(nameBox);
 
         function moveToMainUI() {
+            messageLabel.opacity = 0;
+            clearTimeout(showMessageTID);
+            messageLabel.stopAllActions();
             loginUI.enabled = false;
             mainUI.enabled = true;
             playOnlineButton.enabled = !player.guest;
