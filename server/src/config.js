@@ -3,7 +3,7 @@
     allowOrigin: '*',
     maxRooms: 100,
     serverName: 'A Myomyw Server',
-    version: '0.4',
+    version: '0.5',
 
     defaultLCol: 6,
     defaultRCol: 6,
