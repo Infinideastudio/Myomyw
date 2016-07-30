@@ -4,7 +4,6 @@ var OnlineGameScene = GameScene.extend({
     opponentName: null,
     disconnected: false,
     movingCol: null,
-    fliped: false,
     firstMove: true,
     serverReason: null, //null为未定胜负
     clientReason: null,
@@ -71,13 +70,6 @@ var OnlineGameScene = GameScene.extend({
             } else {
                 this.socket.emit("move", "");
             }
-        }
-    },
-
-    onEndedMoving: function (col, last) {
-        //这里应该是this.turn == right，但翻转已经切换回合了
-        if (this.turn == left && last == Chessman.flip) {
-            this.fliped = true;
         }
     },
 
@@ -154,15 +146,13 @@ var OnlineGameScene = GameScene.extend({
             if (this.action == Action.moving) {
                 this.endMovingAtOnce();
             }
-            if (!this.fliped) {
+            //推出翻转球后上面的endMovingAtOnce会切换回合，所以要再判断一次
+            if (this.turn == right) {
                 this.changeTurn();
-            }
-            else {
-                this.fliped = false;
             }
         }
     },
-
+    
     onEndGame: function (data) {
         data = parseJson(data);
         this.playing = false;
