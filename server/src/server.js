@@ -13,7 +13,7 @@ var serverInfo = JSON.stringify({ name: config.serverName, version: config.versi
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
     switch (url.parse(req.url).pathname) {
-        case "/is_server":
+        case "/is-server":
             res.writeHead(200)
             res.write(serverInfo);
             break;
