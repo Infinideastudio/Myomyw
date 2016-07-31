@@ -38,15 +38,18 @@ var MainScene = cc.Scene.extend({
         }
 
         var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 40), function () {
+
             var name = nameBox.getString();
             if (name.length == 0) {
                 showMessage(txt.mainScene.emptyName);
             } else if (name.length > 15) {
                 showMessage(txt.mainScene.nameTooLong);
             } else {
+                loginUI.enabled = false;
                 player.login(nameBox.getString(), function () {
                     moveToMainUI();
                 }, function (error) {
+                    loginUI.enabled = true;
                     showMessage(error);
                 })
             }
@@ -73,7 +76,7 @@ var MainScene = cc.Scene.extend({
             messageLabel.opacity = 255;
             clearTimeout(showMessageTID);
             messageLabel.stopAllActions();
-            showMessageTID=setTimeout(function () {
+            showMessageTID = setTimeout(function () {
                 messageLabel.runAction(cc.fadeOut(1));
             }, 2000);
         }
