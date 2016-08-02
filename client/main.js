@@ -1,6 +1,6 @@
 cc.game.onStart = function () {
-    if (!cc.sys.isNative && document.getElementById("cocosLoading"))
-        document.body.removeChild(document.getElementById("cocosLoading"));
+    if (!cc.sys.isNative && document.getElementById("loading"))
+        document.body.removeChild(document.getElementById("loading"));
 
     cc.view.enableRetina(cc.sys.os === cc.sys.OS_IOS ? true : false);
     cc.view.adjustViewPort(true);

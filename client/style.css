@@ -46,3 +46,37 @@ body {
 canvas {
     background-color: rgba(0, 0, 0, 0);
 }
+
+#loading {
+    position: absolute;
+    margin: -25px;
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    left: 50%;
+    background-color: rgb(255,216,0);
+    border-radius: 50%;
+    animation-name: spin;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+#loading-inside {
+    position: absolute;
+    margin: -4px -16px;
+    width: 32px;
+    height: 8px;
+    top: 50%;
+    left: 50%;
+    background-color: rgb(255,238,153);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
