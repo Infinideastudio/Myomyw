@@ -9,6 +9,9 @@ cc.game.onStart = function () {
     storage = cc.sys.localStorage;
     creator.init();
     lang.init();
+    if (!cc.sys.isNative) {
+        cc._loaderImage = "";
+    }
     cc.LoaderScene.preload(g_resources, function () {
         player.name = txt.names.notLogged;
         cc.director.setClearColor(cc.color(255, 255, 255));
