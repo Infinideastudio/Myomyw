@@ -42,9 +42,9 @@ body {
     left: 50%;
     background-color: rgb(255,216,0);
     border-radius: 50%;
-    animation-name: spin;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
+    animation:spin 2s infinite;
+    -webkit-animation:spin 2s infinite;
+    -moz-animation:spin 2s infinite;
 }
 
 #loading-inside {
@@ -64,5 +64,25 @@ body {
 
     to {
         transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@-moz-keyframes spin {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+
+    to {
+        -moz-transform: rotate(360deg);
     }
 }
