@@ -127,12 +127,6 @@ var MainScene = cc.Scene.extend({
             playerLabel.setPosition(playerLabel.width / 2 + 20, size.height - playerLabel.height / 2 - 20);
         }
 
-        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(80, 40), function () {
-            cc.director.runScene(new TutorialGameScene());
-        });
-        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + 10);
-        mainUI.addChild(tutorialButton);
-
         if (player.logged) {
             loginUI.enabled = false;
             loginUI.visible = false;
@@ -150,6 +144,12 @@ var MainScene = cc.Scene.extend({
             cc.director.runScene(new OptionScene());
         });
         this.addChild(optionButton);
+
+        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(80, 40), function () {
+            cc.director.runScene(new TutorialGameScene());
+        });
+        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + 10);
+        this.addChild(tutorialButton);
         return true;
     }
 });
