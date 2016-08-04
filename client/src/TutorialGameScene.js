@@ -35,14 +35,26 @@ var TutorialGameScene = GameScene.extend({
             case 2:
                 this.step++;
                 this.changeText(txt.tutorial.s3);
-                this.chessmen[3][1] = Chessman.addCol;
-                this.chessmen[1][3] = Chessman.delCol;
+                if (this.chessmen[3][1] == Chessman.common &&
+                    this.chessmen[1][3] == Chessman.common) {
+                    this.chessmen[3][1] = Chessman.addCol;
+                    this.chessmen[1][3] = Chessman.delCol;
+                }
+                else {
+                    this.chessmen[4][1] = Chessman.addCol;
+                    this.chessmen[1][4] = Chessman.delCol;
+                }
                 this.updateChessboard();
                 break;
             case 3:
                 this.step++;
                 this.changeText(txt.tutorial.s4);
-                this.chessmen[3][3] = Chessman.flip;
+                if (this.chessmen[3][3] == Chessman.common) {
+                    this.chessmen[3][3] = Chessman.flip;
+                }
+                else {
+                    this.chessmen[2][2] = Chessman.flip;
+                }
                 this.updateChessboard();
                 break;
             case 4:
@@ -69,7 +81,7 @@ var TutorialGameScene = GameScene.extend({
         }
     },
 
-    onWin:function(timeout){
+    onWin: function (timeout) {
         if (this.turn == left && timeout) {
             this.addChild(new ResultLayer(txt.result.youOutOfTime, cc.color(0, 0, 0)));
         }
