@@ -144,6 +144,12 @@ var MainScene = cc.Scene.extend({
             cc.director.runScene(new OptionScene());
         });
         this.addChild(optionButton);
+
+        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(100, 40), function () {
+            cc.director.runScene(new TutorialGameScene());
+        });
+        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + 10);
+        this.addChild(tutorialButton);
         return true;
     }
 });

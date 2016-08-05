@@ -12,7 +12,8 @@
     "logout": "Logout",
     "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
-    "serverName": "Server name: "
+    "serverName": "Server name: ",
+    "tutorial": "tutorial"
   },
   "options": {
     "title": "Options",
@@ -48,5 +49,13 @@
     "waiting": "Waiting",
     "room": "Room{0}",
     "serverFull": "The server is full"
+  },
+  "tutorial": {
+    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nThe black balls on the\nchessboard are\n'common balls'.\nNot translated",
+    "s1": "Not translated",
+    "s2": "Not translated",
+    "s3": "Not translated",
+    "s4": "Not translated",
+    "s5": "Not translated"
   }
 }
