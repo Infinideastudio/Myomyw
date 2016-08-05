@@ -19,6 +19,7 @@ var lang = {
         cc.loader.loadJson(path, function (err, data) {
             if (err) return cc.log("load lang file failed " + err);
             txt = data;
+            player.resetName();
             if (cb) cb();
         })
     },

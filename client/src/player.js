@@ -43,5 +43,14 @@ var player = {
     logout: function () {
         player.logged = false;
         player.name = txt.names.notLogged;
+    },
+
+    resetName: function () {
+        if (!player.logged) {
+            player.name = txt.names.notLogged;
+        }
+        if (player.guest) {
+            player.name = txt.names.guest;
+        }
     }
 }
