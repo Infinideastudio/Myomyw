@@ -28,7 +28,7 @@ var AIGameScene = GameScene.extend({
     onChangedTurn: function () {
         if (this.turn == right) {
             //切换回合后冷却一下再让AI下(否则看起来太突然)
-            setTimeout(this.aiMove.bind(this), 800);
+            setTimeout(this.aiMove.bind(this), aiThinkingTime * 1000);
         }
     },
 

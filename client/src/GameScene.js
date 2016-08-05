@@ -169,7 +169,7 @@ var GameScene = cc.Scene.extend({
             var fadeOutAction = cc.fadeOut(0.5);
             old.runAction(moveAction);
             old.runAction(fadeOutAction);
-            setTimeout(this.removeChild.bind(this, old), 5000);
+            setTimeout(this.removeChild.bind(this, old), 500);
         }
 
         var nextChessmanSprite = this.createSpriteByChessman(this.nextChessman);
@@ -359,7 +359,7 @@ var GameScene = cc.Scene.extend({
                 this.halfDiagonal * (this.turn == left ? -col - 1 : col + 1) + this.topVertX,
                 this.boardLength - this.halfDiagonal * (col + 2));
             this.chessmanNode.addChild(newChessman);
-            var movingAction = cc.moveBy(0.3,
+            var movingAction = cc.moveBy(movingTime,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
             for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
@@ -369,7 +369,7 @@ var GameScene = cc.Scene.extend({
 
             var func = this.handleMovingEnd.bind(this, col, lastChessman);
             this.handleMovingEndTFN = func;
-            this.handleMovingEndTID = setTimeout(func, 300);
+            this.handleMovingEndTID = setTimeout(func, movingTime * 1000);
 
             if (this.createNextChessman) {
                 this.setNextChessman(this.createNextChessman());
@@ -379,7 +379,7 @@ var GameScene = cc.Scene.extend({
     },
 
     coolAndMove: function (col) {
-        this.coolTID = setTimeout(this.move.bind(this, col), 400);
+        this.coolTID = setTimeout(this.move.bind(this, col), coolingTime * 1000);
     },
 
     //移动结束后的处理
@@ -454,7 +454,7 @@ var GameScene = cc.Scene.extend({
             }
 
             this.board.setScale((lCol + rCol) / (this.lCol + this.rCol));
-            var scaleAction = cc.scaleTo(0.2, 1);
+            var scaleAction = cc.scaleTo(scalingTime, 1);
             this.board.runAction(scaleAction);
             this.lCol = lCol;
             this.rCol = rCol;
@@ -477,9 +477,9 @@ var GameScene = cc.Scene.extend({
         this.rCol ^= this.lCol;
         this.lCol ^= this.rCol;
 
-        var scaleAction1 = cc.scaleTo(0.2, 0, 1);
+        var scaleAction1 = cc.scaleTo(flippingTime / 2, 0, 1);
         var callAction = cc.callFunc(this.buildChessboard.bind(this));
-        var scaleAction2 = cc.scaleTo(0.2, 1);
+        var scaleAction2 = cc.scaleTo(flippingTime / 2, 1);
         var sequenceAction = cc.sequence(scaleAction1, callAction, scaleAction2);
         this.board.runAction(sequenceAction);
     },
@@ -487,12 +487,12 @@ var GameScene = cc.Scene.extend({
     startTimer: function () {
         this.stopTimer();
         this.timer.setPosition(this.topVertX, this.boardLength);
-        var moveAction = cc.moveBy(20, cc.p(0, -this.diagonal));
+        var moveAction = cc.moveBy(timeLimit, cc.p(0, -this.diagonal));
         this.timer.runAction(moveAction);
         this.timerTID = setTimeout(function () {
             this.playing = false;
             this.onWin(true);
-        }.bind(this), 20000);
+        }.bind(this), timeLimit * 1000);
     },
 
     stopTimer: function () {
