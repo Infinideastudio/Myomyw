@@ -12,7 +12,8 @@
     "logout": "登出",
     "playWithAI": "人機對戰",
     "playDouble": "同屏對戰",
-    "serverName": "伺服器名稱 "
+    "serverName": "伺服器名稱 ",
+    "tutorial": "教程"
   },
   "options": {
     "title": "設定",

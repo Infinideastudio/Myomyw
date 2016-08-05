@@ -12,7 +12,8 @@
     "logout": "Logout",
     "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
-    "serverName": "Server name: "
+    "serverName": "Server name: ",
+    "tutorial": "tutorial"
   },
   "options": {
     "title": "Options",
@@ -50,11 +51,11 @@
     "serverFull": "The server is full"
   },
   "tutorial": {
-    "s0": "Welcome to the tutorial of Myomyw,\nThe two sides should push balls in turns.\nThe black balls on the checkerboard are 'common balls'.\n棋盘上方两边的是双方的发射器。\n点击继续...",
-    "s1": "现在是你的回合，按下你的一个\n发射器试试吧，长按可以连发\n最多五次。顶上的格子是计\n时器，注意不要超时。",
-    "s2": "很好，刚才推出来的红球就是决胜\n球了，推出去的话就算失败\n点击继续...",
-    "s3": "这里是另外两种球，推出绿色的\n增列球会使对方增加一列，\n而黄色的减列球会使对方减\n少一列。棋盘最多10列，\n最少3列。\n点击继续...",
-    "s4": "蓝色的是翻转球，推出后棋盘会\n左右翻转，同時停止连发，\n直接切换到对手回合。\n点击继续...",
-    "s5": "最后右上角是下一个球的提示。\n教程结束，快去实战中练习\n一下吧！\n点击返回..."
+    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nThe black balls on the\nchessboard are\n'common balls'.\nNot translated",
+    "s1": "Not translated",
+    "s2": "Not translated",
+    "s3": "Not translated",
+    "s4": "Not translated",
+    "s5": "Not translated"
   }
 }
