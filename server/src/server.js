@@ -78,7 +78,8 @@ function openRoom(leftPlayer, rightPlayer) {
         var newRoom = new Room(leftPlayer, rightPlayer, closeRoom.bind(this, rooms.length), rooms.length);
         rooms.push(newRoom);
     }
-    console.log('opened room:' + i);
+    var date = new Date();
+    console.log(date.toString() + ' opened room:' + i);
 }
 
 function closeRoom(id) {
