@@ -18,7 +18,7 @@ var player = {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 var response = xhr.responseText;
                 var data = JSON.parse(response);
-                if ("version" in data && "name" in data && data.version == "0.5") {
+                if ("version" in data && "name" in data && data.version == "0.6") {
                     player.name = name;
                     player.serverName = data.name;
                     player.guest = false;
