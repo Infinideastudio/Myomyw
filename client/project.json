@@ -9,7 +9,7 @@
   "renderMode": 0,
   "engineDir": "frameworks/cocos2d-html5",
 
-  "modules": [ "cocos2d", "ccui", "editbox", "socketio" ],
+  "modules": [ "core", "actions", "shape-nodes", "clipping-nodes", "ccui", "editbox", "socketio" ],
   "jsList": [
     "src/resource.js",
     "src/definitions.js",
