@@ -10,7 +10,7 @@ cc.game.onStart = function () {
     creator.init();
     lang.init();
     if (!cc.sys.isNative) {
-        cc._loaderImage = "";
+        cc._loaderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC";
     }
     cc.LoaderScene.preload(g_resources, function () {
         player.name = txt.names.notLogged;
