@@ -10,3 +10,4 @@ server/*.njsproj
 server/.vs
 server/obj
 server/.ntvs_analysis.dat
+server/*.log
