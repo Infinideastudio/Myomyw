@@ -145,10 +145,16 @@ var MainScene = cc.Scene.extend({
         });
         this.addChild(optionButton);
 
+        var homepageButton = creator.createButton(txt.mainScene.homepage, cc.size(150, 40), function () {
+	       cc.sys.openURL("http://www.newinfinideas.com"); 
+        });
+        homepageButton.setPosition(size.width - homepageButton.width / 2 - 10, homepageButton.height / 2 + 10);
+        this.addChild(homepageButton);
+        
         var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(100, 40), function () {
             cc.director.runScene(new TutorialGameScene());
         });
-        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + 10);
+        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + homepageButton.height + 20);
         this.addChild(tutorialButton);
         return true;
     }

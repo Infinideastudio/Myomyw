@@ -13,7 +13,8 @@
     "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
     "serverName": "Server name: ",
-    "tutorial": "tutorial"
+    "tutorial": "tutorial",
+    "homepage": "Homepage"
   },
   "options": {
     "title": "Options",
