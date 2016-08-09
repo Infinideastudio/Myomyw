@@ -13,7 +13,7 @@
     minRCol: 3,
     maxMovementTimes: 5,
     timeLimit: 20000,//超时时间
-    maxInterval: 5000,//两次移动之间的最大间隔
-}
+    maxInterval: 5000//两次移动之间的最大间隔
+};
 
 module.exports = config;

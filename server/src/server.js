@@ -5,7 +5,7 @@ var socket = require('./socket.js');
 var Room = require('./Room.js');
 
 var app = http.createServer(httpHandler);
-var rooms = new Array();
+var rooms = [];
 var matchingPlayer = null;
 var EndReason = { serverFull: 5 };
 var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
@@ -14,7 +14,7 @@ function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
     switch (url.parse(req.url).pathname) {
         case "/is-server":
-            res.writeHead(200)
+            res.writeHead(200);
             res.write(serverInfo);
             break;
         default:

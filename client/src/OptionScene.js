@@ -17,7 +17,7 @@ var OptionScene = MenuScene.extend({
         var standaloneTimerBox = creator.createCheckBoxButton(txt.options.standaloneTimer, cc.size(600, 50),
             storage.getItem("standaloneTimer") != "false", function (sender, type) {
                 storage.setItem("standaloneTimer", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
-            })
+            });
 
         list.addChild(standaloneTimerBox);
 

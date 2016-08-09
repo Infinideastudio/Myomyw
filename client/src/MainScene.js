@@ -51,7 +51,7 @@ var MainScene = cc.Scene.extend({
                 }, function (error) {
                     loginUI.enabled = true;
                     showMessage(error);
-                })
+                });
             }
         });
 
@@ -146,7 +146,7 @@ var MainScene = cc.Scene.extend({
         this.addChild(optionButton);
 
         var homepageButton = creator.createButton(txt.mainScene.homepage, cc.size(150, 40), function () {
-	       cc.sys.openURL("http://www.newinfinideas.com"); 
+	        cc.sys.openURL("http://www.newinfinideas.com");
         });
         homepageButton.setPosition(size.width - homepageButton.width / 2 - 10, homepageButton.height / 2 + 10);
         this.addChild(homepageButton);

@@ -50,9 +50,9 @@ var GameScene = cc.Scene.extend({
     */
     ctor: function (leftName, rightName, controllableSide, createNextChessman, enableTimer) {
         this._super();
-        this.chessmen = new Array();
+        this.chessmen = [];
         for (var i = 0; i < maxLCol; i++) {
-            this.chessmen[i] = new Array();
+            this.chessmen[i] = [];
             for (var j = 0; j < maxRCol; j++) {
                 this.chessmen[i][j] = Chessman.common;
             }
@@ -113,7 +113,7 @@ var GameScene = cc.Scene.extend({
             onTouchEnded: this.ejectorTouchEnded.bind(this)
         }, this.board);
 
-        this.buildChessboard()
+        this.buildChessboard();
 
         return true;
     },

@@ -7,7 +7,7 @@ var lang = {
     autoLangList: {}, //这里存的是langs里的序号
 
     init: function () {
-        var sLang = storage.getItem("lang")
+        var sLang = storage.getItem("lang");
         if (!sLang || sLang == "auto")
             lang.loadAutoLang();
         else
@@ -21,7 +21,7 @@ var lang = {
             txt = data;
             player.resetName();
             if (cb) cb();
-        })
+        });
     },
 
     loadLang: function (langName, cb) {
@@ -41,7 +41,7 @@ var lang = {
             if (cb) cb();
         });
     }
-}
+};
 
 lang.langs[0] = ["English(US)", "en_US"];
 lang.langs[1] = ["简体中文", "zh_CN"];

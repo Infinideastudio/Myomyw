@@ -4,9 +4,9 @@ var Chessman = { common: 0, key: 1, addCol: 2, delCol: 3, flip: 4 };
 var left = 0, right = 1;
 
 function Room(leftPlayer, rightPlayer, closeHandler, id) {
-    this.chessmen = new Array();
+    this.chessmen = [];
     for (var i = 0; i < config.maxLCol; i++) {
-        this.chessmen[i] = new Array();
+        this.chessmen[i] = [];
         for (var j = 0; j < config.maxRCol; j++) {
             this.chessmen[i][j] = Chessman.common;
         }
@@ -35,15 +35,15 @@ Room.prototype.setPlayer = function (player, side) {
     player.on('move', this.onMove.bind(this, side));
     player.on('endTurn', this.onEndTurn.bind(this, side));
     player.on('disconnect', this.onDisconnect.bind(this, side));
-}
+};
 
 Room.prototype.currentPlayer = function () {
     return this.turn == left ? this.leftPlayer : this.rightPlayer;
-}
+};
 
 Room.prototype.waitingPlayer = function () {
     return this.turn == left ? this.rightPlayer : this.leftPlayer;
-}
+};
 
 //只有每回合的第一次移动才传递col
 Room.prototype.onMove = function (side, data) {
@@ -66,7 +66,7 @@ Room.prototype.onMove = function (side, data) {
             this.createAndTellNextChessman();
         }
     }
-}
+};
 
 Room.prototype.onEndTurn = function (side) {
     if (side == this.turn && this.movingCol != null && this.totalMovementTimes <= config.maxMovementTimes) {
@@ -74,7 +74,7 @@ Room.prototype.onEndTurn = function (side) {
         this.setTurn(this.turn == left ? right : left);
         this.currentPlayer().send('endTurn');
     }
-}
+};
 
 Room.prototype.onDisconnect = function (side) {
     if (!this.ended) {
@@ -82,7 +82,7 @@ Room.prototype.onDisconnect = function (side) {
         clearTimeout(this.timeOutTID);
         this.close();
     }
-}
+};
 
 Room.prototype.close = function () {
     if (!this.ended) {
@@ -91,7 +91,7 @@ Room.prototype.close = function () {
         this.rightPlayer.disconnect();
         this.closeHandler();
     }
-}
+};
 
 Room.prototype.setTurn = function (turn) {
     this.turn = turn;
@@ -99,19 +99,19 @@ Room.prototype.setTurn = function (turn) {
     this.totalMovementTimes = 0;
     clearTimeout(this.timeOutTID);
     this.timeOutTID = setTimeout(this.timeOut.bind(this), config.timeLimit);
-}
+};
 
 Room.prototype.timeOut = function () {
     this.currentPlayer().send('endGame', { reason: EndReason.youOutOfTime });
     this.waitingPlayer().send('endGame', { reason: EndReason.opponentOutOfTime });
     this.close();
-}
+};
 
 Room.prototype.createAndTellNextChessman = function () {
     this.nextChessman = this.getRandomChessman();
     this.leftPlayer.send('nextChessman', { chessman: this.nextChessman });
     this.rightPlayer.send('nextChessman', { chessman: this.nextChessman });
-}
+};
 
 Room.prototype.getRandomChessman = function () {
     switch (Math.floor(Math.random() * 11)) {
@@ -126,7 +126,7 @@ Room.prototype.getRandomChessman = function () {
         default:
             return Chessman.common;
     }
-}
+};
 
 
 //返回值为是否已决胜负
@@ -169,7 +169,7 @@ Room.prototype.move = function (col, chessman) {
             break;
     }
     return false;
-}
+};
 
 Room.prototype.setBoardSize = function (lCol, rCol) {
     if (lCol > config.maxLCol || lCol < config.minLCol || rCol > config.maxRCol || rCol < config.minRCol) return;
@@ -189,7 +189,7 @@ Room.prototype.setBoardSize = function (lCol, rCol) {
     }
     this.lCol = lCol;
     this.rCol = rCol;
-}
+};
 
 Room.prototype.flip = function () {
     for (var l = 0; l < config.maxLCol; l++) {
@@ -202,6 +202,6 @@ Room.prototype.flip = function () {
     this.lCol ^= this.rCol;
     this.rCol ^= this.lCol;
     this.lCol ^= this.rCol;
-}
+};
 
 module.exports = Room;

@@ -8,7 +8,7 @@ function Player(socket) {
 
 Player.prototype.on = function (event, func) {
     //这里只能挂一个函数，所以把原来的删掉
-    this.socket.removeAllListeners(event)
+    this.socket.removeAllListeners(event);
     this.socket.on(event, function (data) {
         if (data == '' || event == 'disconnect') {
             func({});
@@ -24,7 +24,7 @@ Player.prototype.on = function (event, func) {
             func(data);
         }
     }.bind(this));
-}
+};
 
 Player.prototype.disconnect = function () {
     if (this.connected) {
@@ -32,10 +32,10 @@ Player.prototype.disconnect = function () {
         this.connected = false;
         console.log(this.getDescription() + ' disconnected');
     }
-}
+};
 
 Player.prototype.getDescription = function () {
     return this.name + '(' + this.id + ')';
-}
+};
 
 module.exports = Player;

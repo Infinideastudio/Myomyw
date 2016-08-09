@@ -59,4 +59,4 @@ var creator = {
 
         return backgroundButton;
     }
-}
+};
