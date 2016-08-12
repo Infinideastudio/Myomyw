@@ -181,9 +181,9 @@ var GameScene = cc.Scene.extend({
                         cc.p(this.topVertX + this.halfDiagonal * (ejector + 1),
                             this.boardLength - this.diagonal - this.halfDiagonal * (ejector + 1)),
                         cc.p(this.diagonal + this.halfDiagonal * ejector,
-                            this.topVertX - this.diagonal - this.halfDiagonal * ejector),
+                            this.boardLength - this.topVertX - this.diagonal - this.halfDiagonal * ejector),
                         cc.p(this.halfDiagonal * (ejector + 1),
-                            this.topVertX - this.halfDiagonal * (ejector + 1))
+                            this.boardLength - this.topVertX - this.halfDiagonal * (ejector + 1))
                     ];
                     var color = cc.color(0, 100, 255, 50);
                 }
@@ -194,7 +194,7 @@ var GameScene = cc.Scene.extend({
     },
 
     getEjectorByPoint: function (point) {
-        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol); i++) {
+        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol) ; i++) {
             var ejector = this.gridNode.getChildByTag(this.turn == left ? i : this.lCol + i);
             if (!ejector) continue;
             rpoint = cc.p(point.x - ejector.x, point.y - ejector.y);
@@ -421,7 +421,7 @@ var GameScene = cc.Scene.extend({
             var movingAction = cc.moveBy(movingTime,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
-            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol); i++) {
+            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
                 this.chessmanNode.getChildByTag(
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
@@ -551,7 +551,7 @@ var GameScene = cc.Scene.extend({
         this.timerTID = setTimeout(function () {
             this.playing = false;
             this.onWin(true);
-        } .bind(this), timeLimit * 1000);
+        }.bind(this), timeLimit * 1000);
     },
 
     stopTimer: function () {
