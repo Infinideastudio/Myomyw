@@ -258,14 +258,6 @@ var GameScene = cc.Scene.extend({
         this.diagonal = 2 * this.halfDiagonal;
         this.topVertX = drawLCol * this.halfDiagonal;
         this.stencilDrawNode.clear();
-        //遮罩不包括发射器部分
-        var stencilPoly = [
-            cc.p(this.topVertX, this.boardLength - this.diagonal),
-            cc.p(this.halfDiagonal, this.boardLength - this.topVertX - this.halfDiagonal),
-            cc.p(this.boardLength - this.topVertX, 0),
-            cc.p(this.boardLength - this.halfDiagonal, this.topVertX - this.halfDiagonal)
-        ];
-        this.stencilDrawNode.drawPoly(stencilPoly, cc.color(255, 255, 255), 0, cc.color(255, 255, 255));
 
         //网格(包括背景网格和发射器)
         this.gridNode.removeAllChildren();
@@ -328,11 +320,19 @@ var GameScene = cc.Scene.extend({
                 cc.p(this.topVertX, this.boardLength - this.diagonal),
                 cc.p(this.topVertX + this.halfDiagonal, this.boardLength - this.halfDiagonal)
             ];
-            this.timerStencilDrawNode.drawPoly(timerStencilPoly, cc.color(255, 255, 255), 0, cc.color(255, 255, 255));
+            this.timerStencilDrawNode.drawPoly(timerStencilPoly, cc.color(0, 0, 0, 0), 0, cc.color(0, 0, 0, 0));
         }
 
-        this.setTurnFlag();
+        //遮罩不包括发射器部分
+        var stencilPoly = [
+            cc.p(this.topVertX, this.boardLength - this.diagonal),
+            cc.p(this.halfDiagonal, this.boardLength - this.topVertX - this.halfDiagonal),
+            cc.p(this.boardLength - this.topVertX, 0),
+            cc.p(this.boardLength - this.halfDiagonal, this.topVertX - this.halfDiagonal)
+        ];
+        this.stencilDrawNode.drawPoly(stencilPoly, cc.color(0, 0, 0, 0), 0, cc.color(0, 0, 0, 0));
         this.updateChessboard();
+        this.setTurnFlag();
     },
 
     updateChessboard: function () {
