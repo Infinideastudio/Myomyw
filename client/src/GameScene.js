@@ -114,7 +114,7 @@ var GameScene = cc.Scene.extend({
         }, this.board);
 
         if ('mouse' in cc.sys.capabilities) {
-            this.highlightCol = null;
+            this.highlightingCol = null;
             this.highlightDrawNode = new cc.DrawNode();
             this.highlightDrawNode.setPosition(0, 0);
             this.board.addChild(this.highlightDrawNode, 3);
@@ -125,21 +125,20 @@ var GameScene = cc.Scene.extend({
         }
 
         this.buildChessboard();
-
         return true;
     },
 
     ejectorTouchBegan: function (touch, event) {
-        if (this.controllableSide != both && this.controllableSide != this.turn) return false;
-        if (!this.playing || this.action == Action.moving) return false;
-        var point = this.board.convertTouchToNodeSpace(touch);
-        var ejector = this.getEjectorByPoint(point);
-        if (ejector != null) {
-            this.moveByTouching = true;
-            this.touching = true;
-            this.highlightDrawNode.clear();
-            this.move(ejector);
-            return true;
+        if (this.isControllable() && this.playing && this.action != Action.moving) {
+            var point = this.board.convertTouchToNodeSpace(touch);
+            var ejector = this.getEjectorByPoint(point);
+            if (ejector != null) {
+                this.moveByTouching = true;
+                this.touching = true;
+                this.highlightDrawNode.clear();
+                this.move(ejector);
+                return true;
+            }
         }
         return false;
     },
@@ -155,42 +154,47 @@ var GameScene = cc.Scene.extend({
     },
 
     onMouseMove: function (event) {
-        if (this.controllableSide != both && this.controllableSide != this.turn) return;
-        if (!this.playing || this.action != Action.nothing) return;
-        var point = this.board.convertToNodeSpace(event.getLocation());
-        var ejector = this.getEjectorByPoint(point);
-        if (ejector != this.highlightCol) {
+        if (this.isControllable() && this.playing && this.action == Action.nothing) {
+            var point = this.board.convertToNodeSpace(event.getLocation());
+            var ejector = this.getEjectorByPoint(point);
+            this.highlightCol(ejector);
+        }
+    },
+
+    //输入null则清除高亮
+    highlightCol: function (col) {
+        if (col != this.highlightingCol) {
+            this.highlightingCol = col;
             this.highlightDrawNode.clear();
-            if (ejector != null) {
+            if (col != null) {
                 if (this.turn == left) {
                     var poly = [
-                        cc.p(this.topVertX - this.halfDiagonal * ejector,
-                            this.boardLength - this.diagonal - this.halfDiagonal * ejector),
-                        cc.p(this.topVertX - this.halfDiagonal * (ejector + 1),
-                            this.boardLength - this.diagonal - this.halfDiagonal * (ejector + 1)),
-                        cc.p(this.boardLength - this.diagonal - this.halfDiagonal * ejector,
-                            this.topVertX - this.diagonal - this.halfDiagonal * ejector),
-                        cc.p(this.boardLength - this.halfDiagonal * (ejector + 1),
-                            this.topVertX - this.halfDiagonal * (ejector + 1))
+                        cc.p(this.topVertX - this.halfDiagonal * col,
+                            this.boardLength - this.diagonal - this.halfDiagonal * col),
+                        cc.p(this.topVertX - this.halfDiagonal * (col + 1),
+                            this.boardLength - this.diagonal - this.halfDiagonal * (col + 1)),
+                        cc.p(this.boardLength - this.diagonal - this.halfDiagonal * col,
+                            this.topVertX - this.diagonal - this.halfDiagonal * col),
+                        cc.p(this.boardLength - this.halfDiagonal * (col + 1),
+                            this.topVertX - this.halfDiagonal * (col + 1))
                     ];
                     var color = cc.color(0, 255, 0, 50);
                 }
                 else {
                     var poly = [
-                        cc.p(this.topVertX + this.halfDiagonal * ejector,
-                            this.boardLength - this.diagonal - this.halfDiagonal * ejector),
-                        cc.p(this.topVertX + this.halfDiagonal * (ejector + 1),
-                            this.boardLength - this.diagonal - this.halfDiagonal * (ejector + 1)),
-                        cc.p(this.diagonal + this.halfDiagonal * ejector,
-                            this.boardLength - this.topVertX - this.diagonal - this.halfDiagonal * ejector),
-                        cc.p(this.halfDiagonal * (ejector + 1),
-                            this.boardLength - this.topVertX - this.halfDiagonal * (ejector + 1))
+                        cc.p(this.topVertX + this.halfDiagonal * col,
+                            this.boardLength - this.diagonal - this.halfDiagonal * col),
+                        cc.p(this.topVertX + this.halfDiagonal * (col + 1),
+                            this.boardLength - this.diagonal - this.halfDiagonal * (col + 1)),
+                        cc.p(this.diagonal + this.halfDiagonal * col,
+                            this.boardLength - this.topVertX - this.diagonal - this.halfDiagonal * col),
+                        cc.p(this.halfDiagonal * (col + 1),
+                            this.boardLength - this.topVertX - this.halfDiagonal * (col + 1))
                     ];
                     var color = cc.color(0, 100, 255, 50);
                 }
                 this.highlightDrawNode.drawPoly(poly, color, 0, color);
             }
-            this.highlightCol = ejector;
         }
     },
 
@@ -207,6 +211,10 @@ var GameScene = cc.Scene.extend({
             }
         }
         return null;
+    },
+
+    isControllable: function () {
+        return this.controllableSide == both || this.controllableSide == this.turn;
     },
 
     start: function (side) {
