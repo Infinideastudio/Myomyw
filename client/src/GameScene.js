@@ -116,6 +116,7 @@ var GameScene = cc.Scene.extend({
         if ('mouse' in cc.sys.capabilities) {
             this.highlightCol = null;
             this.highlightDrawNode = new cc.DrawNode();
+            this.highlightDrawNode.setPosition(0, 0);
             this.board.addChild(this.highlightDrawNode, 3);
             cc.eventManager.addListener({
                 event: cc.EventListener.MOUSE,
@@ -154,8 +155,8 @@ var GameScene = cc.Scene.extend({
     },
 
     onMouseMove: function (event) {
-        if (this.controllableSide != both && this.controllableSide != this.turn) return false;
-        if (!this.playing || this.action == Action.moving) return false;
+        if (this.controllableSide != both && this.controllableSide != this.turn) return;
+        if (!this.playing || this.action != Action.nothing) return;
         var point = this.board.convertToNodeSpace(event.getLocation());
         var ejector = this.getEjectorByPoint(point);
         if (ejector != this.highlightCol) {
@@ -194,7 +195,7 @@ var GameScene = cc.Scene.extend({
     },
 
     getEjectorByPoint: function (point) {
-        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol) ; i++) {
+        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol); i++) {
             var ejector = this.gridNode.getChildByTag(this.turn == left ? i : this.lCol + i);
             if (!ejector) continue;
             rpoint = cc.p(point.x - ejector.x, point.y - ejector.y);
@@ -421,7 +422,7 @@ var GameScene = cc.Scene.extend({
             var movingAction = cc.moveBy(movingTime,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
-            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
+            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol); i++) {
                 this.chessmanNode.getChildByTag(
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
@@ -551,7 +552,7 @@ var GameScene = cc.Scene.extend({
         this.timerTID = setTimeout(function () {
             this.playing = false;
             this.onWin(true);
-        }.bind(this), timeLimit * 1000);
+        } .bind(this), timeLimit * 1000);
     },
 
     stopTimer: function () {
