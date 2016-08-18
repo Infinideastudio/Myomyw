@@ -16,7 +16,13 @@ cc.game.onStart = function () {
         player.name = txt.names.notLogged;
         cc.director.setClearColor(cc.color(255, 255, 255));
         size = cc.winSize;
-        cc.director.runScene(new MainScene());
+        if (storage.getItem("playedBefore") == "true") {
+            cc.director.runScene(new MainScene());
+        }
+        else {
+            storage.setItem("playedBefore", true);
+            cc.director.runScene(new WelcomeScene());
+        }
     }, this);
 };
 cc.game.run();
