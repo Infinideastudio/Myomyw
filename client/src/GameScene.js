@@ -107,21 +107,30 @@ var GameScene = cc.Scene.extend({
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.addChild(this.rightNameLabel);
 
-        cc.eventManager.addListener({
+        var touchEvent = {
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
             onTouchBegan: this.ejectorTouchBegan.bind(this),
             onTouchEnded: this.ejectorTouchEnded.bind(this)
-        }, this.board);
+        };
+        this.needSelect = storage.getItem("needSelect") == "true";
+        if (this.needSelect) {
+            touchEvent.onTouchMoved = this.ejectorTouchMoved.bind(this);
+        }
+        cc.eventManager.addListener(touchEvent, this.board);
 
-        if ('mouse' in cc.sys.capabilities) {
-            this.highlightingCol = null;
-            this.highlightDrawNode = new cc.DrawNode();
-            this.highlightDrawNode.setPosition(0, 0);
-            this.board.addChild(this.highlightDrawNode, 3);
+        var supportMouse = "mouse" in cc.sys.capabilities;
+        if (supportMouse) {
             cc.eventManager.addListener({
                 event: cc.EventListener.MOUSE,
                 onMouseMove: this.onMouseMove.bind(this)
             }, this.board);
+        }
+
+        if (this.needSelect || supportMouse) {
+            this.highlightingCol = null;
+            this.highlightDrawNode = new cc.DrawNode();
+            this.highlightDrawNode.setPosition(0, 0);
+            this.board.addChild(this.highlightDrawNode, 3);
         }
 
         this.buildChessboard();
@@ -132,15 +141,25 @@ var GameScene = cc.Scene.extend({
         if (this.isControllable() && this.playing && this.action != Action.moving) {
             var point = this.board.convertTouchToNodeSpace(touch);
             var ejector = this.getEjectorByPoint(point);
+            if (this.needSelect) {
+                if (ejector == this.selectingCol) {
+                    this.selectingCol = null;
+                }
+                else {
+                    this.selectingCol = ejector;
+                    this.highlightCol(ejector);
+                    return true;
+                }
+            }
             if (ejector != null) {
                 this.moveByTouching = true;
                 this.touching = true;
-                this.highlightDrawNode.clear();
+                this.highlightCol(null);
                 this.move(ejector);
                 return true;
             }
         }
-        return false;
+        return true;
     },
 
     ejectorTouchEnded: function (touch, event) {
@@ -153,8 +172,17 @@ var GameScene = cc.Scene.extend({
         }
     },
 
-    onMouseMove: function (event) {
+    ejectorTouchMoved: function (touch, event) {
         if (this.isControllable() && this.playing && this.action == Action.nothing) {
+            var point = this.board.convertTouchToNodeSpace(touch);
+            var ejector = this.getEjectorByPoint(point);
+            this.selectingCol = ejector;
+            this.highlightCol(ejector);
+        }
+    },
+
+    onMouseMove: function (event) {
+        if (this.isControllable() && this.playing && this.action == Action.nothing && this.selectingCol == null) {
             var point = this.board.convertToNodeSpace(event.getLocation());
             var ejector = this.getEjectorByPoint(point);
             this.highlightCol(ejector);
