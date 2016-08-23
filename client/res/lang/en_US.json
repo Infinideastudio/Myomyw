@@ -1,4 +1,9 @@
 {
+  "welcomeScene": {
+    "title": "Would you like to see our one minute tutorial？",
+    "ok": "Ok",
+    "skip": "Skip"
+  },
   "mainScene": {
     "loginTitle": "Please Login",
     "enterName": "Enter your name",
@@ -13,12 +18,13 @@
     "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
     "serverName": "Server name: ",
-    "tutorial": "tutorial",
+    "tutorial": "Tutorial",
     "homepage": "Homepage"
   },
   "options": {
     "title": "Options",
     "standaloneTimer": "Enable time limit in standalone games",
+    "needSelect": "Confirm after selecting the column",
     "lang": "Language",
     "autoLang": "Automatically",
     "about": "About"
@@ -52,7 +58,7 @@
     "serverFull": "The server is full"
   },
   "tutorial": {
-    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nThe black balls on the\nchessboard are\n'common balls'.\nNot translated",
+    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nNow the black balls on\nthe chessboard are\n'common balls'.\nOn the upper\nleft and\nupper\nright of\nthe\nchessboard,\nthere are ejectors.",
     "s1": "Not translated",
     "s2": "Not translated",
     "s3": "Not translated",

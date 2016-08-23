@@ -1,4 +1,9 @@
 {
+  "welcomeScene": {
+    "title": "想要看一下我們的一分鐘快速教程嗎？",
+    "ok": "好的",
+    "skip": "跳過"
+  },
   "mainScene": {
     "loginTitle": "請登入",
     "enterName": "輸入昵稱",
@@ -19,6 +24,7 @@
   "options": {
     "title": "設定",
     "standaloneTimer": "在單機遊戲中限時",
+    "needSelect": "在選擇列後進行確認",
     "lang": "語言",
     "autoLang": "自動選擇語言",
     "about": "關於"
