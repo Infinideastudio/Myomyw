@@ -23,7 +23,6 @@ cc.game.onStart = function () {
             cc.director.runScene(new MainScene());
         }
         else {
-            storage.setItem("playedBefore", true);
             cc.director.runScene(new WelcomeScene());
         }
     }, this);
