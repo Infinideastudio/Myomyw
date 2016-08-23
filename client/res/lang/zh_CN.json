@@ -24,6 +24,7 @@
   "options": {
     "title": "选项",
     "standaloneTimer": "在单机游戏中限时",
+    "needSelect": "在选择列后进行确认",
     "lang": "语言",
     "autoLang": "自动设置语言",
     "about": "关于"

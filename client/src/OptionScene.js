@@ -18,8 +18,13 @@ var OptionScene = MenuScene.extend({
             storage.getItem("standaloneTimer") != "false", function (sender, type) {
                 storage.setItem("standaloneTimer", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
             });
-
         list.addChild(standaloneTimerBox);
+
+        var needSelectBox = creator.createCheckBoxButton(txt.options.needSelect, cc.size(600, 50),
+            storage.getItem("needSelect") == "true", function (sender, type) {
+                storage.setItem("needSelect", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
+            });
+        list.addChild(needSelectBox);
 
         list.addChild(creator.createButton(txt.options.lang, cc.size(600, 50), function () {
             cc.director.runScene(new LangOptionScene());
@@ -28,7 +33,6 @@ var OptionScene = MenuScene.extend({
         list.addChild(creator.createButton(txt.options.about, cc.size(600, 50), function () {
             cc.director.runScene(new AboutScene());
         }));
-
         return true;
     }
 });
