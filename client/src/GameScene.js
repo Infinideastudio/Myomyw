@@ -86,6 +86,11 @@ var GameScene = cc.Scene.extend({
         this.chessmanNode = new cc.Node();
         this.stencil.addChild(this.chessmanNode);
 
+        this.highlightingCol = null;
+        this.highlightDrawNode = new cc.DrawNode();
+        this.highlightDrawNode.setPosition(0, 0);
+        this.board.addChild(this.highlightDrawNode, 3);
+
         this.createNextChessman = createNextChessman;
         this.controllableSide = controllableSide;
         this.enableTimer = enableTimer || false;
@@ -118,20 +123,10 @@ var GameScene = cc.Scene.extend({
         }
         cc.eventManager.addListener(touchEvent, this.board);
 
-        var supportMouse = "mouse" in cc.sys.capabilities;
-        if (supportMouse) {
-            cc.eventManager.addListener({
-                event: cc.EventListener.MOUSE,
-                onMouseMove: this.onMouseMove.bind(this)
-            }, this.board);
-        }
-
-        if (this.needSelect || supportMouse) {
-            this.highlightingCol = null;
-            this.highlightDrawNode = new cc.DrawNode();
-            this.highlightDrawNode.setPosition(0, 0);
-            this.board.addChild(this.highlightDrawNode, 3);
-        }
+        cc.eventManager.addListener({
+            event: cc.EventListener.MOUSE,
+            onMouseMove: this.onMouseMove.bind(this)
+        }, this.board);
 
         this.buildChessboard();
         return true;
@@ -227,7 +222,7 @@ var GameScene = cc.Scene.extend({
     },
 
     getEjectorByPoint: function (point) {
-        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol); i++) {
+        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol) ; i++) {
             var ejector = this.gridNode.getChildByTag(this.turn == left ? i : this.lCol + i);
             if (!ejector) continue;
             rpoint = cc.p(point.x - ejector.x, point.y - ejector.y);
@@ -458,7 +453,7 @@ var GameScene = cc.Scene.extend({
             var movingAction = cc.moveBy(movingTime,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
-            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol); i++) {
+            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
                 this.chessmanNode.getChildByTag(
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
@@ -588,7 +583,7 @@ var GameScene = cc.Scene.extend({
         this.timerTID = setTimeout(function () {
             this.playing = false;
             this.onWin(true);
-        } .bind(this), timeLimit * 1000);
+        }.bind(this), timeLimit * 1000);
     },
 
     stopTimer: function () {
