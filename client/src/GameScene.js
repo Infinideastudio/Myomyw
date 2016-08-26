@@ -117,8 +117,8 @@ var GameScene = cc.Scene.extend({
             onTouchBegan: this.ejectorTouchBegan.bind(this),
             onTouchEnded: this.ejectorTouchEnded.bind(this)
         };
-        this.needSelect = storage.getItem("needSelect") == "true";
-        if (this.needSelect) {
+
+        if ("touches" in cc.sys.capabilities) {
             touchEvent.onTouchMoved = this.ejectorTouchMoved.bind(this);
         }
         cc.eventManager.addListener(touchEvent, this.board);
@@ -136,25 +136,18 @@ var GameScene = cc.Scene.extend({
         if (this.isControllable() && this.playing && this.action != Action.moving) {
             var point = this.board.convertTouchToNodeSpace(touch);
             var ejector = this.getEjectorByPoint(point);
-            if (this.needSelect) {
-                if (ejector == this.selectingCol) {
-                    this.selectingCol = null;
-                }
-                else {
-                    this.selectingCol = ejector;
-                    this.highlightCol(ejector);
-                    return true;
-                }
+            if (ejector == null) {
+                this.touchingForHighlight = true;
             }
-            if (ejector != null) {
+            else {
                 this.moveByTouching = true;
                 this.touching = true;
                 this.highlightCol(null);
                 this.move(ejector);
-                return true;
             }
+            return true;
         }
-        return true;
+        return false;
     },
 
     ejectorTouchEnded: function (touch, event) {
@@ -165,19 +158,22 @@ var GameScene = cc.Scene.extend({
                 this.changeTurn();
             }
         }
+        this.touchingForHighlight = false;
+        if (this.playing){
+            this.highlightCol(null);
+        }
     },
 
     ejectorTouchMoved: function (touch, event) {
-        if (this.isControllable() && this.playing && this.action == Action.nothing) {
+        if (this.touchingForHighlight && this.playing) {
             var point = this.board.convertTouchToNodeSpace(touch);
             var ejector = this.getEjectorByPoint(point);
-            this.selectingCol = ejector;
             this.highlightCol(ejector);
         }
     },
 
     onMouseMove: function (event) {
-        if (this.isControllable() && this.playing && this.action == Action.nothing && this.selectingCol == null) {
+        if (this.isControllable() && this.playing && this.action == Action.nothing) {
             var point = this.board.convertToNodeSpace(event.getLocation());
             var ejector = this.getEjectorByPoint(point);
             this.highlightCol(ejector);
