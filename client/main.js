@@ -12,9 +12,6 @@ cc.game.onStart = function () {
     if (!cc.sys.isNative) {
         cc._loaderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC";
     }
-    if (!storage.getItem("needSelect")) {
-        storage.setItem("needSelect", cc.sys.isMobile);
-    }
     cc.LoaderScene.preload(g_resources, function () {
         player.name = txt.names.notLogged;
         cc.director.setClearColor(cc.color(255, 255, 255));
