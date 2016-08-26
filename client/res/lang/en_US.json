@@ -1,7 +1,7 @@
 {
   "welcomeScene": {
     "title": "Would you like to see our one minute tutorial？",
-    "ok": "Ok",
+    "ok": "OK",
     "skip": "Skip"
   },
   "mainScene": {
@@ -58,11 +58,12 @@
     "serverFull": "The server is full"
   },
   "tutorial": {
-    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nNow the black balls on\nthe chessboard are\n'common balls'.\nOn the upper\nleft and\nupper\nright of\nthe\nchessboard,\nthere are ejectors.",
+    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nNow the black balls on\nthe chessboard are\n'common balls'.\nOn the upper\nleft and\nupper\nright of\nthe\nchessboard,\nthere are ejectors.\nTouch to continue...",
     "s1": "Not translated",
     "s2": "Not translated",
     "s3": "Not translated",
     "s4": "Not translated",
-    "s5": "Not translated"
+    "s5": "Not translated",
+    "s6": "Not translated"
   }
 }

@@ -62,6 +62,10 @@ var TutorialGameScene = GameScene.extend({
                 this.changeText(txt.tutorial.s5);
                 break;
             case 5:
+                this.step++;
+                this.changeText(txt.tutorial.s6);
+                break;
+            case 6:
                 cc.director.runScene(new MainScene());
                 break;
         }
