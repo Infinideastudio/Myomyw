@@ -22,6 +22,10 @@ var MainScene = cc.Scene.extend({
         loginUI.addChild(titleLabel);
 
         var nameBox = creator.createEditBox(txt.mainScene.enterName);
+        var lastName = storage.getItem("name");
+        if (lastName) {
+            nameBox.setString(lastName);
+        }
         nameBox.setPosition(size.width / 2, size.height / 2 + 20);
         loginUI.addChild(nameBox);
 
@@ -38,7 +42,6 @@ var MainScene = cc.Scene.extend({
         }
 
         var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 40), function () {
-
             var name = nameBox.getString();
             if (name.length == 0) {
                 showMessage(txt.mainScene.emptyName);
@@ -47,6 +50,7 @@ var MainScene = cc.Scene.extend({
             } else {
                 loginUI.enabled = false;
                 player.login(nameBox.getString(), function () {
+                    storage.setItem("name", name);
                     moveToMainUI();
                 }, function (error) {
                     loginUI.enabled = true;
@@ -146,7 +150,7 @@ var MainScene = cc.Scene.extend({
         this.addChild(optionButton);
 
         var homepageButton = creator.createButton(txt.mainScene.homepage, cc.size(150, 40), function () {
-	        cc.sys.openURL("http://www.newinfinideas.com");
+            cc.sys.openURL("http://www.newinfinideas.com");
         });
         homepageButton.setPosition(size.width - homepageButton.width / 2 - 10, homepageButton.height / 2 + 10);
         this.addChild(homepageButton);
