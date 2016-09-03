@@ -12,16 +12,17 @@ var serverInfo = JSON.stringify({ name: config.serverName, version: config.versi
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate')
     switch (url.parse(req.url).pathname) {
         case "/is-server":
             res.writeHead(200);
-            res.write(serverInfo);
+            res.end(serverInfo);
             break;
         default:
             res.writeHead(400);
+            res.end();
             break;
     }
-    res.end();
 }
 
 app.listen(config.port);
