@@ -6,7 +6,7 @@ var player = {
 
     login: function (name, onConnect, onError) {
         var xhr = cc.loader.getXMLHttpRequest();
-        xhr.open("GET", getNoCacheUrl("http://" + cc.game.config.server + "/is-server"));
+        xhr.open("GET", "http://" + cc.game.config.server + "/is-server");
         xhr.timeout = 5000;
         xhr.onerror = function (e) {
             onError(txt.mainScene.error);

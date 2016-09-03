@@ -43,13 +43,3 @@ function format(str) {
     }
     return str;
 }
-
-function getNoCacheUrl(url) {
-    if (cc.game.config.noCache && !cc.sys.isNative) {
-        if (/\?/.test(url))
-            url += "&_t=" + (new Date() - 0);
-        else
-            url += "?_t=" + (new Date() - 0);
-    }
-    return url;
-}

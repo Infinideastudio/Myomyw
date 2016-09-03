@@ -15,7 +15,7 @@ var lang = {
     },
 
     load: function (langName, cb) {
-        var path = getNoCacheUrl("res/lang/" + langName + ".json");
+        var path = "res/lang/" + langName + ".json";
         cc.loader.loadJson(path, function (err, data) {
             if (err) return cc.log("load lang file failed " + err);
             txt = data;
