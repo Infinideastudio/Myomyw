@@ -24,7 +24,7 @@
   "options": {
     "title": "Options",
     "standaloneTimer": "Enable time limit in standalone games",
-    "needSelect": "Confirm after selecting the column",
+    "forceCanvas": "Force Canvas(If the image is incorrect,\ntry to enable this, refresh to take effect)",
     "lang": "Language",
     "autoLang": "Automatically",
     "about": "About"

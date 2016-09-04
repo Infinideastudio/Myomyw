@@ -6,7 +6,6 @@ cc.game.onStart = function () {
     cc.view.adjustViewPort(true);
     cc.view.setDesignResolutionSize(800, 600, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
-    storage = cc.sys.localStorage;
     creator.init();
     lang.init();
     if (!cc.sys.isNative) {
@@ -24,4 +23,15 @@ cc.game.onStart = function () {
         }
     }, this);
 };
-cc.game.run();
+
+storage = cc.sys.localStorage;
+if (!cc.sys.isNative && storage.getItem("forceCanvas") == "true") {
+    cc.loader.loadJson("project.json", function (err, data) {
+        if (err) return cc.log("load lang file failed " + err);
+        data.renderMode = 1;
+        cc.game.run(data);
+    });
+}
+else{
+    cc.game.run();
+}

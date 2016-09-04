@@ -20,6 +20,15 @@ var OptionScene = MenuScene.extend({
             });
         list.addChild(standaloneTimerBox);
 
+        if (!cc.sys.isNative) {
+            var forceCanvasBox = creator.createCheckBoxButton(txt.options.forceCanvas, cc.size(600, 100),
+            storage.getItem("forceCanvas") == "true", function (sender, type) {
+                storage.setItem("forceCanvas", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
+            });
+            forceCanvasBox.getTitleRenderer().textAlign = cc.TEXT_ALIGNMENT_CENTER;
+            list.addChild(forceCanvasBox);
+        }
+
         list.addChild(creator.createButton(txt.options.lang, cc.size(600, 50), function () {
             cc.director.runScene(new LangOptionScene());
         }));

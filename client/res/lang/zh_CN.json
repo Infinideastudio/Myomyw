@@ -24,7 +24,7 @@
   "options": {
     "title": "选项",
     "standaloneTimer": "在单机游戏中限时",
-    "needSelect": "在选择列后进行确认",
+    "forceCanvas": "强制Canvas渲染（如果画面有问题，\n请尝试打开此项，刷新生效）",
     "lang": "语言",
     "autoLang": "自动设置语言",
     "about": "关于"
