@@ -15,21 +15,21 @@ var WelcomeScene = cc.Scene.extend({
         var label = creator.createLabel(txt.welcomeScene.title, 40);
         label.textAlign = cc.TEXT_ALIGNMENT_CENTER;
         label.boundingWidth = size.width;
-        label.setPosition(this.width / 2, this.height / 2 + 100);
+        label.setPosition(size.width / 2, size.height / 2 + 100);
         this.addChild(label);
 
         var okButton = creator.createButton(txt.welcomeScene.ok, cc.size(100, 40), function () {
             storage.setItem("playedBefore", true);
             cc.director.runScene(new TutorialGameScene());
         });
-        okButton.setPosition(this.width / 2 - 100, this.height / 2 - 50);
+        okButton.setPosition(size.width / 2 - 100, size.height / 2 - 50);
         this.addChild(okButton);
 
         var skipButton = creator.createButton(txt.welcomeScene.skip, cc.size(100, 40), function () {
             storage.setItem("playedBefore", true);
             cc.director.runScene(new MainScene());
         });
-        skipButton.setPosition(this.width / 2 + 100, this.height / 2 - 50);
+        skipButton.setPosition(size.width / 2 + 100, size.height / 2 - 50);
         this.addChild(skipButton);
     }
 });
