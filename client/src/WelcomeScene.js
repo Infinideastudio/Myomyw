@@ -19,14 +19,14 @@ var WelcomeScene = cc.Scene.extend({
         this.addChild(label);
 
         var okButton = creator.createButton(txt.welcomeScene.ok, cc.size(100, 40), function () {
-            storage.setItem("playedBefore", true);
+            storage.setItem("playedBefore", "true");
             cc.director.runScene(new TutorialGameScene());
         });
         okButton.setPosition(size.width / 2 - 100, size.height / 2 - 50);
         this.addChild(okButton);
 
         var skipButton = creator.createButton(txt.welcomeScene.skip, cc.size(100, 40), function () {
-            storage.setItem("playedBefore", true);
+            storage.setItem("playedBefore", "true");
             cc.director.runScene(new MainScene());
         });
         skipButton.setPosition(size.width / 2 + 100, size.height / 2 - 50);
