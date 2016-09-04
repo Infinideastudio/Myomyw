@@ -2,7 +2,7 @@ function Player(socket) {
     this.socket = socket;
     this.id = socket.id;
     this.name = null;
-    this.send = this.socket.emit.bind(socket);
+    this.emit = this.socket.emit.bind(socket);
     this.connected = true;
 }
 

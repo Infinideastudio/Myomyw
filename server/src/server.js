@@ -51,7 +51,7 @@ function connectHandler(player) {
         }
         else {
             console.log("Server is full!");
-            player.send('endGame', { reason: EndReason.serverFull });
+            player.emit('endGame', { reason: EndReason.serverFull });
             player.disconnect();
         }
     });

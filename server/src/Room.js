@@ -25,8 +25,8 @@ function Room(leftPlayer, rightPlayer, closeHandler, id) {
 
     this.setPlayer(this.leftPlayer, left);
     this.setPlayer(this.rightPlayer, right);
-    this.leftPlayer.send('start', { side: left, room: id, opponentName: this.rightPlayer.name });
-    this.rightPlayer.send('start', { side: right, room: id, opponentName: this.leftPlayer.name });
+    this.leftPlayer.emit('start', { side: left, room: id, opponentName: this.rightPlayer.name });
+    this.rightPlayer.emit('start', { side: right, room: id, opponentName: this.leftPlayer.name });
 
     this.createAndTellNextChessman();
 }
@@ -53,10 +53,10 @@ Room.prototype.onMove = function (side, data) {
     }
     if (this.movingCol != null && this.totalMovementTimes < config.maxMovementTimes) {
         this.totalMovementTimes++;
-        this.waitingPlayer().send('move', { col: data.col });
+        this.waitingPlayer().emit('move', { col: data.col });
         if (this.move(this.movingCol, this.nextChessman)) {
-            this.currentPlayer().send('endGame', { reason: EndReason.opponentWins });
-            this.waitingPlayer().send('endGame', { reason: EndReason.youWin });
+            this.currentPlayer().emit('endGame', { reason: EndReason.opponentWins });
+            this.waitingPlayer().emit('endGame', { reason: EndReason.youWin });
             clearTimeout(this.timeOutTID);
             this.close();
         } else {
@@ -72,13 +72,13 @@ Room.prototype.onEndTurn = function (side) {
     if (side == this.turn && this.movingCol != null && this.totalMovementTimes <= config.maxMovementTimes) {
         this.movingCol = null;
         this.setTurn(this.turn == left ? right : left);
-        this.currentPlayer().send('endTurn');
+        this.currentPlayer().emit('endTurn');
     }
 };
 
 Room.prototype.onDisconnect = function (side) {
     if (!this.ended) {
-        (side == left ? this.rightPlayer : this.leftPlayer).send('endGame', { reason: EndReason.opponentLeft });
+        (side == left ? this.rightPlayer : this.leftPlayer).emit('endGame', { reason: EndReason.opponentLeft });
         clearTimeout(this.timeOutTID);
         this.close();
     }
@@ -102,15 +102,15 @@ Room.prototype.setTurn = function (turn) {
 };
 
 Room.prototype.timeOut = function () {
-    this.currentPlayer().send('endGame', { reason: EndReason.youOutOfTime });
-    this.waitingPlayer().send('endGame', { reason: EndReason.opponentOutOfTime });
+    this.currentPlayer().emit('endGame', { reason: EndReason.youOutOfTime });
+    this.waitingPlayer().emit('endGame', { reason: EndReason.opponentOutOfTime });
     this.close();
 };
 
 Room.prototype.createAndTellNextChessman = function () {
     this.nextChessman = this.getRandomChessman();
-    this.leftPlayer.send('nextChessman', { chessman: this.nextChessman });
-    this.rightPlayer.send('nextChessman', { chessman: this.nextChessman });
+    this.leftPlayer.emit('nextChessman', { chessman: this.nextChessman });
+    this.rightPlayer.emit('nextChessman', { chessman: this.nextChessman });
 };
 
 Room.prototype.getRandomChessman = function () {
