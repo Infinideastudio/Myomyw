@@ -1,5 +1,5 @@
 # Myomyw
-**Beta 0.6 已发布！**
+**Beta 0.7 已发布！**
 ## 概述 Overview
 Myomyw是一款半棋牌游戏。不同于其他对战游戏的是，你的操作决定的是对方的胜负，因此你需要思考如何迫使对方让自己赢，这也是Myomyw这个名字的由来：Make your opponent make you win。
 ## 在线游戏 Play online

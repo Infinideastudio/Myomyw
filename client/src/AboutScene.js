@@ -4,7 +4,7 @@
             cc.director.runScene(new OptionScene());
         });
 
-        var text = "Myomyw Beta 0.6\nCopyright © 2016 Infinideas";
+        var text = "Myomyw Beta 0.7\nCopyright © 2016 Infinideas";
         var label = creator.createLabel(text, 20);
         label.textAlign = cc.TEXT_ALIGNMENT_CENTER;
         label.setPosition(size.width / 2, size.height / 2);
