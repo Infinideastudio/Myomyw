@@ -59,11 +59,11 @@
   },
   "tutorial": {
     "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nNow the black balls on\nthe chessboard are\n'common balls'.\nOn the upper\nleft and\nupper\nright of\nthe\nchessboard,\nthere are ejectors.\nTouch to continue...",
-    "s1": "Not translated",
-    "s2": "Not translated",
-    "s3": "Not translated",
-    "s4": "Not translated",
-    "s5": "Not translated",
-    "s6": "Not translated"
+    "s1": "Now it's your turn. Try to touch one of your ejectors. Long press to fire up to five pieces. The grid on the top is the Timer. Do not exceed the time.",
+    "s2": "Quite good. The red ball you've pushed out is the Victory Ball. If you push it off the board, you loses. Touch to continue...",
+    "s3": "These are another two types of balls. The green one, when it is pushed off, your opponent gain an extra column. The yellow one, on the contrary, removes a column. There are 10 columns at most and 3 at least.",
+    "s4": "The blue ball is Flipping Ball. When it is pushed off, the chessboard flips horizontally and your turn ends. Directly pass the chance to your opponent. Touch to continue...",
+    "s5": "The ball on the upper right indicates what type of ball it will be. When on touchscreen devices, you can press on the areas around the ejector, then move onto the ejector to highlight the columns. Touch to continue...",
+    "s6": "That's all the game rules. Go and get some practice in the real game! Touch to exit the tutorial."
   }
 }
