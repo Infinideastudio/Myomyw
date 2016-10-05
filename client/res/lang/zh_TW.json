@@ -24,7 +24,7 @@
   "options": {
     "title": "設定",
     "standaloneTimer": "在單機遊戲中限時",
-    "forceCanvas": "強制Canvas渲染（如果畫面有問題，\n請嘗試打開此項，重繪生效）",
+    "forceCanvas": "強制Canvas渲染（如果畫面有問題，\n請嘗試打開此項，刷新生效）",
     "lang": "語言",
     "autoLang": "自動選擇語言",
     "about": "關於"
