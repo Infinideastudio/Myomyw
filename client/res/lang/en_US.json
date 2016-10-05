@@ -10,7 +10,7 @@
     "emptyName": "The name cannot be empty",
     "nameTooLong": "The name is at most 15 characters",
     "login": "Login",
-    "loginAsGuest": "Login as a guest",
+    "loginAsGuest": "Login as Guest",
     "error": "Connection error",
     "timeout": "Connection timemout",
     "wrongReply": "Wrong server or the versions are not compatible",
@@ -23,14 +23,14 @@
   },
   "options": {
     "title": "Options",
-    "standaloneTimer": "Enable time limit in standalone games",
-    "forceCanvas": "Force Canvas(If the image is incorrect,\ntry to enable this, refresh to take effect)",
-    "lang": "Language",
-    "autoLang": "Automatically",
+    "standaloneTimer": "Enable time limit in singleplayer games",
+    "forceCanvas": "Forced canvas rendering (If the image is incorrect,\ntry this option, refresh to take effect)",
+    "lang": "Languages",
+    "autoLang": "Auto-detect",
     "about": "About"
   },
   "names": {
-    "notLogged": "Not Logged",
+    "notLogged": "Not logged in",
     "guest": "Guest",
     "left": "Green",
     "right": "Blue",
