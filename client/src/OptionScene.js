@@ -21,7 +21,7 @@ var OptionScene = MenuScene.extend({
         list.addChild(standaloneTimerBox);
 
         if (!cc.sys.isNative) {
-            var forceCanvasBox = creator.createCheckBoxButton(txt.options.forceCanvas, cc.size(600, 100),
+            var forceCanvasBox = creator.createCheckBoxButton(txt.options.forceCanvas, cc.size(600, 120),
             storage.getItem("forceCanvas") == "true", function (sender, type) {
                 storage.setItem("forceCanvas", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
             });

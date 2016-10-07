@@ -24,7 +24,7 @@
   "options": {
     "title": "Options",
     "standaloneTimer": "Enable time limit in singleplayer games",
-    "forceCanvas": "Forced canvas rendering (If the image is incorrect,\ntry this option, refresh to take effect)",
+    "forceCanvas": "Forced canvas rendering\n(If the image is incorrect, try this option.\nRefresh to take effect)",
     "lang": "Languages",
     "autoLang": "Auto-detect",
     "about": "About"
