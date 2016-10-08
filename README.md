@@ -3,7 +3,7 @@
 ## 概述 Overview
 Myomyw是一款半棋牌游戏。不同于其他对战游戏的是，你的操作决定的是对方的胜负，因此你需要思考如何迫使对方让自己赢，这也是Myomyw这个名字的由来：Make your opponent make you win。
 ## 在线游戏 Play online
-http://www.newinfinideas.com/myomyw/
+http://www.infinideas.org/myomyw/
 ## 游戏规则 Game rule
 游戏界面中左上和右上有两排发射器，中间是棋盘，轮到你时你可以点击或你的一个发射器，把对应列的球推出去，按住发射器可以连续发射球，但最多只能发射五次。
 
