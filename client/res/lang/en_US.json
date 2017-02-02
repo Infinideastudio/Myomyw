@@ -12,7 +12,7 @@
     "login": "Login",
     "loginAsGuest": "Login as Guest",
     "error": "Connection error",
-    "timeout": "Connection timemout",
+    "timeout": "Connection timed out",
     "wrongReply": "Wrong server or the versions are not compatible",
     "logout": "Logout",
     "playWithAI": "Play with Computer",
