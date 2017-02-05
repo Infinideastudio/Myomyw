@@ -23,7 +23,8 @@ http://www.infinideas.org/myomyw/
 2. 使用引擎目录下的`setup.py`进行配置安装。（需要使用Python2.x。）如果你要编译到Android上，你需要配置NDK，Android SDK和Ant；如果你要发布Web的Release版，你需要配置Ant；否则你可以跳过这几项的配置。
 3. 在Repo目录下执行`cocos new Myomyw -l js`。
 4. 完成后Repo目录下会多出一个名为`Myomyw`的目录。把这个目录里的`frameworks`文件夹移动到Repo目录下的`client`中。
-5. 删除`Myomyw`目录即可。
+5. 删除`Myomyw`目录。
+6. 将`platform-res`中的内容复制到`frameworks/runtime-src`中。（如果`platform-res`中的内容更新请再次执行此操作。）
 
 在`client/project.json`中可以配置服务器的地址。
 ### 服务端 Server
