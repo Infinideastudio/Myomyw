@@ -28,6 +28,5 @@
     "src/AIGameScene.js",
     "src/OnlineGameScene.js",
     "src/TutorialGameScene.js"
-  ],
-  "server": "127.0.0.1:8650"
+  ]
 }

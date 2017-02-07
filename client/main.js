@@ -15,6 +15,7 @@ cc.game.onStart = function () {
         player.name = txt.names.notLogged;
         cc.director.setClearColor(cc.color(255, 255, 255));
         size = cc.winSize;
+        player.loadServer();
         if (storage.getItem("playedBefore") == "true") {
             cc.director.runScene(new MainScene());
         }
