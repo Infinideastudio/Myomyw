@@ -8,7 +8,7 @@ var app = http.createServer(httpHandler);
 var rooms = [];
 var matchingPlayer = null;
 var EndReason = { serverFull: 5 };
-var serverInfo = JSON.stringify({ name: config.serverName, version: config.version });
+var serverInfo = JSON.stringify({ version: config.version });
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);

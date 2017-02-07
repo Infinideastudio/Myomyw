@@ -3,7 +3,6 @@ var player = {
     logged: false,
     name: null,
     server: null,
-    serverName: null,
 
     loadServer: function () {
         if (cc.game.config.server) {
@@ -35,9 +34,8 @@ var player = {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 var response = xhr.responseText;
                 var data = JSON.parse(response);
-                if ("version" in data && "name" in data && data.version == "0.7") {
+                if ("version" in data && data.version == "0.7") {
                     player.name = name;
-                    player.serverName = data.name;
                     player.guest = false;
                     player.logged = true;
                     onConnect();

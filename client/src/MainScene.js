@@ -123,11 +123,7 @@ var MainScene = cc.Scene.extend({
         var playerLabel = creator.createLabel("", 25);
         mainUI.addChild(playerLabel);
         function updatePlayerLabel() {
-            var str = player.name;
-            if (!player.guest) {
-                str += "   " + txt.mainScene.serverName + player.serverName;
-            }
-            playerLabel.string = str;
+            playerLabel.string = player.name;
             playerLabel.setPosition(playerLabel.width / 2 + 20, size.height - playerLabel.height / 2 - 20);
         }
 

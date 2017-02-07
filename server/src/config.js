@@ -2,7 +2,6 @@
     port: 8650,
     allowOrigin: '*',
     maxRooms: 100,
-    serverName: 'A Myomyw Server',
     version: '0.7',
 
     defaultLCol: 6,
