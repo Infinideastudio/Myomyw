@@ -4,7 +4,7 @@ cc.game.onStart = function () {
 
     cc.view.enableRetina(cc.sys.os === cc.sys.OS_IOS ? true : false);
     cc.view.adjustViewPort(true);
-    cc.view.setDesignResolutionSize(800, 600, cc.ResolutionPolicy.SHOW_ALL);
+    cc.view.setDesignResolutionSize(1280, 720, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     creator.init();
     lang.init();
@@ -33,6 +33,6 @@ if (!cc.sys.isNative && storage.getItem("forceCanvas") == "true") {
         cc.game.run(data);
     });
 }
-else{
+else {
     cc.game.run();
 }
