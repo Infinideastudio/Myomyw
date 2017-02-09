@@ -1,5 +1,6 @@
 var res = {
     MainSceneBG_png: "res/UI/MainSceneBG.png",
+    Title_png: "res/UI/Title.png",
     EditBox_png: "res/UI/EditBox.png",
     Button_png: "res/UI/Button.png",
     HighlightedButton_png: "res/UI/HighlightedButton.png",
