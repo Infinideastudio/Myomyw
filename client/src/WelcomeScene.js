@@ -18,18 +18,18 @@ var WelcomeScene = cc.Scene.extend({
         label.setPosition(size.width / 2, size.height / 2 + 100);
         this.addChild(label);
 
-        var okButton = creator.createButton(txt.welcomeScene.ok, cc.size(100, 40), function () {
+        var okButton = creator.createButton(txt.welcomeScene.ok, cc.size(150, 50), function () {
             storage.setItem("playedBefore", "true");
             cc.director.runScene(new TutorialGameScene());
         });
-        okButton.setPosition(size.width / 2 - 100, size.height / 2 - 50);
+        okButton.setPosition(size.width / 2 - 120, size.height / 2 - 50);
         this.addChild(okButton);
 
-        var skipButton = creator.createButton(txt.welcomeScene.skip, cc.size(100, 40), function () {
+        var skipButton = creator.createButton(txt.welcomeScene.skip, cc.size(150, 50), function () {
             storage.setItem("playedBefore", "true");
             cc.director.runScene(new MainScene());
         });
-        skipButton.setPosition(size.width / 2 + 100, size.height / 2 - 50);
+        skipButton.setPosition(size.width / 2 + 120, size.height / 2 - 50);
         this.addChild(skipButton);
     }
 });

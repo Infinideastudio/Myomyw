@@ -14,7 +14,7 @@ var OptionScene = MenuScene.extend({
         list.setPosition(size.width / 2, size.height / 2 - 10);
         this.addChild(list);
 
-        var standaloneTimerBox = creator.createCheckBoxButton(txt.options.standaloneTimer, cc.size(600, 50),
+        var standaloneTimerBox = creator.createCheckBoxButton(txt.options.standaloneTimer, cc.size(600, 60),
             storage.getItem("standaloneTimer") != "false", function (sender, type) {
                 storage.setItem("standaloneTimer", type == ccui.CheckBox.EVENT_SELECTED ? "true" : "false");
             });
@@ -29,11 +29,11 @@ var OptionScene = MenuScene.extend({
             list.addChild(forceCanvasBox);
         }
 
-        list.addChild(creator.createButton(txt.options.lang, cc.size(600, 50), function () {
+        list.addChild(creator.createButton(txt.options.lang, cc.size(600, 60), function () {
             cc.director.runScene(new LangOptionScene());
         }));
 
-        list.addChild(creator.createButton(txt.options.about, cc.size(600, 50), function () {
+        list.addChild(creator.createButton(txt.options.about, cc.size(600, 60), function () {
             cc.director.runScene(new AboutScene());
         }));
         return true;

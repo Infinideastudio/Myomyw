@@ -8,7 +8,7 @@ var MenuScene = cc.Scene.extend({
         backButton.setName("backButton");
         this.addChild(backButton);
 
-        var title = creator.createLabel(titleText, 30);
+        var title = creator.createLabel(titleText, 35);
         title.setPosition(size.width / 2, size.height - title.height / 2 - 10);
         title.setName("title");
         this.addChild(title);

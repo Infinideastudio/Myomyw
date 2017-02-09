@@ -25,8 +25,8 @@ var creator = {
         return label;
     },
 
-    createEditBox: function (placeHolder) {
-        var editBox = new cc.EditBox(cc.size(500, 50), new cc.Scale9Sprite(res.EditBox_png));
+    createEditBox: function (placeHolder, size) {
+        var editBox = new cc.EditBox(size, new cc.Scale9Sprite(res.EditBox_png));
         editBox.setFont(creator.normalFont, 25);
         editBox.setFontColor(cc.color(0, 0, 0));
         editBox.setPlaceHolder(placeHolder);

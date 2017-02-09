@@ -37,7 +37,7 @@ var LangOptionScene = MenuScene.extend({
             }
         }
 
-        var autoLangButton = creator.createButton(txt.options.autoLang, cc.size(600, 50), onTouchedButton);
+        var autoLangButton = creator.createButton(txt.options.autoLang, cc.size(600, 60), onTouchedButton);
         autoLangButton.tag = -1;
         autoLangButton.loadTextureDisabled(res.HighlightedButton_png);
         if (lang.autoLang) {
@@ -47,7 +47,7 @@ var LangOptionScene = MenuScene.extend({
         list.addChild(autoLangButton);
 
         for (var i = 0; i < lang.langs.length; i++) {
-            var button = creator.createButton(lang.langs[i][0], cc.size(600, 50), onTouchedButton);
+            var button = creator.createButton(lang.langs[i][0], cc.size(600, 60), onTouchedButton);
             button.tag = i;
             button.loadTextureDisabled(res.HighlightedButton_png);
             if (!lang.autoLang && lang.langs[i][1] == lang.currentLang) {

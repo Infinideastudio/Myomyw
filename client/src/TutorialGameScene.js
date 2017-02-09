@@ -9,7 +9,7 @@ var TutorialGameScene = GameScene.extend({
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
             onTouchBegan: this.touched.bind(this)
         }, this);
-        this.tutorialLabel = creator.createLabel("", 20);
+        this.tutorialLabel = creator.createLabel("", 25);
         this.changeText(txt.tutorial.s0);
         this.addChild(this.tutorialLabel);
         return true;
@@ -73,7 +73,7 @@ var TutorialGameScene = GameScene.extend({
 
     changeText: function (text) {
         this.tutorialLabel.string = text;
-        this.tutorialLabel.setPosition(this.tutorialLabel.width / 2 + 10,
+        this.tutorialLabel.setPosition(this.tutorialLabel.width / 2 + 20,
             size.height - this.tutorialLabel.height / 2 - 60);
     },
 
