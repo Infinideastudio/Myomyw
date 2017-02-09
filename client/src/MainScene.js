@@ -146,7 +146,7 @@ var MainScene = cc.Scene.extend({
         this.addChild(optionButton);
 
         var homepageButton = creator.createButton(txt.mainScene.homepage, cc.size(200, 50), function () {
-            cc.sys.openURL("http://www.newinfinideas.com");
+            cc.sys.openURL("http://www.infinideas.org");
         });
         homepageButton.setPosition(size.width - homepageButton.width / 2 - 10, homepageButton.height / 2 + 20);
         this.addChild(homepageButton);
