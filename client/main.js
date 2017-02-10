@@ -6,6 +6,8 @@ cc.game.onStart = function () {
     cc.view.adjustViewPort(true);
     cc.view.setDesignResolutionSize(1280, 720, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
+    cc.director.setClearColor(cc.color(255, 255, 255));
+    size = cc.winSize;
     creator.init();
     lang.init();
     var ready = false;
@@ -29,8 +31,6 @@ cc.game.onStart = function () {
     }
     cc.LoaderScene.preload(g_resources, function () {
         player.name = txt.names.notLogged;
-        cc.director.setClearColor(cc.color(255, 255, 255));
-        size = cc.winSize;
         loaded();
     }, this);
 };
@@ -38,7 +38,7 @@ cc.game.onStart = function () {
 storage = cc.sys.localStorage;
 if (!cc.sys.isNative && storage.getItem("forceCanvas") == "true") {
     cc.loader.loadJson("project.json", function (err, data) {
-        if (err) return cc.log("load lang file failed " + err);
+        if (err) return cc.log("load project file failed " + err);
         data.renderMode = 1;
         cc.game.run(data);
     });
