@@ -4,16 +4,19 @@ var player = {
     name: null,
     server: null,
 
-    loadServer: function () {
+    loadServer: function (onCompeleted, onError) {
         if (cc.game.config.server) {
             player.server = cc.game.config.server;
         } else {
             var xhr = cc.loader.getXMLHttpRequest();
             xhr.open("GET", "http://www.infinideas.org/myomyw/server.txt");
             xhr.timeout = 5000;
+            xhr.onerror = onError;
+            xhr.ontimeout = onError;
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     player.server = xhr.responseText;
+                    onCompeleted();
                 }
             };
             xhr.send();
