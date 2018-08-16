@@ -143,8 +143,8 @@ new_room参数表示用户是否新建房间（true表示新建）
 {
 	"event" : "enter",
 	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
-	"watched" ： "false",
-  	"new_room" : "true",
+	"watched" ： false,
+  	"new_room" : true,
 	"room_id" : 233
 }
 ```
@@ -165,7 +165,7 @@ error_code表示服务器返回的错误代码
 ```json
 {
   	"event" : "enter",
- 	"error_code" : 0x00
+ 	"error_code" : 0x10
 }
 ```
 
@@ -189,7 +189,7 @@ is_first表示玩家是否为先手
 	"event" : "start",
   	"opponent_name" : "qzr",
   	"overtime" : 20000,
-  	"is_first" : "true"
+  	"is_first" : true
 }
 ```
 
@@ -207,7 +207,7 @@ ready=true表示已收到
 {
   	"event" : "ready",
   	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
-  	"ready" : "true"
+  	"ready" : true
 }
 ```
 
@@ -228,7 +228,7 @@ error_code表示错误代码
 ```json
 {
     "event" : "ready",
-    "error_code" : 0x00
+    "error_code" : 0x20
 }
 ```
 
@@ -284,7 +284,7 @@ ended表示游戏是否结束
 {
     "event" : "gaming",
   	"ended" : 0x00,
-    "succeed" :"true",
+    "succeed" :true,
     "col" : 5,
     "next_ball" : 1
 }
@@ -306,7 +306,7 @@ uuid表示用户的uuid
 {
   	"event" : "received", 
   	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
-  	"received" : "true"
+  	"received" : true
 }
 ```
 
