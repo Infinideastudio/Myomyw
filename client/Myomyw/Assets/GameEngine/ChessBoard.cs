@@ -11,37 +11,23 @@ public enum ChessType
 
 public class ChessBoard
 {
-    private delegate void Operation();
-
-    public class ChessOperation
-    {
-        public void Process()
-        {
-            if (OnOperation != null) 
-                OnOperation();
-            if (_operation != null)
-                _operation();
-        }
-
-        public delegate void OnOperationEvent();
-
-        private event OnOperationEvent OnOperation;
-
-        private Operation _operation;
-    }
+    private readonly Dictionary<ChessType, Operation> _operations = new Dictionary<ChessType, Operation>();
 
     private ChessType[] _chessBoard;
-
-    private int _sizeLeft, _sizeRight;
-
-    private readonly Dictionary<ChessType, Operation> _operations = new Dictionary<ChessType, Operation>();
 
     public ChessBoard()
     {
         _operations.Add(ChessType.Normal, null);
-
     }
+    
+    public static ChessBoard Current { get; private set; }
 
+    public int SizeLeft { get; private set; }
+
+    public int SizeRight { get; private set; }
+
+    public void MakeCurrent() => Current = this;
+    
     private void ProcessExtraChess(ChessType type)
     {
         _operations[type]();
@@ -49,7 +35,7 @@ public class ChessBoard
 
     private ChessType GetChess(int left, int right)
     {
-        return _chessBoard[left * _sizeLeft + right];
+        return _chessBoard[left * SizeLeft + right];
     }
 
     private void ResizeBoard(int newSizeLeft, int newSizeRight)
@@ -59,8 +45,24 @@ public class ChessBoard
         for (var j = 0; j < newSizeRight; ++j)
             board[i * newSizeLeft + j] = GetChess(i, j);
         _chessBoard = board;
-        _sizeLeft = newSizeLeft;
-        _sizeRight = newSizeRight;
+        SizeLeft = newSizeLeft;
+        SizeRight = newSizeRight;
     }
-    
+
+    private delegate void Operation();
+
+    public class ChessOperation
+    {
+        public delegate void OnOperationEvent();
+
+        private Operation _operation;
+
+        public void Process()
+        {
+            OnOperation?.Invoke();
+            _operation?.Invoke();
+        }
+
+        private event OnOperationEvent OnOperation;
+    }
 }

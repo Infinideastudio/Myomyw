@@ -31,6 +31,7 @@ packages/
 # Unity generated
 # ===============
 [Oo]bj/
+[Tt]emp
 [Bb]uild
 [Ll]ibrary
 sysinfo.txt

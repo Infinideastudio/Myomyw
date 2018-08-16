@@ -1,21 +1,21 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class Game : MonoBehaviour
+public class ChessBoardGrid : MonoBehaviour
 {
     // Use this for initialization
     private void Start()
     {
-        
     }
 
     // Update is called once per frame
     private void Update()
     {
+        UpdateChessBoard(gameObject);
     }
 
-    public void ExitGame()
+    private void UpdateChessBoard(GameObject canvas)
     {
-        SceneManager.LoadScene(0);
+        var chessBoard = ChessBoard.Current;
+        
     }
 }
