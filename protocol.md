@@ -6,11 +6,11 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 #### Request
 
-event为regist
-
-username表示玩家用户名，为一个长度位于3-15的字符串，且不包含特殊字符（不包括_）
-
-email表示用户邮箱
+|参数名|描述|类型|可选|
+|---|---|---|---|
+|event|register|string|必须|
+|username|表示玩家用户名，为一个长度位于3-15的字符串|string|必须|
+|email|表示用户邮箱|string|必须|
 
 ##### example
 
