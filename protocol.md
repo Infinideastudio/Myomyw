@@ -1,7 +1,7 @@
 # Myomyw协议
 
 Myomyw的数据包采用json格式发送，每个json的具体格式如下
-## 注意：文中所有十六进制在实际传输中请用十进制
+**注意：文中所有十六进制在实际传输中请转化成十进制**
 
 ## 注册
 
@@ -40,7 +40,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ```json
 {
   	"event" : "register",
-	"error_code" : 0
+	"error_code" : 0x00
 }
 ```
 
