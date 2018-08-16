@@ -165,7 +165,7 @@ error_code表示服务器返回的错误代码
 ```json
 {
   	"event" : "enter",
- 	"error_code" : 0x10
+ 	"error_code" : 0x00
 }
 ```
 
@@ -228,7 +228,7 @@ error_code表示错误代码
 ```json
 {
     "event" : "ready",
-    "error_code" : 0x20
+    "error_code" : 0x00
 }
 ```
 
