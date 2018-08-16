@@ -1,6 +1,7 @@
 # Myomyw协议
 
 Myomyw的数据包采用json格式发送，每个json的具体格式如下
+## 注意：文中所有十六进制在实际传输中请用十进制
 
 ## 注册
 
@@ -102,14 +103,14 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
   	"event" : "log_in",
 	"error_code" : 0x00 ,
 	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
-  	"rating" : 2333
+  	"rating" : 2333,
   	"rooms" : [
    	{
     	"waited" : true,
       	"player1" :"ob",
       	"watched_num" : 5
   	}
-  	]
+  	],
   	"rank" : [
       	{
        		"user_name" : "qzr",
@@ -142,7 +143,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 {
 	"event" : "enter",
 	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
-	"watched" ： false,
+	"watched" : false,
   	"new_room" : true,
 	"room_id" : 233
 }
