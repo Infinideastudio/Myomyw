@@ -5,12 +5,11 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ## 注册
 
 #### Request
-
-|参数名|描述|类型|可选|
-|---|---|---|---|
-|event|register|string|必须|
-|username|表示玩家用户名，为一个长度位于3-15的字符串|string|必须|
-|email|表示用户邮箱|string|必须|
+|   参数名    |          描述           |   类型   |  可选  |
+| :------: | :-------------------: | :----: | :--: |
+|  event   |       register        | string |      |
+| username | 玩家用户名，为一个长度位于3-15的字符串 | string |      |
+|  email   |         用户邮箱          | string |      |
 
 ##### example
 
@@ -23,15 +22,17 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ```
 
 #### Response
+|    参数名     |    描述    |   类型   |  可选  |
+| :--------: | :------: | :----: | :--: |
+|   event    | register | string |      |
+| error_code |   错误代码   |  int   |      |
 
-event为regist
-
-error_code为错误代码
-
-- 0x00表示注册成功
-- 0x41表示用户名不符合要求
-- 0x42表示邮箱错误
-- 0xff表示UKE
+| error_code |    描述    |
+| :--------: | :------: |
+|    0x00    |   注册成功   |
+|    0x41    | 用户名不符合要求 |
+|    0x42    |   邮箱错误   |
+|    0xff    |   UKE    |
 
 ##### example
 
@@ -49,13 +50,11 @@ error_code为错误代码
 ## 登陆
 
 #### Request 
-event为login
-
-username表示玩家用户名，为一个长度位于3-15的字符串，且不包含特殊字符（不包括_）
-
-password表示用户密码散列值
-
-version表示用户当前版本号
+|   参数名    |          描述           |   类型   |  可选  |
+| :------: | :-------------------: | :----: | :--: |
+|  event   |         login         | string |      |
+| username | 玩家用户名，为一个长度位于3-15的字符串 | string |      |
+| version  |        用户当前版本号        | string |      |
 
 ##### example 
 ```json
@@ -67,32 +66,35 @@ version表示用户当前版本号
 ```
 
 #### Response
+|    参数名     |       描述       |   类型   |  可选  |
+| :--------: | :------------: | :----: | :--: |
+|   event    |     login      | string |      |
+| error_code |   服务器返回的错误代码   | string |      |
+|    uuid    | 用户的唯一身份(uuid4) | string | yes  |
+|   rooms    |       房间       |   数组   | yes  |
+|   rating   |     用户等级分      |  int   | yes  |
+|    rank    |    排名前十的用户     |   数组   | yes  |
 
-event为log_in
+| error_code |    描述    |
+| :--------: | :------: |
+|    0x00    |   登陆成功   |
+|    0x01    | 用户名或密码错误 |
+|    0x02    |  服务器正忙   |
+|    0x03    |  版本不匹配   |
+|    0xff    |   UKE    |
 
-error_code表示服务器返回的错误代码
+|  rooms  |          描述          |   类型   |  可选  |
+| :-----: | :------------------: | :----: | :--: |
+|   num   |         房间编号         |  int   |      |
+| waited  |       是否处于等待状态       |  bool  |      |
+| player1 |  第一玩家名字（player1为先手）  | string |      |
+| player2 | waited=false时，第二玩家名字 | string | yes  |
+| locked  |    房间是否加锁（即需要密码）     |  bool  |      |
 
-- 0x00为登陆成功
-- 0x01为用户名或密码错误
-- 0x02为服务器正忙
-- 0x03为版本不匹配
-- 0xff表示UKE
-
-如果error_code=0x00，返回uuid表示用户的唯一身份(uuid4)
-
-如果error_code=0x00，返回rooms数组，类型为列表
-
-- 列表中num表示房间编号
-- waited表示是否处于等待状态
-- player1表示第一玩家名字（player1为先手）
-- 如果waited=false，则有player2表示第二玩家名字
-- locked表示房间是否加锁（即需要密码）
-
-返回rating表示当前用户等级分
-
-返回rank数组，为一列表表示排名前十的用户
-- user_name为用户名字
-- rating为等级分
+|   rank    |  描述  |   类型   |  可选  |
+| :-------: | :--: | :----: | :--: |
+| user_name | 用户名字 | string |      |
+|  rating   | 等级分  |  int   |      |
 
 ##### example
 ```json
@@ -126,17 +128,14 @@ error_code表示服务器返回的错误代码
 ## 进入房间
 
 #### Request
-event为enter
-
-uuid参数表示Server返回的uuid
-
-watched参数表示是否旁观
-
-new_room参数表示用户是否新建房间（true表示新建）
-
-如果new_room=false，room_id参数表示用户选择的房间（为已有房间,或者room_id=0表示随机进房）
-
-如果房间locked=true则需提供password表示密码
+|   参数名    |                描述                |   类型   |  可选  |
+| :------: | :------------------------------: | :----: | :--: |
+|  event   |              enter               | string |      |
+|   uuid   |          Server返回的uuid           | string |      |
+| watched  |               是否旁观               |  bool  |      |
+| new_room |        用户是否新建房间（true表示新建）        |  bool  |      |
+| room_id  | 用户选择的房间（为已有房间,或者room_id=0表示随机进房） |  int   | yes  |
+| password |                密码                | string | yes  |
 
 ##### example
 ```json
@@ -150,15 +149,18 @@ new_room参数表示用户是否新建房间（true表示新建）
 ```
 ##### Response
 
-event为enter
+|    参数名     |  描述   |   类型   |  可选  |
+| :--------: | :---: | :----: | :--: |
+|   event    | enter | string |      |
+| error_code | 错误代码  |  int   |      |
 
-error_code表示服务器返回的错误代码
-
-- 0x00表示成功连接
-- 0x11表示房间人已满
-- 0x12表示无法创建更多的房间
-- 0x13表示密码错误或没有提供密码
-- 0xff表示UKE
+| error_code |     描述      |
+| :--------: | :---------: |
+|    0x00    |    成功连接     |
+|    0x11    |    房间人已满    |
+|    0x12    |  无法创建更多的房间  |
+|    0x13    | 密码错误或没有提供密码 |
+|    0xff    |     UKE     |
 
 ##### example
 
@@ -174,13 +176,13 @@ error_code表示服务器返回的错误代码
 ## 开始游戏
 
 #### Request (Server发送)
-event为start
 
-opponent_name表示对手名字
-
-overtime表示超时时间（以ms为单位）
-
-is_first表示玩家是否为先手
+|      参数名      |      描述      |   类型   |  可选  |
+| :-----------: | :----------: | :----: | :--: |
+|     event     |    start     | string |      |
+| opponent_name |     对手名字     | string |      |
+|   overtime    | 超时时间（以ms为单位） |  int   |      |
+|   is_first    |   玩家是否为先手    |  bool  |      |
 
 ##### example
 
@@ -194,12 +196,11 @@ is_first表示玩家是否为先手
 ```
 
 #### Response(Client发送)
-
-event为ready
-
-uuid表示用户的uuid
-
-ready=true表示已收到
+|  参数名  |    描述     |   类型   |  可选  |
+| :---: | :-------: | :----: | :--: |
+| event |   ready   | string |      |
+| uuid  |  用户的uuid  | string |      |
+| ready | true表示已收到 |  bool  |      |
 
 ##### example
 
@@ -213,15 +214,16 @@ ready=true表示已收到
 
 #### Response(Server发送)
 
-event为ready
+|    参数名     |  描述   |   类型   |  可选  |
+| :--------: | :---: | :----: | :--: |
+|   event    | ready | string |      |
+| error_code | 错误代码  |  int   |      |
 
-error_code表示错误代码
-
-- 0x00表示正常开始游戏
-
-- 0x21表示对方在一定时间内未发送ready
-
-- 0xff表示UKE
+| error_code |        描述        |
+| :--------: | :--------------: |
+|    0x00    |      正常开始游戏      |
+|    0x21    | 对方在一定时间内未发送ready |
+|    0xff    |       UKE        |
 
 ##### example
 
@@ -232,17 +234,16 @@ error_code表示错误代码
 }
 ```
 
-
 ---
 
 ## 游戏过程中
 
 #### Request
-event为gaming
-
-uuid表示用户的uuid
-
-col表示用户操作的行号
+|  参数名  |   描述    |   类型   |  可选  |
+| :---: | :-----: | :----: | :--: |
+| event | gaming  | string |      |
+| uuid  | 用户的uuid | string |      |
+|  col  | 用户操作的行号 |  int   |      |
 
 ##### example
 
@@ -256,27 +257,22 @@ col表示用户操作的行号
 
 #### Response（同时对两个Client发送）
 
-event为gaming
+|    参数名    |              描述              |   类型   |  可选  |
+| :-------: | :--------------------------: | :----: | :--: |
+|   event   |            gaming            | string |      |
+|   ended   |            游戏是否结束            |  int   |      |
+|  succeed  |            操作是否成功            |  bool  | yes  |
+|    col    |        移动行号(一开始col为0)        |  int   | yes  |
+| next_ball | 下一个球的类型(1:N,2:=,3:-,4:R,5:V) |  int   | yes  |
 
-ended表示游戏是否结束
-
-- 0x00表示游戏未结束
-
-- 0x31表示对方超时
-
-- 0x32表示自己超时
-
-- 0x33表示自己赢得比赛
-
-- 0x34表示自己输掉比赛
-
-- 0xff表示服务器发生错误
-
-返回succeed表示操作是否成功
-
-返回col表示移动行号(一开始col为0)
-
-返回next_ball表示下一个球的类型
+| ended |   描述    |
+| :---: | :-----: |
+| 0x00  |  游戏未结束  |
+| 0x31  |  对方超时   |
+| 0x32  |  自己超时   |
+| 0x33  | 自己赢得比赛  |
+| 0x34  | 自己输掉比赛  |
+| 0xff  | 服务器发生错误 |
 
 ##### example
 
@@ -294,11 +290,11 @@ ended表示游戏是否结束
 
 #### Response(双方Client)
 
-event为received
-
-uuid表示用户的uuid
-
-返回received=true表示接收到参数
+|   参数名    |     描述      |   类型   |  可选  |
+| :------: | :---------: | :----: | :--: |
+|  event   |  received   | string |      |
+|   uuid   |   用户的uuid   | string |      |
+| received | true表示接收到参数 |  bool  |      |
 
 ##### example
 
@@ -316,11 +312,11 @@ uuid表示用户的uuid
 
 #### Request
 
-event为chat
-
-uuid为用户的uuid
-
-text为用户聊天内容
+|  参数名  |   描述    |   类型   |  可选  |
+| :---: | :-----: | :----: | :--: |
+| event |  chat   | string |      |
+| uuid  | 用户的uuid | string |      |
+| text  | 用户聊天内容  | string |      |
 
 ##### example
 
@@ -335,12 +331,11 @@ text为用户聊天内容
 
 
 #### Response（对房间内所有人广播）
-
-event为chat
-
-user_name为讲话用户名字
-
-text为用户聊天内容
+|    参数名    |   描述   |   类型   |  可选  |
+| :-------: | :----: | :----: | :--: |
+|   event   |  chat  | string |      |
+| user_name | 讲话用户名字 | string |      |
+|   text    | 用户聊天内容 | string |      |
 
 ##### example
 
