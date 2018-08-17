@@ -11,8 +11,9 @@ var (
 )
 
 func main() {
+	server := NewServer()
 	flag.Parse()
-	http.HandleFunc("/is-server", serveVersion)
-	http.HandleFunc("/ws", serveWs)
+	http.HandleFunc("/is-server", server.ServeVersion)
+	http.HandleFunc("/ws", server.ServeWs)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }

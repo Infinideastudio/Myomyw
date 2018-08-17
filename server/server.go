@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -14,17 +15,51 @@ const (
 	Version = "1.0"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+type Room struct {
+	ID       int      `json:"id"`
+	Waiting  bool     `json:"waiting"`
+	Players  []string `json:"players"`
+	Locked   bool     `json:"locked"`
+	password string
 }
 
-// (WS) route /ws
-func serveWs(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+type User struct {
+	UUID        string
+	email       string
+	roomPlaying *Room
+}
+
+type Server struct {
+	upgrader  websocket.Upgrader
+	rooms     []Room
+	roomMutex *sync.RWMutex
+	users     []User
+	userMutex *sync.RWMutex
+}
+
+// NewServer Create a server instance
+func NewServer() Server {
+	server := Server{}
+	server.upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	server.roomMutex = &sync.RWMutex{}
+	return server
+}
+
+func (server Server) getRooms() []Room {
+	server.roomMutex.RLock()
+	defer server.roomMutex.RUnlock()
+	return server.rooms
+}
+
+// ServeWs (WS) route /ws
+func (server Server) ServeWs(w http.ResponseWriter, r *http.Request) {
+	c, err := server.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
@@ -56,7 +91,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			if handler, ok := handlers[strAction]; ok {
-				handler(c, parsedMessage)
+				handler(server, c, message)
 			} else {
 				log.Println("Error occured. Invalid action "+action.(string)+" found. The message is", parsedMessage)
 				continue
@@ -66,8 +101,8 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// (HTTP) route /is-server
-func serveVersion(w http.ResponseWriter, r *http.Request) {
+// ServeVersion (HTTP) route /is-server
+func (server Server) ServeVersion(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/is-server" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
