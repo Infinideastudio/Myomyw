@@ -1,7 +1,7 @@
 # Myomyw协议
 
 Myomyw的数据包采用json格式发送，每个json的具体格式如下
-**注意：文中所有十六进制在实际传输中请转化成十进制**
+## 注意：文中所有十六进制在实际传输中请用十进制
 
 ## 注册
 
@@ -40,7 +40,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ```json
 {
   	"action" : "register",
-	"error_code" : 0x00
+	"error_code" : 0
 }
 ```
 
@@ -54,6 +54,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 |   参数名    |          描述           |   类型   |  可选  |
 | :------: | :-------------------: | :----: | :--: |
 |  action   |         login         | string |      |
+| uuid | 玩家UUID，若不填则视为新用户 | string |  是 |
 | username | 玩家用户名，为一个长度位于3-15的字符串 | string |      |
 | version  |        用户当前版本号        | string |      |
 
@@ -62,7 +63,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 {
 	"action" : "login",
 	"username" : "null" ,
-	"version" : "0.7"
+	"version" : "1.0"
 }
 ```
 
@@ -70,11 +71,11 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 |    参数名     |       描述       |   类型   |  可选  |
 | :--------: | :------------: | :----: | :--: |
 |   action    |     login      | string |      |
-| error_code |   服务器返回的错误代码   | string |      |
+| error_code |   服务器返回的错误代码   | int |      |
 |    uuid    | 用户的唯一身份(uuid4) | string | yes  |
-|   rooms    |       房间       |   数组   | yes  |
+|   rooms    |       房间       |   Room[]   | yes  |
 |   rating   |     用户等级分      |  int   | yes  |
-|    rank    |    排名前十的用户     |   数组   | yes  |
+|    rank    |    排名前十的用户     |   Rank[]   | yes  |
 
 | error_code |    描述    |
 | :--------: | :------: |
@@ -84,17 +85,16 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 |    0x03    |  版本不匹配   |
 |    0xff    |   UKE    |
 
-|  rooms  |          描述          |   类型   |  可选  |
+|  Room  |          描述          |   类型   |  可选  |
 | :-----: | :------------------: | :----: | :--: |
-|   num   |         房间编号         |  int   |      |
-| waited  |       是否处于等待状态       |  bool  |      |
-| player1 |  第一玩家名字（player1为先手）  | string |      |
-| player2 | waited=false时，第二玩家名字 | string | yes  |
+|   id   |         房间编号         |  int   |      |
+| waiting  |       是否处于等待状态       |  bool  |      |
+| player |  玩家名字  | string[] |      |
 | locked  |    房间是否加锁（即需要密码）     |  bool  |      |
 
-|   rank    |  描述  |   类型   |  可选  |
+|   Rank    |  描述  |   类型   |  可选  |
 | :-------: | :--: | :----: | :--: |
-| user_name | 用户名字 | string |      |
+| username | 用户名字 | string |      |
 |  rating   | 等级分  |  int   |      |
 
 ##### example
