@@ -8,7 +8,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Request
 |   参数名    |          描述           |   类型   |  可选  |
 | :------: | :-------------------: | :----: | :--: |
-|  event   |       register        | string |      |
+|  action   |       register        | string |      |
 | username | 玩家用户名，为一个长度位于3-15的字符串 | string |      |
 |  email   |         用户邮箱          | string |      |
 
@@ -16,7 +16,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "register",
+  	"action" : "register",
   	"username" : "null" ,
   	"email" : "root@oier.moe"
 }
@@ -25,7 +25,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Response
 |    参数名     |    描述    |   类型   |  可选  |
 | :--------: | :------: | :----: | :--: |
-|   event    | register | string |      |
+|   action    | register | string |      |
 | error_code |   错误代码   |  int   |      |
 
 | error_code |    描述    |
@@ -39,7 +39,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "register",
+  	"action" : "register",
 	"error_code" : 0x00
 }
 ```
@@ -53,14 +53,14 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Request 
 |   参数名    |          描述           |   类型   |  可选  |
 | :------: | :-------------------: | :----: | :--: |
-|  event   |         login         | string |      |
+|  action   |         login         | string |      |
 | username | 玩家用户名，为一个长度位于3-15的字符串 | string |      |
 | version  |        用户当前版本号        | string |      |
 
 ##### example 
 ```json
 {
-	"event" : "login",
+	"action" : "login",
 	"username" : "null" ,
 	"version" : "0.7"
 }
@@ -69,7 +69,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Response
 |    参数名     |       描述       |   类型   |  可选  |
 | :--------: | :------------: | :----: | :--: |
-|   event    |     login      | string |      |
+|   action    |     login      | string |      |
 | error_code |   服务器返回的错误代码   | string |      |
 |    uuid    | 用户的唯一身份(uuid4) | string | yes  |
 |   rooms    |       房间       |   数组   | yes  |
@@ -100,7 +100,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ##### example
 ```json
 {
-  	"event" : "log_in",
+  	"action" : "log_in",
 	"error_code" : 0x00 ,
 	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
   	"rating" : 2333,
@@ -131,7 +131,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Request
 |   参数名    |                描述                |   类型   |  可选  |
 | :------: | :------------------------------: | :----: | :--: |
-|  event   |              enter               | string |      |
+|  action   |              enter               | string |      |
 |   uuid   |          Server返回的uuid           | string |      |
 | watched  |               是否旁观               |  bool  |      |
 | new_room |        用户是否新建房间（true表示新建）        |  bool  |      |
@@ -141,7 +141,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 ##### example
 ```json
 {
-	"event" : "enter",
+	"action" : "enter",
 	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
 	"watched" : false,
   	"new_room" : true,
@@ -152,7 +152,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |    参数名     |  描述   |   类型   |  可选  |
 | :--------: | :---: | :----: | :--: |
-|   event    | enter | string |      |
+|   action    | enter | string |      |
 | error_code | 错误代码  |  int   |      |
 
 | error_code |     描述      |
@@ -167,7 +167,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "enter",
+  	"action" : "enter",
  	"error_code" : 0x10
 }
 ```
@@ -180,7 +180,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |      参数名      |      描述      |   类型   |  可选  |
 | :-----------: | :----------: | :----: | :--: |
-|     event     |    start     | string |      |
+|     action     |    start     | string |      |
 | opponent_name |     对手名字     | string |      |
 |   overtime    | 超时时间（以ms为单位） |  int   |      |
 |   is_first    |   玩家是否为先手    |  bool  |      |
@@ -189,7 +189,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-	"event" : "start",
+	"action" : "start",
   	"opponent_name" : "qzr",
   	"overtime" : 20000,
   	"is_first" : true
@@ -199,7 +199,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Response(Client发送)
 |  参数名  |    描述     |   类型   |  可选  |
 | :---: | :-------: | :----: | :--: |
-| event |   ready   | string |      |
+| action |   ready   | string |      |
 | uuid  |  用户的uuid  | string |      |
 | ready | true表示已收到 |  bool  |      |
 
@@ -207,7 +207,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "ready",
+  	"action" : "ready",
   	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
   	"ready" : true
 }
@@ -217,7 +217,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |    参数名     |  描述   |   类型   |  可选  |
 | :--------: | :---: | :----: | :--: |
-|   event    | ready | string |      |
+|   action    | ready | string |      |
 | error_code | 错误代码  |  int   |      |
 
 | error_code |        描述        |
@@ -230,7 +230,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-    "event" : "ready",
+    "action" : "ready",
     "error_code" : 0x20
 }
 ```
@@ -242,7 +242,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Request
 |  参数名  |   描述    |   类型   |  可选  |
 | :---: | :-----: | :----: | :--: |
-| event | gaming  | string |      |
+| action | gaming  | string |      |
 | uuid  | 用户的uuid | string |      |
 |  col  | 用户操作的行号 |  int   |      |
 
@@ -250,7 +250,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-	"event" : "gaming", 
+	"action" : "gaming", 
  	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
   	"col" : 5
 }
@@ -260,7 +260,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |    参数名    |              描述              |   类型   |  可选  |
 | :-------: | :--------------------------: | :----: | :--: |
-|   event   |            gaming            | string |      |
+|   action   |            gaming            | string |      |
 |   ended   |            游戏是否结束            |  int   |      |
 |  succeed  |            操作是否成功            |  bool  | yes  |
 |    col    |        移动行号(一开始col为0)        |  int   | yes  |
@@ -279,7 +279,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-    "event" : "gaming",
+    "action" : "gaming",
   	"ended" : 0x00,
     "succeed" :true,
     "col" : 5,
@@ -293,7 +293,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |   参数名    |     描述      |   类型   |  可选  |
 | :------: | :---------: | :----: | :--: |
-|  event   |  received   | string |      |
+|  action   |  received   | string |      |
 |   uuid   |   用户的uuid   | string |      |
 | received | true表示接收到参数 |  bool  |      |
 
@@ -301,7 +301,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "received", 
+  	"action" : "received", 
   	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
   	"received" : true
 }
@@ -315,7 +315,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 |  参数名  |   描述    |   类型   |  可选  |
 | :---: | :-----: | :----: | :--: |
-| event |  chat   | string |      |
+| action |  chat   | string |      |
 | uuid  | 用户的uuid | string |      |
 | text  | 用户聊天内容  | string |      |
 
@@ -323,7 +323,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "chat",
+  	"action" : "chat",
   	"uuid" : "651a4613-ad1c-405d-a255-df89dcd3a59c" ,
   	"text" : "qzrakioi2019"
 }
@@ -334,7 +334,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 #### Response（对房间内所有人广播）
 |    参数名    |   描述   |   类型   |  可选  |
 | :-------: | :----: | :----: | :--: |
-|   event   |  chat  | string |      |
+|   action   |  chat  | string |      |
 | user_name | 讲话用户名字 | string |      |
 |   text    | 用户聊天内容 | string |      |
 
@@ -342,7 +342,7 @@ Myomyw的数据包采用json格式发送，每个json的具体格式如下
 
 ```json
 {
-  	"event" : "chat",
+  	"action" : "chat",
   	"user_name" : "null",
   	"text" : "qzrakioi2019"
 }
