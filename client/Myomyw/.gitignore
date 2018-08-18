@@ -37,3 +37,7 @@ packages/
 sysinfo.txt
 *.stackdump
 
+# JetBrains IDE generated
+# =======================
+.idea/
+

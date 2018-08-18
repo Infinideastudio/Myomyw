@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Assets.GameEngine
 {
@@ -15,18 +14,21 @@ namespace Assets.GameEngine
 
     public abstract class ChessType
     {
+        public delegate void OnOperationEvent();
+
         protected ChessType(string name, ChessTypeName type)
         {
             Name = name;
             Type = type;
         }
 
-        public delegate void OnOperationEvent();
-
         public ChessTypeName Type { get; }
         public string Name { get; }
 
-        public virtual void Process() => OnOperation?.Invoke();
+        public virtual void Process(ChessBoard board)
+        {
+            OnOperation?.Invoke();
+        }
 
         public event OnOperationEvent OnOperation;
 
@@ -39,52 +41,54 @@ namespace Assets.GameEngine
         {
         }
     }
-    
+
     public class ChessKey : ChessType
     {
         public ChessKey() : base("Key", ChessTypeName.Key)
         {
         }
 
-        public override void Process()
+        public override void Process(ChessBoard board)
         {
-            base.Process();
+            base.Process(board);
         }
     }
-    
+
     public class ChessFlip : ChessType
     {
         public ChessFlip() : base("Flip", ChessTypeName.Flip)
         {
         }
-            
-        public override void Process()
+
+        public override void Process(ChessBoard board)
         {
-            base.Process();
+            base.Process(board);
         }
     }
-    
+
     public class ChessAddCol : ChessType
     {
         public ChessAddCol() : base("AddCol", ChessTypeName.AddCol)
         {
-        } 
-        
-        public override void Process()
+        }
+
+        public override void Process(ChessBoard board)
         {
-            base.Process();
+            base.Process(board);
+            board.ResizeBoard(board.SizeLeft + 1, board.SizeRight);
         }
     }
-    
+
     public class ChessDelCol : ChessType
     {
         public ChessDelCol() : base("DelCol", ChessTypeName.DelCol)
         {
         }
-        
-        public override void Process()
+
+        public override void Process(ChessBoard board)
         {
-            base.Process();
+            base.Process(board);
+            board.ResizeBoard(board.SizeLeft - 1, board.SizeRight);
         }
     }
 
@@ -101,9 +105,15 @@ namespace Assets.GameEngine
             Register(new ChessDelCol());
         }
 
-        public static ChessType Get(ChessTypeName name) => Types[name];
-        
-        private static void Register(ChessType type) => Types.Add(type.Type, type);
+        public static ChessType Get(ChessTypeName name)
+        {
+            return Types[name];
+        }
+
+        private static void Register(ChessType type)
+        {
+            Types.Add(type.Type, type);
+        }
     }
 
     public class ChessBoard
@@ -121,9 +131,15 @@ namespace Assets.GameEngine
 
         public int SizeRight { get; private set; }
 
-        public void MakeCurrent() => Current = this;
+        public void MakeCurrent()
+        {
+            Current = this;
+        }
 
-        private void ProcessExtraChess(ChessTypeName typeName) => ChessTypeManager.Get(typeName).Process();
+        private void ProcessExtraChess(ChessTypeName typeName)
+        {
+            ChessTypeManager.Get(typeName).Process(this);
+        }
 
         public ChessTypeName GetChess(int left, int right)
         {
@@ -135,7 +151,7 @@ namespace Assets.GameEngine
             _chessBoard[left * SizeLeft + right] = chess;
         }
 
-        private void ResizeBoard(int newSizeLeft, int newSizeRight)
+        public void ResizeBoard(int newSizeLeft, int newSizeRight)
         {
             var board = new ChessTypeName[newSizeLeft * newSizeRight];
             for (var i = 0; i < Math.Min(SizeLeft, newSizeLeft); ++i)

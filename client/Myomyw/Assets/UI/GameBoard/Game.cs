@@ -1,5 +1,4 @@
-﻿using Assets.GameEngine;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Assets.UI.GameBoard
@@ -10,6 +9,5 @@ namespace Assets.UI.GameBoard
         {
             SceneManager.LoadScene(0);
         }
-     
     }
 }
