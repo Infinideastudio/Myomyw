@@ -5,22 +5,15 @@ import (
 	"fmt"
 	"gamemanager"
 
-	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 )
 
-type errorResponse struct {
-	Action    string `json:"action"`
-	ErrorCode int    `json:"error_code"`
+func handleVersionRequest(server *Server, decoder *json.Decoder) (int, interface{}) {
+	return 0, struct{ Version string }{Version}
 }
 
-func handleVersionRequest(server Server, c *websocket.Conn, message []byte) {
-	c.WriteMessage(websocket.TextMessage, []byte("{\"version\": \""+Version+"\"}"))
-}
-
-func playerLogin(server Server, c *websocket.Conn, message []byte) {
+func playerLogin(server *Server, decoder *json.Decoder) (int, interface{}) {
 	type LoginRequest struct {
-		Action   string `json:"action"`
 		Username string `json:"username"`
 		Version  string `json:"version"`
 		UUID     string `json:"uuid"`
@@ -29,53 +22,44 @@ func playerLogin(server Server, c *websocket.Conn, message []byte) {
 		Username string `json:"username"`
 		Rating   int    `json:"rating"`
 	}
-
 	type LoginResponse struct {
-		Action    string             `json:"action"`
-		ErrorCode int                `json:"error_code"`
-		UUID      string             `json:"uuid"`
-		Rating    int                `json:"rating"`
-		Rank      []TopUser          `json:"rank"`
-		Room      []gamemanager.Room `json:"room"`
+		UUID   string             `json:"uuid"`
+		Rating int                `json:"rating"`
+		Rank   []TopUser          `json:"rank"`
+		Room   []gamemanager.Room `json:"room"`
 	}
 	var request LoginRequest
-	if json.Unmarshal(message, &request) != nil {
-		c.WriteJSON(errorResponse{"login", 0xff})
-		return
+	if decoder.Decode(&request) != nil {
+		return 0xff, nil
 	}
 	// client version unmatched
 	if request.Version != Version {
-		c.WriteJSON(errorResponse{"login", 0x03})
-		return
+		return 0x03, nil
 	}
 
 	if request.UUID == "" { // new user
 		usertoken, err := uuid.NewV4()
 		if err != nil {
-			fmt.Printf("Something went wrong: %s", err)
-			return
+			fmt.Printf("Failed to generate UUID: %s", err)
+			return 0xff, nil
 		}
-		c.WriteJSON(LoginResponse{
-			Action:    "login",
-			ErrorCode: 0,
-			UUID:      usertoken.String(),
-			Rating:    0,
-			Rank:      nil,
-			Room:      server.getRooms(),
-		})
+		return 0, LoginResponse{
+			UUID:   usertoken.String(),
+			Rating: 0,
+			Rank:   nil,
+			Room:   server.getRooms(),
+		}
 	} else {
-		c.WriteJSON(LoginResponse{
-			Action:    "login",
-			ErrorCode: 0,
-			UUID:      request.UUID,
-			Rating:    0,
-			Rank:      nil,
-			Room:      server.getRooms(),
-		})
+		return 0, LoginResponse{
+			UUID:   request.UUID,
+			Rating: 0,
+			Rank:   nil,
+			Room:   server.getRooms(),
+		}
 	}
 }
 
-var handlers = map[string](func(server Server, c *websocket.Conn, message []byte)){
+var handlers = map[string](func(server *Server, decoder *json.Decoder) (int, interface{})){
 	"version": handleVersionRequest,
 	"login":   playerLogin,
 }

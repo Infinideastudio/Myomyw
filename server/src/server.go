@@ -5,6 +5,7 @@ import (
 	"gamemanager"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 	"usermanager"
@@ -14,6 +15,7 @@ import (
 
 const (
 	timeout = 5 * time.Second
+	// Version is the protocol version that the server uses
 	Version = "1.0"
 )
 
@@ -39,14 +41,14 @@ func NewServer() Server {
 	return server
 }
 
-func (server Server) getRooms() []gamemanager.Room {
+func (server *Server) getRooms() []gamemanager.Room {
 	server.roomMutex.RLock()
 	defer server.roomMutex.RUnlock()
 	return server.rooms
 }
 
 // ServeWs (WS) route /ws
-func (server Server) serveWs(w http.ResponseWriter, r *http.Request) {
+func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	c, err := server.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -61,27 +63,39 @@ func (server Server) serveWs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if mt == websocket.TextMessage {
-			var parsedMessage interface{}
-			err := json.Unmarshal(message, &parsedMessage)
-			if err != nil {
-				log.Println("Error occured when trying to parse JSON:", err, ". The message is", message)
+			var header struct {
+				Action string
+			}
+			decoder := json.NewDecoder(strings.NewReader(string(message)))
+
+			// Decode header
+			if err := decoder.Decode(&header); err != nil {
+				log.Println("Error occured when trying to parse JSON:", err, ". The message is", string(message))
 				continue
 			}
 
-			action := parsedMessage.(map[string]interface{})["action"]
-			if action == nil {
-				log.Println("Error occured. No action contained in message. The message is", parsedMessage)
-				continue
-			}
-			strAction, ok := action.(string)
-			if !ok {
-				log.Println("Error occured. Expect action to be string. The message is", parsedMessage)
-				continue
-			}
-			if handler, ok := handlers[strAction]; ok {
-				handler(server, c, message)
+			// Forward to handler according to action
+			if handler, ok := handlers[header.Action]; ok {
+				errorCode, bodyRaw := handler(server, decoder)
+				header, _ := json.Marshal(struct {
+					Action    string `json:"action"`
+					ErrorCode int    `json:"error_code"`
+				}{header.Action, errorCode})
+				body, err := json.Marshal(bodyRaw)
+				if err != nil {
+					log.Println("Error occured when trying to encode JSON:", err, "for", bodyRaw)
+					continue
+				}
+				writer, err := c.NextWriter(websocket.TextMessage)
+				if err != nil {
+					log.Println("Error occured when trying to send message:", err)
+					continue
+				}
+				writer.Write(header)
+				writer.Write(body)
+				writer.Close()
 			} else {
-				log.Println("Error occured. Invalid action "+action.(string)+" found. The message is", parsedMessage)
+				log.Println("Error occured. Invalid action \"" + header.Action + "\" found.")
 				continue
 			}
 
