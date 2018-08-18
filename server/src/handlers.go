@@ -2,17 +2,18 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"gamemanager"
 
 	uuid "github.com/satori/go.uuid"
 )
 
-func handleVersionRequest(server *Server, decoder *json.Decoder) (int, interface{}) {
-	return 0, struct{ Version string }{Version}
+func handleVersionRequest(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+	return 0, struct {
+		Version string `json:"version"`
+	}{Version}
 }
 
-func playerLogin(server *Server, decoder *json.Decoder) (int, interface{}) {
+func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	type LoginRequest struct {
 		Username string `json:"username"`
 		Version  string `json:"version"`
@@ -37,29 +38,26 @@ func playerLogin(server *Server, decoder *json.Decoder) (int, interface{}) {
 		return 0x03, nil
 	}
 
-	if request.UUID == "" { // new user
-		usertoken, err := uuid.NewV4()
-		if err != nil {
-			fmt.Printf("Failed to generate UUID: %s", err)
-			return 0xff, nil
-		}
-		return 0, LoginResponse{
-			UUID:   usertoken.String(),
-			Rating: 0,
-			Rank:   nil,
-			Room:   server.getRooms(),
-		}
-	} else {
-		return 0, LoginResponse{
-			UUID:   request.UUID,
-			Rating: 0,
-			Rank:   nil,
-			Room:   server.getRooms(),
-		}
+	playerUUID := request.UUID
+
+	if playerUUID == "" { // new user
+		u, _ := uuid.NewV4()
+		playerUUID = u.String()
 	}
+
+	conn.uuid = playerUUID
+	conn.user = server.getUser(playerUUID)
+
+	return 0, LoginResponse{
+		UUID:   playerUUID,
+		Rating: 0,
+		Rank:   nil,
+		Room:   server.getRooms(),
+	}
+
 }
 
-var handlers = map[string](func(server *Server, decoder *json.Decoder) (int, interface{})){
+var handlers = map[string](func(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{})){
 	"version": handleVersionRequest,
 	"login":   playerLogin,
 }
