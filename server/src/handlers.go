@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"gamemanager"
 
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
@@ -30,12 +31,12 @@ func playerLogin(server Server, c *websocket.Conn, message []byte) {
 	}
 
 	type LoginResponse struct {
-		Action    string    `json:"action"`
-		ErrorCode int       `json:"error_code"`
-		UUID      string    `json:"uuid"`
-		Rating    int       `json:"rating"`
-		Rank      []TopUser `json:"rank"`
-		Room      []Room    `json:"room"`
+		Action    string             `json:"action"`
+		ErrorCode int                `json:"error_code"`
+		UUID      string             `json:"uuid"`
+		Rating    int                `json:"rating"`
+		Rank      []TopUser          `json:"rank"`
+		Room      []gamemanager.Room `json:"room"`
 	}
 	var request LoginRequest
 	if json.Unmarshal(message, &request) != nil {

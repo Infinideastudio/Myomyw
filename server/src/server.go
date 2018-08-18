@@ -2,38 +2,26 @@ package main
 
 import (
 	"encoding/json"
+	"gamemanager"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+	"usermanager"
 
 	"github.com/gorilla/websocket"
 )
 
 const (
-	Timeout = 5 * time.Second
+	timeout = 5 * time.Second
 	Version = "1.0"
 )
 
-type Room struct {
-	ID       int      `json:"id"`
-	Waiting  bool     `json:"waiting"`
-	Players  []string `json:"players"`
-	Locked   bool     `json:"locked"`
-	password string
-}
-
-type User struct {
-	UUID        string
-	email       string
-	roomPlaying *Room
-}
-
 type Server struct {
 	upgrader  websocket.Upgrader
-	rooms     []Room
+	rooms     []gamemanager.Room
 	roomMutex *sync.RWMutex
-	users     []User
+	users     []usermanager.User
 	userMutex *sync.RWMutex
 }
 
@@ -51,14 +39,14 @@ func NewServer() Server {
 	return server
 }
 
-func (server Server) getRooms() []Room {
+func (server Server) getRooms() []gamemanager.Room {
 	server.roomMutex.RLock()
 	defer server.roomMutex.RUnlock()
 	return server.rooms
 }
 
 // ServeWs (WS) route /ws
-func (server Server) ServeWs(w http.ResponseWriter, r *http.Request) {
+func (server Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	c, err := server.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -102,7 +90,7 @@ func (server Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 }
 
 // ServeVersion (HTTP) route /is-server
-func (server Server) ServeVersion(w http.ResponseWriter, r *http.Request) {
+func (server Server) serveVersion(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/is-server" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
