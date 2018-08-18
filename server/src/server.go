@@ -108,7 +108,9 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 
 		if mt == websocket.TextMessage {
 			var header struct {
-				Action string
+				Action    string `json:"action"`
+				Ref       int    `json:"ref"`
+				ErrorCode int    `json:"error_code"`
 			}
 			decoder := json.NewDecoder(strings.NewReader(string(message)))
 
@@ -123,10 +125,8 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 				errorCode, bodyRaw := handler(server, &connData, decoder)
 
 				// Pack response returned from handler
-				err := sendResponse(c, struct {
-					Action    string `json:"action"`
-					ErrorCode int    `json:"error_code"`
-				}{header.Action, errorCode}, bodyRaw)
+				header.ErrorCode = errorCode
+				err := sendResponse(c, header, bodyRaw)
 
 				if err != nil {
 					log.Println("Error occured when trying to send response: ", err, " body:", bodyRaw)
