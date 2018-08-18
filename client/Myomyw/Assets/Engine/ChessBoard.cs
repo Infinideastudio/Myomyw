@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Assets.GameEngine
+namespace Engine
 {
     public enum ChessTypeName
     {

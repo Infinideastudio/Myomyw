@@ -1,46 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using System.Threading;
-using UnityEngine;
 
-namespace Assets.GameEngine
+namespace Engine.Network
 {
-    public class Register
-    {
-        [DataContract]
-        public class Send
-        {
-            [DataMember] public string email;
-
-            [DataMember] public string username;
-
-            public Send(string iUsername, string iEmail)
-            {
-                username = iUsername;
-                email = iEmail;
-            }
-
-            public string GetJson()
-            {
-                return JsonUtility.ToJson(this, true);
-            }
-        }
-
-        public class Reply
-        {
-            public static Reply Unpack(string from)
-            {
-                return JsonUtility.FromJson<Reply>(from);
-            }
-        }
-    }
-
-    public interface IProtocol
-    {
-        void Handle();
-    }
-
     public static class ProtocolHub
     {
         private static readonly Dictionary<string, IProtocol> Protocols = new Dictionary<string, IProtocol>();

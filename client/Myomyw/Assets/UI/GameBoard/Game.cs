@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Assets.UI.GameBoard
+namespace UI.GameBoard
 {
     public class Game : MonoBehaviour
     {

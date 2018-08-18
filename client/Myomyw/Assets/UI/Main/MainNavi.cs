@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Assets.UI.Main
+namespace UI.Main
 {
     public class MainNavi : MonoBehaviour
     {
