@@ -5,5 +5,5 @@ type Room struct {
 	Waiting  bool     `json:"waiting"`
 	Players  []string `json:"players"`
 	Locked   bool     `json:"locked"`
-	password string
+	Password string   `json:"-"`
 }

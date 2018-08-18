@@ -38,6 +38,8 @@ func NewServer() Server {
 		},
 	}
 	server.roomMutex = &sync.RWMutex{}
+	server.userMutex = &sync.RWMutex{}
+	server.users = make(map[string]usermanager.User)
 	return server
 }
 
@@ -46,7 +48,33 @@ func (server *Server) getRooms() []gamemanager.Room {
 	defer server.roomMutex.RUnlock()
 	return server.rooms
 }
+func (server *Server) findRoom(id int) gamemanager.Room {
+	server.roomMutex.RLock()
+	defer server.roomMutex.RUnlock()
+	return server.rooms[id]
+}
 
+// Create a new room. The id of the room created will be returned
+func (server *Server) createRoom(room gamemanager.Room) int {
+	server.roomMutex.Lock()
+	defer server.roomMutex.Unlock()
+	room.ID = len(server.rooms)
+	server.rooms = append(server.rooms, room)
+	return room.ID
+}
+
+// Try to join a room. Return if it succeeds.
+func (server *Server) joinRoom(id int, playerUUID string) bool {
+	server.roomMutex.Lock()
+	defer server.roomMutex.Unlock()
+	if len(server.rooms[id].Players) == 2 {
+		return false
+	}
+	server.rooms[id].Players = append(server.rooms[id].Players, playerUUID)
+	return true
+}
+
+// Try to find a user. Will be created if not existing.
 func (server *Server) getUser(uuid string) usermanager.User {
 	server.userMutex.RLock()
 	user, ok := server.users[uuid]
@@ -62,9 +90,10 @@ func (server *Server) getUser(uuid string) usermanager.User {
 }
 
 type connectionData struct {
-	uuid string
-	user usermanager.User
-	room gamemanager.Room
+	uuid    string
+	user    usermanager.User
+	roomID  int
+	playing bool // if playing == false && roomID != -1, then the player is watching
 }
 
 func sendResponse(c *websocket.Conn, headerRaw interface{}, bodyRaw interface{}) error {
@@ -99,6 +128,7 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	var connData connectionData
+	connData.roomID = -1
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
@@ -126,6 +156,9 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 
 				// Pack response returned from handler
 				header.ErrorCode = errorCode
+				if bodyRaw == nil {
+					bodyRaw = struct{}{}
+				}
 				err := sendResponse(c, header, bodyRaw)
 
 				if err != nil {
