@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Engine.Network
 {
-    public class Client
+    public class EndPoint
     {
         private readonly ClientWebSocket _webSocket;
 
-        public Client()
+        public EndPoint()
         {
             _webSocket = new ClientWebSocket();
         }
@@ -27,7 +27,7 @@ namespace Engine.Network
             while (_webSocket.State != WebSocketState.Closed)
             {
                 var message = await ReadMessage(buffer);
-                var protocol = ProtocolHub.Get(MessageHeader.Unpack(message));
+                var protocol = ProtocolHub.Get(Header.Unpack(message));
             }
 
             ProtocolHub.ReleaseAccess();

@@ -2,6 +2,7 @@ namespace Engine.Network
 {
     public interface IProtocol
     {
-        void Handle();
+        string Name { get; }
+        void Handle(IoHelper io);
     }
 }
