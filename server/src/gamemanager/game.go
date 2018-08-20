@@ -70,6 +70,10 @@ func (game *GameBoard) pushRowOnce(row int) (int,int){
 				game.Board[i][j]=temp[i][j];
 			}
 		}
+		var swtemp int
+		swtemp=Row
+		Row=Col
+		Col=swtemp
 	}
 	return newBall,outBall
 }
@@ -109,6 +113,10 @@ func (game *GameBoard) pushColOnce(col int) (int,int){
 				game.Board[i][j]=temp[i][j];
 			}
 		}
+		var swtemp int
+		swtemp=Row
+		Row=Col
+		Col=swtemp
 	}
 	return newBall,outBall
 }
