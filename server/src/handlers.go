@@ -46,17 +46,25 @@ func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (i
 	}
 
 	conn.uuid = playerUUID
-	conn.user = server.getUser(playerUUID)
+	conn.user = server.userManager.GetUser(playerUUID)
 
 	return 0, LoginResponse{
 		UUID:   playerUUID,
 		Rating: 0,
 		Rank:   nil,
-		Rooms:  server.getRooms(),
+		Rooms:  server.roomManager.GetRooms(),
 	}
 
 }
+
 func createRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+	if !conn.loggedIn() {
+		return 0xff, nil
+	}
+	if conn.isInGame() {
+		return 0x14, nil // you're already in a game
+	}
+
 	type CreateRequest struct {
 		Watching bool   `json:"watching"`
 		Password string `json:"password"`
@@ -66,23 +74,33 @@ func createRoom(server *Server, conn *connectionData, decoder *json.Decoder) (in
 	if decoder.Decode(&request) != nil {
 		return 0xff, nil
 	}
-	if conn.uuid == "" {
-		return 0xff, nil
+
+	var room = gamemanager.Room{
+		Locked:   request.Password != "",
+		Password: request.Password,
+		Waiting:  true,
 	}
-	var room gamemanager.Room
-	room.Locked = request.Password != ""
-	room.Password = request.Password
-	room.Waiting = true
+
 	if !request.Watching {
 		room.Players = append(room.Players, conn.uuid)
 	}
+	room.Subscribers = append(room.Subscribers, conn.messageChan)
+
 	// Update connection states
-	conn.roomID = server.createRoom(room)
+	conn.roomID = server.roomManager.CreateRoom(room)
 	conn.playing = !request.Watching
 	return 0x00, nil
 
 }
+
 func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+	if !conn.loggedIn() {
+		return 0xff, nil
+	}
+	if conn.isInGame() {
+		return 0x14, nil // you're already in a game!
+	}
+
 	type JoinRequest struct {
 		Watching bool   `json:"watching"`
 		NewRoom  bool   `json:"newroom"`
@@ -96,7 +114,7 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 	}
 
 	if request.RoomID != -1 {
-		if request.RoomID >= len(server.getRooms()) {
+		if request.RoomID >= len(server.roomManager.GetRooms()) {
 			return 0x12, nil
 		}
 		if request.Watching {
@@ -104,23 +122,30 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 			conn.playing = false
 			return 0x00, nil
 		}
-		room := server.findRoom(request.RoomID)
+		room := server.roomManager.FindRoom(request.RoomID)
 		if room.Locked && room.Password != request.Password {
 			return 0x13, nil
 		}
-		if !server.joinRoom(request.RoomID, conn.uuid) {
-			return 0x11, nil
+		roomNotFull, shouldStart := server.roomManager.JoinRoom(request.RoomID, conn.uuid, conn.messageChan)
+		if !roomNotFull {
+			return 0x11, nil // room is full
+		}
+		// Successfully joined a room
+		if shouldStart {
+			room = server.roomManager.FindRoom(request.RoomID)
+			room.BoardcastMessage(generateGameStart(&server.userManager, &room))
 		}
 		return 0x00, nil
 	}
-	// or random choose a room if not provided
+	// or do a matchmaking if not provided
 	// TODO: implement this
 	return 0xff, nil
 }
+
 func getRooms(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	return 0, struct {
 		Rooms []gamemanager.Room `json:"rooms"`
-	}{server.getRooms()}
+	}{server.roomManager.GetRooms()}
 }
 
 var handlers = map[string](func(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{})){

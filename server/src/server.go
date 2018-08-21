@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 	"usermanager"
+	"utils"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,11 +20,9 @@ const (
 )
 
 type Server struct {
-	upgrader  websocket.Upgrader
-	rooms     []gamemanager.Room
-	roomMutex *sync.RWMutex
-	users     map[string]usermanager.User // uuid -> User
-	userMutex *sync.RWMutex
+	upgrader    websocket.Upgrader
+	roomManager gamemanager.RoomManager
+	userManager usermanager.UserManager
 }
 
 // NewServer Create a server instance
@@ -37,65 +35,26 @@ func NewServer() Server {
 			return true
 		},
 	}
-	server.roomMutex = &sync.RWMutex{}
-	server.userMutex = &sync.RWMutex{}
-	server.users = make(map[string]usermanager.User)
+	server.roomManager = gamemanager.NewRoomManager()
+	server.userManager = usermanager.NewUserManager()
 	return server
 }
 
-func (server *Server) getRooms() []gamemanager.Room {
-	server.roomMutex.RLock()
-	defer server.roomMutex.RUnlock()
-	return server.rooms
-}
-func (server *Server) findRoom(id int) gamemanager.Room {
-	server.roomMutex.RLock()
-	defer server.roomMutex.RUnlock()
-	return server.rooms[id]
-}
-
-// Create a new room. The id of the room created will be returned
-func (server *Server) createRoom(room gamemanager.Room) int {
-	server.roomMutex.Lock()
-	defer server.roomMutex.Unlock()
-	room.ID = len(server.rooms)
-	server.rooms = append(server.rooms, room)
-	return room.ID
-}
-
-// Try to join a room. Return if it succeeds.
-func (server *Server) joinRoom(id int, playerUUID string) bool {
-	server.roomMutex.Lock()
-	defer server.roomMutex.Unlock()
-	if len(server.rooms[id].Players) == 2 {
-		return false
-	}
-	server.rooms[id].Players = append(server.rooms[id].Players, playerUUID)
-	return true
-}
-
-// Try to find a user. Will be created if not existing.
-func (server *Server) getUser(uuid string) usermanager.User {
-	server.userMutex.RLock()
-	user, ok := server.users[uuid]
-	server.userMutex.RUnlock()
-
-	if !ok {
-		server.userMutex.Lock()
-		defer server.userMutex.Unlock()
-		user = usermanager.User{UUID: uuid}
-		server.users[uuid] = user
-	}
-	return user
-}
-
 type connectionData struct {
-	uuid    string
-	user    usermanager.User
-	roomID  int
-	playing bool // if playing == false && roomID != -1, then the player is watching
+	uuid        string
+	user        usermanager.User
+	roomID      int
+	playing     bool // if playing == false && roomID != -1, then the player is watching
+	messageChan chan utils.Message
 }
 
+func (conn *connectionData) isInGame() bool {
+	return conn.roomID != -1
+}
+
+func (conn *connectionData) loggedIn() bool {
+	return conn.uuid != ""
+}
 func sendResponse(c *websocket.Conn, headerRaw interface{}, bodyRaw interface{}) error {
 	header, err := json.Marshal(headerRaw)
 	if err != nil {
@@ -129,6 +88,7 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 
 	var connData connectionData
 	connData.roomID = -1
+	connData.messageChan = make(chan utils.Message)
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
@@ -137,11 +97,7 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if mt == websocket.TextMessage {
-			var header struct {
-				Action    string `json:"action"`
-				Ref       int    `json:"ref"`
-				ErrorCode int    `json:"error_code"`
-			}
+			var header utils.MessageHeader
 			decoder := json.NewDecoder(strings.NewReader(string(message)))
 
 			// Decode header
