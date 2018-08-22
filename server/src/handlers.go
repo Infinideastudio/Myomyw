@@ -150,7 +150,7 @@ func getRooms(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 	}{server.roomManager.GetRooms()}
 }
 
-func chat(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+func sendChat(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	if !conn.loggedIn() {
 		return 0x20, nil
 	}
@@ -176,5 +176,5 @@ var handlers = map[string](func(server *Server, conn *connectionData, decoder *j
 	"join_room":   joinRoom,
 	"create_room": createRoom,
 	"get_rooms":   getRooms,
-	"chat":        chat,
+	"send_chat":   sendChat,
 }
