@@ -20,3 +20,15 @@ func generateGameStart(users *usermanager.UserManager, room *gamemanager.Room) u
 		},
 	}
 }
+
+func generateChat(users *usermanager.UserManager, message string, uuid string) utils.Message {
+	return utils.Message{utils.MessageHeader{"chat", 0, 0},
+		struct {
+			Username string `json:"username"`
+			Text     string `json:"text"`
+		}{
+			Username: users.GetUser(uuid).Name,
+			Text:     message,
+		},
+	}
+}

@@ -131,6 +131,8 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 			return 0x11, nil // room is full
 		}
 		// Successfully joined a room
+		conn.roomID = request.RoomID
+		conn.playing = true
 		if shouldStart {
 			room = server.roomManager.FindRoom(request.RoomID)
 			room.BoardcastMessage(generateGameStart(&server.userManager, &room))
@@ -148,10 +150,31 @@ func getRooms(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 	}{server.roomManager.GetRooms()}
 }
 
+func chat(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+	if !conn.loggedIn() {
+		return 0x20, nil
+	}
+	if !conn.isInGame() {
+		return 0x21, nil // You need to be in game to send message
+	}
+
+	type ChatRequest struct {
+		Message string `json:"message"`
+	}
+	var request ChatRequest
+	if decoder.Decode(&request) != nil {
+		return 0xff, nil
+	}
+	room := server.roomManager.FindRoom(conn.roomID)
+	room.BoardcastMessage(generateChat(&server.userManager, request.Message, conn.uuid))
+	return 0, nil
+}
+
 var handlers = map[string](func(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{})){
 	"version":     handleVersionRequest,
 	"login":       playerLogin,
 	"join_room":   joinRoom,
 	"create_room": createRoom,
 	"get_rooms":   getRooms,
+	"chat":        chat,
 }

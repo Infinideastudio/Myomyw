@@ -40,22 +40,6 @@ func NewServer() Server {
 	return server
 }
 
-type connectionData struct {
-	uuid        string
-	user        usermanager.User
-	roomID      int
-	playing     bool // if playing == false && roomID != -1, then the player is watching
-	messageChan chan utils.Message
-}
-
-func (conn *connectionData) isInGame() bool {
-	return conn.roomID != -1
-}
-
-func (conn *connectionData) loggedIn() bool {
-	return conn.uuid != ""
-}
-
 func sendResponse(c *websocket.Conn, message utils.Message) error {
 	header, err := json.Marshal(message.Header)
 	if err != nil {
@@ -132,10 +116,7 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	var connData connectionData
-	connData.roomID = -1
-	connData.messageChan = make(chan utils.Message)
-
+	connData := makeConnectionData()
 	go readAndHandleData(c, server, &connData)
 	for {
 		sendResponse(c, <-connData.messageChan)
