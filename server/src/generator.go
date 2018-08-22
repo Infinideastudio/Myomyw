@@ -2,12 +2,11 @@ package main
 
 import (
 	"gamemanager"
-	"math/rand"
 	"usermanager"
 	"utils"
 )
 
-func generateGameStart(users *usermanager.UserManager, room *gamemanager.Room) utils.Message {
+func generateGameStart(users *usermanager.UserManager, room *gamemanager.Room, whofirst int) utils.Message {
 	return utils.Message{utils.MessageHeader{"start_game", 0, 0},
 		struct {
 			PlayerNames [2]string `json:"player_names"`
@@ -16,7 +15,7 @@ func generateGameStart(users *usermanager.UserManager, room *gamemanager.Room) u
 		}{
 			PlayerNames: [2]string{users.GetUser(room.Players[0]).Name, users.GetUser(room.Players[1]).Name},
 			Overtime:    10,
-			FirstID:     rand.Intn(2),
+			FirstID:     whofirst,
 		},
 	}
 }
@@ -29,6 +28,22 @@ func generateChat(users *usermanager.UserManager, message string, uuid string) u
 		}{
 			Username: users.GetUser(uuid).Name,
 			Text:     message,
+		},
+	}
+}
+
+func generateMove(col bool, num int, next_ball int, handover bool, errcode int) utils.Message {
+	return utils.Message{utils.MessageHeader{"game_update", 0, errcode},
+		struct {
+			Col      bool `json:"col"`
+			Num      int  `json:"num"`
+			NextBall int  `json:"next_ball"`
+			Handover bool `json:"handover"`
+		}{
+			Col:      col,
+			Num:      num,
+			NextBall: next_ball,
+			Handover: handover,
 		},
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"gamemanager"
+	"math/rand"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -135,7 +136,9 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 		conn.playing = true
 		if shouldStart {
 			room = server.roomManager.FindRoom(request.RoomID)
-			room.BoardcastMessage(generateGameStart(&server.userManager, &room))
+			room.Whoesturn = rand.Intn(2)
+			server.roomManager.UpdateRoom(room)
+			room.BoardcastMessage(generateGameStart(&server.userManager, &room, room.Whoesturn))
 		}
 		return 0x00, nil
 	}
@@ -170,6 +173,50 @@ func sendChat(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 	return 0, nil
 }
 
+func move(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
+	if !conn.loggedIn() {
+		return 0x20, nil
+	}
+	if !conn.isInGame() {
+		return 0x21, nil // You need to be in game to send message
+	}
+	type MoveRequest struct {
+		Num      int  `json:"num"`
+		Handover bool `json:"handover"`
+	}
+	var request MoveRequest
+	if decoder.Decode(&request) != nil {
+		return 0xff, nil
+	}
+
+	room := server.roomManager.FindRoom(conn.roomID)
+	if room.Players[room.Whoesturn] != conn.uuid {
+		return 0x31, nil // It's not your turn yet
+	}
+	isCol := room.Whoesturn == 1
+	var outBall int
+	if isCol {
+		_, outBall = room.Gameboard.PushCol(request.Num)
+	} else {
+		_, outBall = room.Gameboard.PushRow(request.Num)
+	}
+	conn.ballUsed++
+	if request.Handover || conn.ballUsed == 4 {
+		conn.ballUsed = 0
+		room.Whoesturn = 1 - room.Whoesturn
+	}
+	errcode := 0
+	if outBall == gamemanager.Key {
+		errcode = 0x50
+		room.Subscribers = nil
+	}
+	server.roomManager.UpdateRoom(room)
+
+	room.BoardcastMessage(generateMove(isCol, request.Num, room.Gameboard.NextBall, request.Handover, errcode))
+
+	return 0, nil
+}
+
 var handlers = map[string](func(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{})){
 	"version":     handleVersionRequest,
 	"login":       playerLogin,
@@ -177,4 +224,5 @@ var handlers = map[string](func(server *Server, conn *connectionData, decoder *j
 	"create_room": createRoom,
 	"get_rooms":   getRooms,
 	"send_chat":   sendChat,
+	"move":        move,
 }

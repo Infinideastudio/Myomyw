@@ -52,3 +52,10 @@ func (rm *RoomManager) JoinRoom(id int, playerUUID string, messageChan chan<- ut
 	rm.rooms[id].Waiting = len(rm.rooms[id].Players) != 2
 	return true, len(rm.rooms[id].Players) == 2
 }
+
+// UpdateRoom updates room
+func (rm *RoomManager) UpdateRoom(room Room) {
+	rm.roomMutex.Lock()
+	defer rm.roomMutex.Unlock()
+	rm.rooms[room.ID] = room
+}

@@ -11,6 +11,7 @@ type connectionData struct {
 	roomID      int
 	playing     bool // if playing == false && roomID != -1, then the player is watching
 	messageChan chan utils.Message
+	ballUsed    int
 }
 
 // makeConnectionData makes a new connectionData for use

@@ -11,13 +11,14 @@ const (
 )
 
 type GameBoard struct {
-	Row    int
-	Col    int
-	MaxRow int
-	MaxCol int
-	MinRow int
-	MinCol int
-	Board  [10][10]int
+	Row      int
+	Col      int
+	MaxRow   int
+	MaxCol   int
+	MinRow   int
+	MinCol   int
+	NextBall int
+	Board    [10][10]int
 }
 
 func MakeGameBoard(row, col, minRow, minCol, maxRow, maxCol int) GameBoard {
@@ -41,7 +42,7 @@ func randBall() int {
 }
 
 //return value: new ball,out ball
-func (game *GameBoard) pushRowOnce(row int) (int, int) {
+func (game *GameBoard) PushRow(row int) (int, int) {
 	var outBall int
 	outBall = game.Board[row][game.Col-1]
 	switch game.Board[row][game.Col-1] {
@@ -63,7 +64,8 @@ func (game *GameBoard) pushRowOnce(row int) (int, int) {
 		game.Board[row][i] = game.Board[row][i-1]
 	}
 	var newBall int
-	newBall = randBall()
+	newBall = game.NextBall
+	game.NextBall = randBall()
 	game.Board[row][0] = newBall
 	if outBall == Flip {
 		var temp [10][10]int
@@ -81,7 +83,7 @@ func (game *GameBoard) pushRowOnce(row int) (int, int) {
 	}
 	return newBall, outBall
 }
-func (game *GameBoard) pushColOnce(col int) (int, int) {
+func (game *GameBoard) PushCol(col int) (int, int) {
 	var outBall int
 	outBall = game.Board[game.Row-1][col]
 	switch game.Board[game.Row-1][col] {
@@ -103,7 +105,8 @@ func (game *GameBoard) pushColOnce(col int) (int, int) {
 		game.Board[i][col] = game.Board[i-1][col]
 	}
 	var newBall int
-	newBall = randBall()
+	newBall = game.NextBall
+	game.NextBall = randBall()
 	game.Board[0][col] = newBall
 	if outBall == Flip {
 		var temp [10][10]int

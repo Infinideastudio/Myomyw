@@ -9,6 +9,8 @@ type Room struct {
 	Subscribers []chan<- utils.Message `json:"-"`
 	Locked      bool                   `json:"locked"`
 	Password    string                 `json:"-"`
+	Gameboard   GameBoard              `json:"-"`
+	Whoesturn   int                    `json:"-"`
 }
 
 // BoardcastMessage boradcasts the message to all players who are playing/watching the game
