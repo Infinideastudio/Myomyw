@@ -55,12 +55,13 @@ func (conn *connectionData) isInGame() bool {
 func (conn *connectionData) loggedIn() bool {
 	return conn.uuid != ""
 }
-func sendResponse(c *websocket.Conn, headerRaw interface{}, bodyRaw interface{}) error {
-	header, err := json.Marshal(headerRaw)
+
+func sendResponse(c *websocket.Conn, message utils.Message) error {
+	header, err := json.Marshal(message.Header)
 	if err != nil {
 		return err
 	}
-	body, err := json.Marshal(bodyRaw)
+	body, err := json.Marshal(message.Body)
 	if err != nil {
 		return err
 	}
@@ -77,11 +78,56 @@ func sendResponse(c *websocket.Conn, headerRaw interface{}, bodyRaw interface{})
 	return nil
 }
 
+func readAndHandleData(c *websocket.Conn, server *Server, connData *connectionData) {
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("Error occured when trying to read a message:", err)
+			continue
+		}
+		if mt == websocket.TextMessage {
+			handleTextMessage(message, c, server, connData)
+		}
+	}
+}
+
+func handleTextMessage(message []byte, c *websocket.Conn, server *Server, connData *connectionData) {
+	var header utils.MessageHeader
+	decoder := json.NewDecoder(strings.NewReader(string(message)))
+
+	// Decode header
+	if err := decoder.Decode(&header); err != nil {
+		log.Println("Error occured when trying to parse JSON:", err, ". The message is", string(message))
+		return
+	}
+
+	// Forward to handler according to action
+	if handler, ok := handlers[header.Action]; ok {
+		errorCode, body := handler(server, connData, decoder)
+
+		// Pack response returned from handler
+		header.ErrorCode = errorCode
+		if body == nil {
+			body = struct{}{}
+		}
+		err := sendResponse(c, utils.Message{Header: header, Body: body})
+
+		if err != nil {
+			log.Println("Error occured when trying to send response: ", err, " body:", body)
+			return
+		}
+
+	} else {
+		log.Println("Error occured. Invalid action \"" + header.Action + "\" found.")
+		return
+	}
+}
+
 // ServeWs (WS) route /ws
 func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	c, err := server.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		log.Print("upgrade error:", err)
 		return
 	}
 	defer c.Close()
@@ -89,45 +135,10 @@ func (server *Server) serveWs(w http.ResponseWriter, r *http.Request) {
 	var connData connectionData
 	connData.roomID = -1
 	connData.messageChan = make(chan utils.Message)
+
+	go readAndHandleData(c, server, &connData)
 	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("Error occured when trying to read data:", err)
-			break
-		}
-
-		if mt == websocket.TextMessage {
-			var header utils.MessageHeader
-			decoder := json.NewDecoder(strings.NewReader(string(message)))
-
-			// Decode header
-			if err := decoder.Decode(&header); err != nil {
-				log.Println("Error occured when trying to parse JSON:", err, ". The message is", string(message))
-				continue
-			}
-
-			// Forward to handler according to action
-			if handler, ok := handlers[header.Action]; ok {
-				errorCode, bodyRaw := handler(server, &connData, decoder)
-
-				// Pack response returned from handler
-				header.ErrorCode = errorCode
-				if bodyRaw == nil {
-					bodyRaw = struct{}{}
-				}
-				err := sendResponse(c, header, bodyRaw)
-
-				if err != nil {
-					log.Println("Error occured when trying to send response: ", err, " body:", bodyRaw)
-					continue
-				}
-
-			} else {
-				log.Println("Error occured. Invalid action \"" + header.Action + "\" found.")
-				continue
-			}
-
-		}
+		sendResponse(c, <-connData.messageChan)
 	}
 }
 

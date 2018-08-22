@@ -11,6 +11,9 @@ type Room struct {
 	Password    string                 `json:"-"`
 }
 
-func (room *Room) BoardcastMessage(utils.Message) {
-
+// BoardcastMessage boradcasts the message to all players who are playing/watching the game
+func (room *Room) BoardcastMessage(msg utils.Message) {
+	for _, sub := range room.Subscribers {
+		sub <- msg
+	}
 }
