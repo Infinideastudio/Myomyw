@@ -62,6 +62,7 @@ namespace Engine
 
         public override void Process(ChessBoard board)
         {
+            board.Flip();
             base.Process(board);
         }
     }
@@ -160,6 +161,18 @@ namespace Engine
             _chessBoard = board;
             SizeLeft = newSizeLeft;
             SizeRight = newSizeRight;
+        }
+
+        public void Flip()
+        {
+            var board = new ChessTypeName[SizeLeft * SizeRight];
+            for (var i = 0; i < SizeLeft; ++i)
+            for (var j = 0; j < SizeRight; ++j)
+                board[j * SizeRight + i] = GetChess(i, j);
+            var tempSize = SizeRight;
+            SizeRight = SizeLeft;
+            SizeLeft = tempSize;
+            _chessBoard = board;
         }
     }
 }

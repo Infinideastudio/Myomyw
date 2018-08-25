@@ -1,5 +1,6 @@
 ﻿using System;
 using Engine;
+using UI.GameBoard.BoardGrid;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,58 +31,46 @@ namespace UI.GameBoard
                 BuildOpponentLauncherButton(i).transform.SetParent(canvas.transform, false);
         }
 
-        private static GameObject BuildLauncherButton(int pad)
+        private GameObject BuildLauncherButton(int pad)
         {
             var obj = new GameObject();
-            ApplyBoardCellLayout(obj);
-            obj.transform.localPosition = new Vector3(32, -pad * 64 - 32 - 64, -2);
+            obj.SetChessBoardLayout(new Vector3(0, pad + 1, 2));
             var image = obj.AddComponent<Image>();
             image.color = Color.grey;
             image.sprite = null;
-            var button = obj.AddComponent<Button>();
+            var button = obj.AddComponent<ChessLauncher>();
+            button.Setup(pad, this);
             button.targetGraphic = image;
-            button.onClick.AddListener(() => LaunchChess(pad));
             return obj;
+        }
+
+        private static void LaunchChessBegin(int pad)
+        {
+            throw new NotImplementedException();
         }
 
         private static GameObject BuildOpponentLauncherButton(int pad)
         {
             var obj = new GameObject();
-            ApplyBoardCellLayout(obj);
-            obj.transform.localPosition = new Vector3(pad * 64 + 32 + 64, -32, -2);
+            obj.SetChessBoardLayout(new Vector3(pad + 1, 0, 2));
             var image = obj.AddComponent<Image>();
             image.color = Color.grey;
             image.sprite = null;
             return obj;
         }
 
-        private static void LaunchChess(int pad)
+        public void LaunchChess(int pad)
         {
-            throw new NotImplementedException();
+            Debug.Log("Launch Ball");
         }
 
         private static GameObject BuildChessRenderer(ChessTypeName type, int left, int right)
         {
             var obj = new GameObject();
-            ApplyBoardCellLayout(obj, new Vector3(.618f, .618f, .618f));
-            obj.transform.localPosition = new Vector3(right * 64 + 32 + 64, -left * 64 - 32 - 64, -1);
+            obj.SetChessBoardLayout(new Vector3(right + 1, left + 1, 2), new Vector3(0.618f, 0.618f, 1));
             var spriteRenderer = obj.AddComponent<SpriteRenderer>();
             spriteRenderer.sprite = Resources.Load<Sprite>(ChessTypeManager.Get(type).Name);
             return obj;
-        }
-
-        private static void ApplyBoardCellLayout(GameObject obj)
-        {
-            ApplyBoardCellLayout(obj, new Vector3(1, 1, 1));
-        }
-
-        private static void ApplyBoardCellLayout(GameObject obj, Vector3 scale)
-        {
-            var trans = obj.AddComponent<RectTransform>();
-            trans.localScale = scale;
-            trans.anchorMin = trans.anchorMax = new Vector2(0.0f, 1.0f);
-            trans.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 64);
-            trans.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 64);
         }
 
         public void ResetBoard()

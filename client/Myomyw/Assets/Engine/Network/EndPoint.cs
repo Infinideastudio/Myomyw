@@ -1,16 +1,27 @@
 ﻿using System;
-using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Engine.Network
 {
-    public class EndPoint
+    public abstract class EndPoint
+    {
+        public abstract void Send(ArraySegment<byte> messaage);
+
+        public void Send(byte[] message)
+        {
+            Send(new ArraySegment<byte>(message));
+        }
+    }
+
+    public class Client : EndPoint
     {
         private readonly ClientWebSocket _webSocket;
 
-        public EndPoint()
+        private readonly object _writelock = new object();
+
+        public Client()
         {
             _webSocket = new ClientWebSocket();
         }
@@ -24,16 +35,20 @@ namespace Engine.Network
         {
             ProtocolHub.LockAccess();
             var buffer = new ByteBuffer();
+            var ioBuffer = new IoHelperBuffer(this, buffer);
             while (_webSocket.State != WebSocketState.Closed)
             {
-                var message = await ReadMessage(buffer);
-                var protocol = ProtocolHub.Get(Header.Unpack(message));
+                await ReadMessage(buffer);
+                ioBuffer.ResetIn();
+                var header = Header.Read(ioBuffer.InBuffer);
+                var protocol = ProtocolHub.Get(header.Action);
+                protocol.Handle(new IoHelper(ioBuffer, header));
             }
 
             ProtocolHub.ReleaseAccess();
         }
 
-        private async Task<MemoryStream> ReadMessage(ByteBuffer buffer)
+        private async Task ReadMessage(ByteBuffer buffer)
         {
             var messageComplete = false;
             buffer.Reset();
@@ -43,8 +58,14 @@ namespace Engine.Network
                 messageComplete = result.EndOfMessage;
                 buffer.Occupy(result.Count);
             }
+        }
 
-            return buffer.Get();
+        public override void Send(ArraySegment<byte> messaage)
+        {
+            lock (_writelock)
+            {
+                _webSocket.SendAsync(messaage, WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+            }
         }
     }
 }

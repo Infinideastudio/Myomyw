@@ -16,12 +16,12 @@ ScriptedImporter:
   GradientResolution: 128
   Alignment: 0
   CustomPivot: {x: 0, y: 0}
-  AdvancedMode: 0
+  AdvancedMode: 1
   PredefinedResolutionIndex: 0
   TargetResolution: 2160
   ResolutionMultiplier: 1
-  StepDistance: 10
-  SamplingStepDistance: 100
+  StepDistance: 3
+  SamplingStepDistance: 8
   MaxCordDeviationEnabled: 0
   MaxCordDeviation: 1
   MaxTangentAngleEnabled: 0

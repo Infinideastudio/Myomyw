@@ -1,13 +1,14 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
+using Engine.Connection;
+using Engine.Network.Protocols;
 
 namespace Engine.Network
 {
     [DataContract]
-    public class Header
+    
+    public class Header: ContractSerializable<Header>
     {
-        private static readonly DataContractSerializer Serializerer = new DataContractSerializer(typeof(Header));
-
         [DataMember(Name = "action", IsRequired = true)]
         internal string Action;
 
@@ -22,14 +23,9 @@ namespace Engine.Network
             Action = act;
         }
 
-        public static void Pack(string action, Stream to)
+        public Header Clone()
         {
-            Serializerer.WriteObject(to, new Header(action));
-        }
-
-        public static string Unpack(Stream from)
-        {
-            return ((Header) Serializerer.ReadObject(from)).Action;
+            return MemberwiseClone() as Header;
         }
     }
 }
