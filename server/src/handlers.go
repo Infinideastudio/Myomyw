@@ -8,6 +8,20 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	Success              = iota
+	ErrorVersionMismatch = iota
+	ErrorFullRoom        = iota
+	ErrorRoomNotExist    = iota
+	ErrorWrongPassword   = iota
+	ErrorAlreadyInGame   = iota
+	ErrorNotLoggedIn     = iota
+	ErrorNotInGame       = iota
+	ErrorNotYourRound    = iota
+	Gameover             = iota
+	UnknownError         = 0xff
+)
+
 func handleVersionRequest(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	return 0, struct {
 		Version string `json:"version"`
@@ -18,7 +32,7 @@ func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (i
 	type LoginRequest struct {
 		Username string `json:"username"`
 		Version  string `json:"version"`
-		UUID     string `json:"uuid"`
+		UUID     string `json:"uuid"` // Optional
 	}
 	type TopUser struct {
 		Username string `json:"username"`
@@ -32,11 +46,11 @@ func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (i
 	}
 	var request LoginRequest
 	if decoder.Decode(&request) != nil {
-		return 0xff, nil
+		return UnknownError, nil
 	}
 	// client version unmatched
 	if request.Version != Version {
-		return 0x03, nil
+		return ErrorVersionMismatch, nil
 	}
 
 	playerUUID := request.UUID
@@ -49,7 +63,7 @@ func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (i
 	conn.uuid = playerUUID
 	conn.user = server.userManager.GetUser(playerUUID)
 
-	return 0, LoginResponse{
+	return Success, LoginResponse{
 		UUID:   playerUUID,
 		Rating: 0,
 		Rank:   nil,
@@ -60,10 +74,10 @@ func playerLogin(server *Server, conn *connectionData, decoder *json.Decoder) (i
 
 func createRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	if !conn.loggedIn() {
-		return 0xff, nil
+		return ErrorNotLoggedIn, nil
 	}
 	if conn.isInGame() {
-		return 0x14, nil // you're already in a game
+		return ErrorAlreadyInGame, nil // you're already in a game
 	}
 
 	type CreateRequest struct {
@@ -73,7 +87,7 @@ func createRoom(server *Server, conn *connectionData, decoder *json.Decoder) (in
 
 	var request CreateRequest
 	if decoder.Decode(&request) != nil {
-		return 0xff, nil
+		return UnknownError, nil
 	}
 
 	var room = gamemanager.Room{
@@ -90,21 +104,20 @@ func createRoom(server *Server, conn *connectionData, decoder *json.Decoder) (in
 	// Update connection states
 	conn.roomID = server.roomManager.CreateRoom(room)
 	conn.playing = !request.Watching
-	return 0x00, nil
+	return Success, nil
 
 }
 
 func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	if !conn.loggedIn() {
-		return 0xff, nil
+		return ErrorNotLoggedIn, nil
 	}
 	if conn.isInGame() {
-		return 0x14, nil // you're already in a game!
+		return ErrorAlreadyInGame, nil // you're already in a game!
 	}
 
 	type JoinRequest struct {
 		Watching bool   `json:"watching"`
-		NewRoom  bool   `json:"newroom"`
 		RoomID   int    `json:"roomid"`
 		Password string `json:"password"`
 	}
@@ -116,7 +129,7 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 
 	if request.RoomID != -1 {
 		if request.RoomID >= len(server.roomManager.GetRooms()) {
-			return 0x12, nil
+			return 3, nil
 		}
 		if request.Watching {
 			conn.roomID = request.RoomID
@@ -125,11 +138,11 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 		}
 		room := server.roomManager.FindRoom(request.RoomID)
 		if room.Locked && room.Password != request.Password {
-			return 0x13, nil
+			return 4, nil
 		}
 		roomNotFull, shouldStart := server.roomManager.JoinRoom(request.RoomID, conn.uuid, conn.messageChan)
 		if !roomNotFull {
-			return 0x11, nil // room is full
+			return 2, nil // room is full
 		}
 		// Successfully joined a room
 		conn.roomID = request.RoomID
@@ -140,11 +153,11 @@ func joinRoom(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 			server.roomManager.UpdateRoom(room)
 			room.BoardcastMessage(generateGameStart(&server.userManager, &room, room.Whoesturn))
 		}
-		return 0x00, nil
+		return Success, nil
 	}
 	// or do a matchmaking if not provided
 	// TODO: implement this
-	return 0xff, nil
+	return UnknownError, nil
 }
 
 func getRooms(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
@@ -155,10 +168,10 @@ func getRooms(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 
 func sendChat(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	if !conn.loggedIn() {
-		return 0x20, nil
+		return ErrorNotLoggedIn, nil
 	}
 	if !conn.isInGame() {
-		return 0x21, nil // You need to be in game to send message
+		return ErrorNotInGame, nil // You need to be in game to send message
 	}
 
 	type ChatRequest struct {
@@ -166,19 +179,19 @@ func sendChat(server *Server, conn *connectionData, decoder *json.Decoder) (int,
 	}
 	var request ChatRequest
 	if decoder.Decode(&request) != nil {
-		return 0xff, nil
+		return UnknownError, nil
 	}
 	room := server.roomManager.FindRoom(conn.roomID)
 	room.BoardcastMessage(generateChat(&server.userManager, request.Message, conn.uuid))
-	return 0, nil
+	return Success, nil
 }
 
 func move(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{}) {
 	if !conn.loggedIn() {
-		return 0x20, nil
+		return ErrorNotLoggedIn, nil
 	}
 	if !conn.isInGame() {
-		return 0x21, nil // You need to be in game to send message
+		return ErrorNotInGame, nil // You need to be in game to send message
 	}
 	type MoveRequest struct {
 		Num      int  `json:"num"`
@@ -186,12 +199,12 @@ func move(server *Server, conn *connectionData, decoder *json.Decoder) (int, int
 	}
 	var request MoveRequest
 	if decoder.Decode(&request) != nil {
-		return 0xff, nil
+		return UnknownError, nil
 	}
 
 	room := server.roomManager.FindRoom(conn.roomID)
 	if room.Players[room.Whoesturn] != conn.uuid {
-		return 0x31, nil // It's not your turn yet
+		return ErrorNotYourRound, nil // It's not your turn yet
 	}
 	isCol := room.Whoesturn == 1
 	var outBall int
@@ -207,14 +220,14 @@ func move(server *Server, conn *connectionData, decoder *json.Decoder) (int, int
 	}
 	errcode := 0
 	if outBall == gamemanager.Key {
-		errcode = 0x50
+		errcode = Gameover
 		room.Subscribers = nil
 	}
 	server.roomManager.UpdateRoom(room)
 
 	room.BoardcastMessage(generateMove(isCol, request.Num, room.Gameboard.NextBall, request.Handover, errcode))
 
-	return 0, nil
+	return Success, nil
 }
 
 var handlers = map[string](func(server *Server, conn *connectionData, decoder *json.Decoder) (int, interface{})){
