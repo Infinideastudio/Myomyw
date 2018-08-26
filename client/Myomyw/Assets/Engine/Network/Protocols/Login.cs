@@ -1,27 +1,23 @@
-using System.Runtime.Serialization;
-using Engine.Connection;
-using Engine.Connection.Login;
-
 namespace Engine.Network.Protocols
 {
-    public sealed class Login : GroupBase<Login>
+    public sealed class PrLogin : GroupBase<PrLogin>
     {
-        static Login()
+        static PrLogin()
         {
             Name = "login";
         }
 
-        private class HandleRequest : ProtocolBase<LoginRequest>
+        private class HandleRequest : ProtocolBase<Connection.Login.Request>
         {
-            protected override void Handle(LoginRequest income, IoHelper io)
+            protected override void Handle(Connection.Login.Request income, IoHelper io)
             {
                 throw new System.NotImplementedException();
             }
         }
 
-        private class HandleResponse : ProtocolBase<LoginResponse>
+        private class HandleResponse : ProtocolBase<Connection.Login.Response>
         {
-            protected override void Handle(LoginResponse income, IoHelper io)
+            protected override void Handle(Connection.Login.Response income, IoHelper io)
             {
                 throw new System.NotImplementedException();
             }
