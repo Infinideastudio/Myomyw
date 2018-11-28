@@ -29,8 +29,8 @@
 	}
 	$row = mysqli_fetch_array($ret);
 	$rating_loser=$row['rating'];
-	$EA=1/(1+pow(10,($rating_winner-$rating_loser)/400));
-	$EB=1/(1+pow(10,($rating_loser-$rating_winner)/400));
+	$EA=1/(1+pow(10,($rating_loser-$rating_winner)/400));
+	$EB=1/(1+pow(10,($rating_winner-$rating_loser)/400));
 	$RA=$rating_winner+32*(1-$EA);
 	$RB=$rating_loser+32*(-$EB);
 	$sql='update user set rating='.$RA.' where uuid='."'$winner'";
