@@ -10,6 +10,9 @@ var GameScene = cc.Scene.extend({
     chessmen: null,
     createNextChessman: null,
     nextChessman: null,
+    nextChessmanOutdated: true,
+    waitForNextChessman: false,
+    myMovingCol: null,
     turn: null,
     playing: false,
     totalMovements: null,
@@ -155,6 +158,7 @@ var GameScene = cc.Scene.extend({
             this.touching = false;
             if (this.action == Action.cooling) {
                 clearTimeout(this.coolTID);
+                this.waitForNextChessman = false;
                 this.changeTurn();
             }
         }
@@ -248,7 +252,12 @@ var GameScene = cc.Scene.extend({
     },
 
     setNextChessman: function (chessman) {
+        this.nextChessmanOutdated = false;
         this.nextChessman = chessman;
+        if(this.waitForNextChessman){
+            this.waitForNextChessman = false;
+            this.move(this.myMovingCol);
+        }
         var moveAction = cc.moveBy(0.5, cc.p(0, -20));
         var old = this.getChildByName("next");
         if (old) {
@@ -461,12 +470,21 @@ var GameScene = cc.Scene.extend({
             if (this.createNextChessman) {
                 this.setNextChessman(this.createNextChessman());
             }
+            this.nextChessmanOutdated = true;
             this.onBeganMoving(col, lastChessman);
         }
     },
 
     coolAndMove: function (col) {
-        this.coolTID = setTimeout(this.move.bind(this, col), coolingTime * 1000);
+        this.coolTID = setTimeout(function(){
+            if(this.nextChessmanOutdated){
+                this.waitForNextChessman = true;
+                this.myMovingCol=col;
+            }else{
+                this.move(col);
+            }
+        }.bind(this),
+        coolingTime * 1000);
     },
 
     //移动结束后的处理
