@@ -71,7 +71,7 @@ var MainScene = cc.Scene.extend({
         loginUI.addChild(guestButton);
 
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
-        messageLabel.setPosition(size.width / 2, size.height / 2 - 200);
+        messageLabel.setPosition(size.width / 2, size.height / 2 - 270);
         messageLabel.opacity = 0;
         this.addChild(messageLabel);
 
@@ -148,7 +148,7 @@ var MainScene = cc.Scene.extend({
         });
         this.addChild(optionButton);
 
-        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(150, 60), function () {
+        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(180, 60), function () {
             cc.director.runScene(new TutorialGameScene());
         });
         tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 20, tutorialButton.height / 2 + 20);
