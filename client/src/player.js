@@ -9,7 +9,7 @@ var player = {
             player.server = cc.game.config.server;
         } else {
             var xhr = cc.loader.getXMLHttpRequest();
-            xhr.open("GET", "http://www.infinideas.org/myomyw/server.txt");
+            xhr.open("GET", "https://www.newinfinideas.cn/myomyw/server.txt");
             xhr.timeout = 5000;
             xhr.onerror = onError;
             xhr.ontimeout = onError;
