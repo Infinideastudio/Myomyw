@@ -194,14 +194,14 @@ Room.prototype.setBoardSize = function (lCol, rCol) {
 Room.prototype.flip = function () {
     for (var l = 0; l < config.maxLCol; l++) {
         for (var r = l + 1; r < config.maxRCol; r++) {
-            this.chessmen[l][r] ^= this.chessmen[r][l];
-            this.chessmen[r][l] ^= this.chessmen[l][r];
-            this.chessmen[l][r] ^= this.chessmen[r][l];
+            var temp = this.chessmen[l][r];
+            this.chessmen[l][r] = this.chessmen[r][l];
+            this.chessmen[r][l] = temp;
         }
     }
-    this.lCol ^= this.rCol;
-    this.rCol ^= this.lCol;
-    this.lCol ^= this.rCol;
+    var temp = this.rCol;
+    this.rCol = this.lCol;
+    this.lCol = temp;
 };
 
 module.exports = Room;

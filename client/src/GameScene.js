@@ -555,14 +555,14 @@ var GameScene = cc.Scene.extend({
     flip: function () {
         for (var l = 0; l < maxLCol; l++) {
             for (var r = l + 1; r < maxRCol; r++) {
-                this.chessmen[l][r] ^= this.chessmen[r][l];
-                this.chessmen[r][l] ^= this.chessmen[l][r];
-                this.chessmen[l][r] ^= this.chessmen[r][l];
+                var temp = this.chessmen[l][r];
+                this.chessmen[l][r] = this.chessmen[r][l];
+                this.chessmen[r][l] = temp;
             }
         }
-        this.lCol ^= this.rCol;
-        this.rCol ^= this.lCol;
-        this.lCol ^= this.rCol;
+        var temp = this.rCol;
+        this.rCol = this.lCol;
+        this.lCol = temp;
 
         var scaleAction1 = cc.scaleTo(flippingTime / 2, 0, 1);
         var callAction = cc.callFunc(this.buildChessboard.bind(this));

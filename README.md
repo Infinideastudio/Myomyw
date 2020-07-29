@@ -35,7 +35,7 @@ http://www.infinideas.org/myomyw/
 ## 运行 Run 
 ### 客户端 Client
 #### Web
-在`client`目录下运行`cocos run -p web -m {debug/release}`。在Release模式下`client/publish/html5`中会生成打包后的Web发布包，请手动在发布包中添加`style.css`和`favicon.ico`，之后可以发布到远程服务器上。
+在`client`目录下运行`cocos run -p web -m {debug/release}`。在Release模式下`client/publish/html5`中会生成打包后的Web发布包。
 #### 原生平台 
 在`client`目录下运行`cocos run -p (相应平台) -m {debug/release}`或用相应的编译工具编译`client/frameworks/runtime-src`下的对应项目。你也可以使用CMake。
 ### 服务端 Server
