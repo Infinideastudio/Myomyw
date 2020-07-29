@@ -36,8 +36,10 @@ https://www.newinfinideas.cn/myomyw/index.html
 ### 客户端 Client
 #### Web
 在`client`目录下运行`cocos run -p web -m {debug/release}`。在Release模式下`client/publish/html5`中会生成打包后的Web发布包。
+此时在`res/server.txt`中设置服务器地址
 #### 原生平台 
 在`client`目录下运行`cocos run -p (相应平台) -m {debug/release}`或用相应的编译工具编译`client/frameworks/runtime-src`下的对应项目。你也可以使用CMake。
+此时从`https://www.newinfinideas.cn/myomyw/server.txt`获取服务器地址
 ### 服务端 Server
 在`server`目录下使用脚本或运行`node src/server.js`启动服务器。
 ## 协议 License
