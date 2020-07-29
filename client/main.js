@@ -2,7 +2,7 @@ cc.game.onStart = function () {
     if (!cc.sys.isNative && document.getElementById("loading"))
         document.body.removeChild(document.getElementById("loading"));
 
-    cc.view.enableRetina(cc.sys.os === cc.sys.OS_IOS ? true : false);
+    cc.view.enableRetina(true);
     cc.view.adjustViewPort(true);
     cc.view.setDesignResolutionSize(1280, 720, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);

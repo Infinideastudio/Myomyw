@@ -42,7 +42,7 @@ var MainScene = cc.Scene.extend({
             updatePlayerLabel();
         }
 
-        var loginButton = creator.createButton(txt.mainScene.login, cc.size(200, 50), function () {
+        var loginButton = creator.createButton(txt.mainScene.login, cc.size(250, 60), function () {
             var name = nameBox.getString();
             if (name.length == 0) {
                 showMessage(txt.mainScene.emptyName);
@@ -60,14 +60,14 @@ var MainScene = cc.Scene.extend({
             }
         });
 
-        loginButton.setPosition(size.width / 2, size.height / 2 - 60);
+        loginButton.setPosition(size.width / 2, size.height / 2 - 90);
         loginUI.addChild(loginButton);
 
-        guestButton = creator.createButton(txt.mainScene.loginAsGuest, cc.size(200, 50), function () {
+        guestButton = creator.createButton(txt.mainScene.loginAsGuest, cc.size(250, 60), function () {
             player.loginAsGuest();
             moveToMainUI();
         });
-        guestButton.setPosition(size.width / 2, size.height / 2 - 140);
+        guestButton.setPosition(size.width / 2, size.height / 2 - 190);
         loginUI.addChild(guestButton);
 
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
@@ -92,25 +92,27 @@ var MainScene = cc.Scene.extend({
         scrollableLayer.addChild(mainUI);
 
         var playOnlineButton = new ccui.Button(res.PlayOnlineButton_png);
+        playOnlineButton.ignoreContentAdaptWithSize(false);
+        playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
             cc.director.runScene(new OnlineGameScene());
         });
         mainUI.addChild(playOnlineButton);
 
-        var playWithAIButton = creator.createButton(txt.mainScene.playWithAI, cc.size(250, 50), function () {
+        var playWithAIButton = creator.createButton(txt.mainScene.playWithAI, cc.size(280, 60), function () {
             cc.director.runScene(new AIGameScene());
         });
-        playWithAIButton.setPosition(size.width / 2, size.height / 2 - 20);
+        playWithAIButton.setPosition(size.width / 2, size.height / 2 - 60);
         mainUI.addChild(playWithAIButton);
 
-        var playDoubleButton = creator.createButton(txt.mainScene.playDouble, cc.size(250, 50), function () {
+        var playDoubleButton = creator.createButton(txt.mainScene.playDouble, cc.size(280, 60), function () {
             cc.director.runScene(new DoubleGameScene());
         });
-        playDoubleButton.setPosition(size.width / 2, size.height / 2 - 100);
+        playDoubleButton.setPosition(size.width / 2, size.height / 2 - 150);
         mainUI.addChild(playDoubleButton);
 
-        var logoutButton = creator.createButton(txt.mainScene.logout, cc.size(150, 50), function () {
+        var logoutButton = creator.createButton(txt.mainScene.logout, cc.size(150, 60), function () {
             player.logout();
             loginUI.enabled = true;
             loginUI.visible = true;
@@ -118,7 +120,7 @@ var MainScene = cc.Scene.extend({
             var moveAction = cc.moveTo(1, cc.p(0, 0)).easing(cc.easeExponentialInOut());
             scrollableLayer.runAction(moveAction);
         });
-        logoutButton.setPosition(size.width / 2, size.height / 2 - 250);
+        logoutButton.setPosition(size.width / 2, size.height / 2 - 260);
         mainUI.addChild(logoutButton);
 
         var playerLabel = creator.createLabel("", 25);
@@ -140,22 +142,16 @@ var MainScene = cc.Scene.extend({
 
         //固定界面
         var optionButton = new ccui.Button(res.OptionButtonN_png, res.OptionButtonS_png);
-        optionButton.setPosition(optionButton.width / 2 + 10, optionButton.height / 2 + 10);
+        optionButton.setPosition(optionButton.width / 2 + 20, optionButton.height / 2 + 20);
         optionButton.addClickEventListener(function () {
             cc.director.runScene(new OptionScene());
         });
         this.addChild(optionButton);
 
-        var homepageButton = creator.createButton(txt.mainScene.homepage, cc.size(200, 50), function () {
-            cc.sys.openURL("http://www.infinideas.org");
-        });
-        homepageButton.setPosition(size.width - homepageButton.width / 2 - 10, homepageButton.height / 2 + 20);
-        this.addChild(homepageButton);
-
-        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(150, 50), function () {
+        var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(150, 60), function () {
             cc.director.runScene(new TutorialGameScene());
         });
-        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 10, tutorialButton.height / 2 + homepageButton.height + 40);
+        tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 20, tutorialButton.height / 2 + 20);
         this.addChild(tutorialButton);
         return true;
     }
