@@ -22,6 +22,7 @@ var creator = {
 
     createLabel: function (text, size, color) {
         var label = new cc.LabelTTF(text, creator.normalFont, size);
+        label.setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
         label.color = color ? color : cc.color(0, 0, 0);
         return label;
     },

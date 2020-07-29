@@ -73,8 +73,8 @@ var TutorialGameScene = GameScene.extend({
 
     changeText: function (text) {
         this.tutorialLabel.string = text;
-        this.tutorialLabel.setPosition(this.tutorialLabel.width / 2 + 20,
-            size.height - this.tutorialLabel.height / 2 - 60);
+        this.tutorialLabel.setPosition(this.tutorialLabel.width / 2 + 30,
+            size.height - this.tutorialLabel.height / 2 - 80);
     },
 
     onChangedTurn: function () {

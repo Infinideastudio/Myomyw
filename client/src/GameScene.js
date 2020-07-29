@@ -109,10 +109,10 @@ var GameScene = cc.Scene.extend({
         }
 
         this.leftNameLabel = creator.createLabel(leftName, 25);
-        this.leftNameLabel.setPosition(this.leftNameLabel.width / 2 + 20, size.height - this.leftNameLabel.height / 2 - 20);
+        this.leftNameLabel.setPosition(this.leftNameLabel.width / 2 + 30, size.height - this.leftNameLabel.height / 2 - 30);
         this.addChild(this.leftNameLabel);
         this.rightNameLabel = creator.createLabel(rightName, 25);
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 30, size.height - this.rightNameLabel.height / 2 - 30);
         this.addChild(this.rightNameLabel);
 
         var touchEvent = {
@@ -272,8 +272,8 @@ var GameScene = cc.Scene.extend({
         nextChessmanSprite.attr({
             opacity: 0,
             scale: 0.8,
-            x: size.width - 50,
-            y: size.height - 80
+            x: size.width - 60,
+            y: size.height - 100
         });
         nextChessmanSprite.setName("next");
         var fadeInAction = cc.fadeIn(0.5);

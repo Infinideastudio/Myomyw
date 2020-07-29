@@ -127,7 +127,7 @@ var MainScene = cc.Scene.extend({
         mainUI.addChild(playerLabel);
         function updatePlayerLabel() {
             playerLabel.string = player.name;
-            playerLabel.setPosition(playerLabel.width / 2 + 20, size.height - playerLabel.height / 2 - 20);
+            playerLabel.setPosition(playerLabel.width / 2 + 30, size.height - playerLabel.height / 2 - 30);
         }
 
         if (player.logged) {
