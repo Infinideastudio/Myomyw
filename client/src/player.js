@@ -9,7 +9,7 @@ var player = {
             player.server = cc.game.config.server;
         } else {
             var xhr = cc.loader.getXMLHttpRequest();
-            var path = cc.sys.isNative ? "https://www.newinfinideas.cn/myomyw/server.txt" : "/res/server.txt";
+            var path = cc.sys.isNative ? "http://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "/res/server.txt";
             xhr.open("GET", path);
             xhr.timeout = 5000;
             xhr.onerror = onError;
