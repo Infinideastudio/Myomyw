@@ -466,11 +466,10 @@ var GameScene = cc.Scene.extend({
             var func = this.handleMovingEnd.bind(this, col, lastChessman);
             this.handleMovingEndTFN = func;
             this.handleMovingEndTID = setTimeout(func, movingTime * 1000);
-
+            this.nextChessmanOutdated = true;
             if (this.createNextChessman) {
                 this.setNextChessman(this.createNextChessman());
             }
-            this.nextChessmanOutdated = true;
             this.onBeganMoving(col, lastChessman);
         }
     },
