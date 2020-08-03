@@ -6,6 +6,7 @@ cc.game.onStart = function () {
     cc.view.adjustViewPort(true);
     cc.view.setDesignResolutionSize(1280, 720, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
+    cc.view.setOrientation(cc.ORIENTATION_LANDSCAPE)
     cc.director.setClearColor(cc.color(255, 255, 255));
     size = cc.winSize;
     creator.init();
