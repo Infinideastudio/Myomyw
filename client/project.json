@@ -27,6 +27,7 @@
     "src/DoubleGameScene.js",
     "src/AIGameScene.js",
     "src/OnlineGameScene.js",
-    "src/TutorialGameScene.js"
+    "src/TutorialGameScene.js",
+    "src/Socket.js"
   ]
 }

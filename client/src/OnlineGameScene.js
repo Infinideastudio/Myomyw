@@ -14,16 +14,13 @@ var OnlineGameScene = GameScene.extend({
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);
 
-        io = window.SocketIO || window.io;
-        this.socket = io.connect(player.server, { "force new connection": true });
-        this.socket.on("connect", this.onConnect.bind(this));
+        this.socket = new Socket("ws://" + player.server, this.onConnect.bind(this), this.onDisconnect.bind(this));
         this.socket.on("error", this.onError.bind(this));
         this.socket.on("start", this.onStart.bind(this));
         this.socket.on("nextChessman", this.onNextChessman.bind(this));
         this.socket.on("move", this.onMove.bind(this));
         this.socket.on("endTurn", this.onEndTurn.bind(this));
         this.socket.on("endGame", this.onEndGame.bind(this));
-        this.socket.on("disconnect", this.onDisconnect.bind(this));
         return true;
     },
 
@@ -68,7 +65,7 @@ var OnlineGameScene = GameScene.extend({
                 this.socket.emit("move", JSON.stringify({ col: col }));
                 this.firstMove = false;
             } else {
-                this.socket.emit("move", "");
+                this.socket.emit("move", JSON.stringify({ col: col }));
             }
         }
     },
@@ -104,7 +101,8 @@ var OnlineGameScene = GameScene.extend({
 
     //socket.io的回调
     onConnect: function () {
-        this.socket.emit("match", JSON.stringify({ name: player.name }));
+        this.socket.emit("login", JSON.stringify({ name: player.name }));
+        this.socket.emit("match");
         this.roomLabel.string = txt.online.waiting;
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
     },
@@ -152,7 +150,7 @@ var OnlineGameScene = GameScene.extend({
             }
         }
     },
-    
+
     onEndGame: function (data) {
         data = parseJson(data);
         this.playing = false;
@@ -189,8 +187,5 @@ var OnlineGameScene = GameScene.extend({
 });
 
 function parseJson(str) {
-    if (cc.sys.isNative)
-        return JSON.parse(str);
-    else
-        return str;
+    return JSON.parse(str);
 }
