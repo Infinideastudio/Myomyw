@@ -14,16 +14,15 @@ var OnlineGameScene = GameScene.extend({
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);
 
-        io = window.SocketIO || window.io;
-        this.socket = io.connect(player.server, { "force new connection": true });
-        this.socket.on("connect", this.onConnect.bind(this));
-        this.socket.on("error", this.onError.bind(this));
+        this.socket = new Socket("ws://" + player.server);
+        this.socket.onConnect(this.onConnect.bind(this));
+        this.socket.onDisconnect(this.onDisconnect.bind(this));
+        this.socket.onError(this.onError.bind(this));
         this.socket.on("start", this.onStart.bind(this));
         this.socket.on("nextChessman", this.onNextChessman.bind(this));
         this.socket.on("move", this.onMove.bind(this));
         this.socket.on("endTurn", this.onEndTurn.bind(this));
         this.socket.on("endGame", this.onEndGame.bind(this));
-        this.socket.on("disconnect", this.onDisconnect.bind(this));
         return true;
     },
 
@@ -65,7 +64,7 @@ var OnlineGameScene = GameScene.extend({
     onBeganMoving: function (col, last) {
         if (this.turn == left && !this.disconnected) {
             if (this.firstMove) {
-                this.socket.emit("move", JSON.stringify({ col: col }));
+                this.socket.emit("move", { col: col });
                 this.firstMove = false;
             } else {
                 this.socket.emit("move", "");
@@ -102,19 +101,17 @@ var OnlineGameScene = GameScene.extend({
         }
     },
 
-    //socket.io的回调
     onConnect: function () {
-        this.socket.emit("match", JSON.stringify({ name: player.name }));
+        this.socket.emit("match", { name: player.name });
         this.roomLabel.string = txt.online.waiting;
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
     },
 
     onError: function (data) {
-        cc.log(data);
+        cc.log(JSON.stringify(data));
     },
 
     onStart: function (data) {
-        data = parseJson(data);
         this.roomLabel.string = format(txt.online.room, data.room);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.opponentName = data.opponentName;
@@ -124,12 +121,10 @@ var OnlineGameScene = GameScene.extend({
     },
 
     onNextChessman: function (data) {
-        data = parseJson(data);
         this.setNextChessman(data.chessman);
     },
 
     onMove: function (data) {
-        data = parseJson(data);
         if (this.turn == right) {
             if ("col" in data && this.movingCol === null) {
                 this.movingCol = data.col;
@@ -152,9 +147,8 @@ var OnlineGameScene = GameScene.extend({
             }
         }
     },
-    
+
     onEndGame: function (data) {
-        data = parseJson(data);
         this.playing = false;
         this.serverReason = data.reason;
         if (this.serverReason == EndReason.opponentLeft) {
@@ -187,10 +181,3 @@ var OnlineGameScene = GameScene.extend({
         }
     }
 });
-
-function parseJson(str) {
-    if (cc.sys.isNative)
-        return JSON.parse(str);
-    else
-        return str;
-}
