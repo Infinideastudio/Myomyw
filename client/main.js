@@ -12,8 +12,9 @@ cc.game.onStart = function () {
     creator.init();
     lang.init();
     var ready = false;
-    player.loadServer(loaded, loaded);
+    connection.loadServer(loaded, loaded);
     function loaded() {
+        connection.connect(function(){},function(){});
         if (ready) {
             if (storage.getItem("playedBefore") == "true") {
                 cc.director.runScene(new MainScene());

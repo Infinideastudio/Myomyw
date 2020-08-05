@@ -28,6 +28,7 @@
     "src/AIGameScene.js",
     "src/OnlineGameScene.js",
     "src/TutorialGameScene.js",
-    "src/Socket.js"
+    "src/socket.js",
+    "src/connection.js"
   ]
 }

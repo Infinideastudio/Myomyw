@@ -1,17 +1,30 @@
 var WebSocket = WebSocket || window.WebSocket || window.MozWebSocket;
-var Socket = cc.Class.extend({
+var socket = {
     ws: null,
     handlers: {},
-    ctor: function (address, onopen, onclose) {
-        this.ws = new WebSocket(address);
-        this.ws.onopen = onopen;
-        this.ws.onclose = onclose;
-        this.ws.onmessage = this._onmessage.bind(this);
+    replyTimeoutTID: null,
+
+    connect: function (address) {
+        if (socket.ws) {
+            socket.ws.close();
+        }
+        socket.ws = new WebSocket(address);
+        socket.ws.onmessage = socket.onmessage;
     },
-    _onmessage: function (e) {
+    onmessage: function (e) {
         var substr = e.data.split("$@@$");
         var action = substr[0], data = JSON.parse(substr[1]);
-        this.handlers[action](data);
+        if (socket.handlers[action]) {
+            socket.handlers[action](data);
+        }
+        if (action == "reply") {
+            socket.handler = null;
+            if (replyTimeoutTID) {
+                //不应当在正常情况下发生
+                cc.log("A reply is to be waited while another is still being waited!");
+                clearTimeout(replyTimeoutTID);
+            }
+        }
     },
     emit: function (action, data) {
         if (data) {
@@ -19,21 +32,28 @@ var Socket = cc.Class.extend({
         } else {
             data = "";
         }
-        this.ws.send(action + "$@@$" + data);
+        socket.ws.send(action + "$@@$" + data);
     },
     on: function (action, handler) {
-        this.handlers[action] = handler;
+        socket.handlers[action] = handler;
+    },
+    onReply: function (handler, timeout) {
+        socket.handlers["reply"] = handler;
+        if (replyTimeoutTID) {
+            clearTimeout(replyTimeoutTID);
+        }
+        replyTimeoutTID = setTimeout(timeout, 5000);
     },
     onConnect: function (handler) {
-        this.ws.onopen = handler;
+        socket.ws.onopen = handler;
     },
     onDisconnect: function (handler) {
-        this.ws.onclose = handler;
+        socket.ws.onclose = handler;
     },
     onError: function (handler) {
-        this.ws.onerror = handler;
+        socket.ws.onerror = handler;
     },
     disconnect: function () {
-        this.ws.close();
+        socket.ws.close();
     }
-});
+}

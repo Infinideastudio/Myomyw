@@ -1,5 +1,4 @@
 var OnlineGameScene = GameScene.extend({
-    socket: null,
     roomLabel: null,
     opponentName: null,
     disconnected: false,
@@ -10,28 +9,23 @@ var OnlineGameScene = GameScene.extend({
 
     ctor: function () {
         this._super(player.name, txt.names.opponent, left, null, true);
-        this.roomLabel = creator.createLabel(txt.online.connecting, 25);
+        this.roomLabel = creator.createLabel(txt.online.waiting, 25);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);
 
-        this.socket = new Socket("ws://" + player.server);
-        this.socket.onConnect(this.onConnect.bind(this));
-        this.socket.onDisconnect(this.onDisconnect.bind(this));
-        this.socket.onError(this.onError.bind(this));
-        this.socket.on("start", this.onStart.bind(this));
-        this.socket.on("nextChessman", this.onNextChessman.bind(this));
-        this.socket.on("move", this.onMove.bind(this));
-        this.socket.on("endTurn", this.onEndTurn.bind(this));
-        this.socket.on("endGame", this.onEndGame.bind(this));
+        socket.on("start", this.onStart.bind(this));
+        socket.on("nextChessman", this.onNextChessman.bind(this));
+        socket.on("move", this.onMove.bind(this));
+        socket.on("endTurn", this.onEndTurn.bind(this));
+        socket.on("endGame", this.onEndGame.bind(this));
+
+        socket.emit("match", { name: player.name });
         return true;
     },
 
     onExit: function () {
         this._super();
-        if (!this.disconnected) {
-            this.socket.disconnect();
-            this.disconnected = true;
-        }
+        //TODO
     },
 
     win: function () {
@@ -64,10 +58,10 @@ var OnlineGameScene = GameScene.extend({
     onBeganMoving: function (col, last) {
         if (this.turn == left && !this.disconnected) {
             if (this.firstMove) {
-                this.socket.emit("move", { col: col });
+                socket.emit("move", { col: col });
                 this.firstMove = false;
             } else {
-                this.socket.emit("move", "");
+                socket.emit("move", "");
             }
         }
     },
@@ -75,7 +69,7 @@ var OnlineGameScene = GameScene.extend({
     onChangedTurn: function () {
         if (this.turn == right) {
             if (!this.disconnected) {
-                this.socket.emit("endTurn", "");
+                socket.emit("endTurn", "");
             }
             this.movingCol = null;
         }
@@ -99,16 +93,6 @@ var OnlineGameScene = GameScene.extend({
                 cc.log("client reason:" + this.clientReason);
             }
         }
-    },
-
-    onConnect: function () {
-        this.socket.emit("match", { name: player.name });
-        this.roomLabel.string = txt.online.waiting;
-        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
-    },
-
-    onError: function (data) {
-        cc.log(JSON.stringify(data));
     },
 
     onStart: function (data) {
@@ -169,15 +153,6 @@ var OnlineGameScene = GameScene.extend({
                     cc.log("client reason:" + this.clientReason);
                 }
             }
-        }
-    },
-
-    onDisconnect: function () {
-        this.disconnected = true;
-        if (this.serverReason == null) {
-            this.socket.disconnect();
-            this.playing = false;
-            this.addChild(new ResultLayer(txt.result.unknownDisconnection, cc.color(0, 0, 0)));
         }
     }
 });
