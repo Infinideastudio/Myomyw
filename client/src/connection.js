@@ -40,9 +40,6 @@ var connection = {
     login: function (name, onSuccess, onError) {
         socket.emitForReply("login", { name: name }, function (data) {
             if (data.error_code == 0) {
-                player.name = name;
-                player.guest = false;
-                player.logged = true;
                 onSuccess()
             } else {
                 onError(txt.mainScene.wrongReply);

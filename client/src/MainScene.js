@@ -17,15 +17,11 @@ var MainScene = cc.Scene.extend({
         var renameModalBox = new ModalBox(600, 350);
         this.addChild(renameModalBox, 10);
 
-        var renameModalBoxLabel = creator.createLabel("修改昵称", 30);
+        var renameModalBoxLabel = creator.createLabel("请输入你的昵称", 30);
         renameModalBoxLabel.setPosition(size.width / 2, size.height / 2 + 100)
         renameModalBox.addChild(renameModalBoxLabel);
 
         var nameBox = creator.createEditBox(txt.mainScene.enterName, cc.size(500, 60));
-        var lastName = storage.getItem("name");
-        if (lastName) {
-            nameBox.setString(lastName);
-        }
         nameBox.setPosition(size.width / 2, size.height / 2);
         renameModalBox.addChild(nameBox);
 
@@ -36,11 +32,14 @@ var MainScene = cc.Scene.extend({
             } else if (name.length > 15) {
                 showMessage(txt.mainScene.nameTooLong);
             } else {
-                player.login(nameBox.getString(), function () {
+                player.setName(name);
+                updatePlayerLabel();
+                connection.login(nameBox.getString(), function () {
                     storage.setItem("name", name);
                     renameModalBox.hide();
                 }, function (error) {
                     showMessage(error);
+                    renameModalBox.hide();
                 });
             }
         });
@@ -103,16 +102,24 @@ var MainScene = cc.Scene.extend({
         this.addChild(playDoubleButton);
 
         var playerLabel = new ccui.Button();
-        playerLabel.addClickEventListener(renameModalBox.popup.bind(renameModalBox));
+        playerLabel.addClickEventListener(function () {
+            var name = storage.getItem("name");
+            if (name) {
+                nameBox.setString(name);
+            }
+            renameModalBox.popup();
+        });
         playerLabel.titleColor = cc.color(0, 0, 0);
         playerLabel.titleFontSize = 25;
         this.addChild(playerLabel);
         function updatePlayerLabel() {
-            playerLabel.titleText = player.name;
+            playerLabel.titleText = player.getName();
             playerLabel.setPosition(playerLabel.width / 2 + 30, size.height - playerLabel.height / 2 - 30);
         }
         updatePlayerLabel();
-
+        if (!storage.getItem("name")) {
+            renameModalBox.popup();
+        }
         //固定界面
         var optionButton = new ccui.Button(res.OptionButtonN_png, res.OptionButtonS_png);
         optionButton.setPosition(optionButton.width / 2 + 20, optionButton.height / 2 + 20);

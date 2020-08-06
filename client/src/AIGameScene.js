@@ -2,7 +2,7 @@ var AIGameScene = GameScene.extend({
     aiMovements: null, //null代表不在移动,0代表刚移动完
 
     ctor: function () {
-        this._super(player.name, txt.names.ai, left, getRandomChessman,
+        this._super(player.getName(), txt.names.ai, left, getRandomChessman,
             storage.getItem("standaloneTimer") != "false");
         this.start(left);
         return true;
