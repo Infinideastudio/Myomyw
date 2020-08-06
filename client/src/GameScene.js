@@ -44,6 +44,8 @@ var GameScene = cc.Scene.extend({
     timerStencil: null,
     timerStencilDrawNode: null,
     timer: null,
+
+    exitModalBox: null,
     /*
     leftName 左边玩家的名字
     rightName 右边玩家的名字
@@ -53,6 +55,7 @@ var GameScene = cc.Scene.extend({
     */
     ctor: function (leftName, rightName, controllableSide, createNextChessman, enableTimer) {
         this._super();
+        this.initUI();
         this.chessmen = [];
         for (var i = 0; i < maxLCol; i++) {
             this.chessmen[i] = [];
@@ -60,13 +63,6 @@ var GameScene = cc.Scene.extend({
                 this.chessmen[i][j] = Chessman.common;
             }
         }
-        var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
-        backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
-        backButton.addClickEventListener(function () {
-            cc.director.popScene();
-        });
-        this.addChild(backButton, 10);
-
         this.boardLength = Math.min(size.width, size.height) - 10;
         this.board = new cc.Layer();
         this.board.ignoreAnchorPointForPosition(false);
@@ -135,6 +131,31 @@ var GameScene = cc.Scene.extend({
         return true;
     },
 
+    initUI: function () {
+        exitModalBox = new ModalBox(250, 250);
+        this.exitModalBox = exitModalBox;
+        this.addChild(exitModalBox, 11);
+
+        exitButton = creator.createButton("退出", cc.size(150, 60), function () {
+            cc.director.popScene();
+        });
+        exitButton.setPosition(size.width / 2, size.height / 2 + 50);
+        exitModalBox.addChild(exitButton);
+
+        cancelButton = creator.createButton("继续", cc.size(150, 60), function () {
+            exitModalBox.hide();
+        });
+        cancelButton.setPosition(size.width / 2, size.height / 2 - 50);
+        exitModalBox.addChild(cancelButton);
+        
+        var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
+        backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
+        backButton.addClickEventListener(function () {
+            exitModalBox.popup();
+        });
+        this.addChild(backButton, 10);
+    },
+
     ejectorTouchBegan: function (touch, event) {
         if (this.isControllable() && this.playing && this.action != Action.moving) {
             var point = this.board.convertTouchToNodeSpace(touch);
@@ -163,7 +184,7 @@ var GameScene = cc.Scene.extend({
             }
         }
         this.touchingForHighlight = false;
-        if (this.playing){
+        if (this.playing) {
             this.highlightCol(null);
         }
     },
@@ -222,7 +243,7 @@ var GameScene = cc.Scene.extend({
     },
 
     getEjectorByPoint: function (point) {
-        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol) ; i++) {
+        for (var i = 0; i < (this.turn == left ? this.lCol : this.rCol); i++) {
             var ejector = this.gridNode.getChildByTag(this.turn == left ? i : this.lCol + i);
             if (!ejector) continue;
             rpoint = cc.p(point.x - ejector.x, point.y - ejector.y);
@@ -254,7 +275,7 @@ var GameScene = cc.Scene.extend({
     setNextChessman: function (chessman) {
         this.nextChessmanOutdated = false;
         this.nextChessman = chessman;
-        if(this.waitForNextChessman){
+        if (this.waitForNextChessman) {
             this.waitForNextChessman = false;
             this.move(this.myMovingCol);
         }
@@ -337,16 +358,16 @@ var GameScene = cc.Scene.extend({
         for (var i = 0; i <= drawLCol; i++) {
             this.border.drawSegment(cc.p(this.topVertX - this.halfDiagonal * i, this.boardLength - this.halfDiagonal * i),
                 i > 1 && i < drawLCol ?
-                cc.p(this.topVertX - this.halfDiagonal * (i - 1), this.boardLength - this.halfDiagonal * (i + 1)) :
-                cc.p(this.topVertX - this.halfDiagonal * (i - drawRCol), this.boardLength - this.halfDiagonal * (i + drawRCol)),
+                    cc.p(this.topVertX - this.halfDiagonal * (i - 1), this.boardLength - this.halfDiagonal * (i + 1)) :
+                    cc.p(this.topVertX - this.halfDiagonal * (i - drawRCol), this.boardLength - this.halfDiagonal * (i + drawRCol)),
                 1, cc.color(128, 128, 128));
         }
         for (var i = 0; i <= drawRCol; i++) {
             this.border.drawSegment(cc.p(this.topVertX + this.halfDiagonal * i, this.boardLength - this.halfDiagonal * i),
                 i > 1 && i < drawRCol ?
-                cc.p(this.topVertX + this.halfDiagonal * (i - 1), this.boardLength - this.halfDiagonal * (i + 1)) :
-                cc.p(this.topVertX + this.halfDiagonal * (i - drawLCol), this.boardLength - this.halfDiagonal * (i + drawLCol)),
-               1, cc.color(128, 128, 128));
+                    cc.p(this.topVertX + this.halfDiagonal * (i - 1), this.boardLength - this.halfDiagonal * (i + 1)) :
+                    cc.p(this.topVertX + this.halfDiagonal * (i - drawLCol), this.boardLength - this.halfDiagonal * (i + drawLCol)),
+                1, cc.color(128, 128, 128));
         }
 
         if (this.enableTimer) {
@@ -458,7 +479,7 @@ var GameScene = cc.Scene.extend({
             var movingAction = cc.moveBy(movingTime,
                 cc.p(this.turn == left ? this.halfDiagonal : -this.halfDiagonal, -this.halfDiagonal));
             newChessman.runAction(movingAction);
-            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol) ; i++) {
+            for (var i = 0; i < (this.turn == left ? this.rCol : this.lCol); i++) {
                 this.chessmanNode.getChildByTag(
                     this.turn == left ? col * this.rCol + i : i * this.rCol + col).runAction(movingAction.clone());
             }
@@ -475,15 +496,15 @@ var GameScene = cc.Scene.extend({
     },
 
     coolAndMove: function (col) {
-        this.coolTID = setTimeout(function(){
-            if(this.nextChessmanOutdated){
+        this.coolTID = setTimeout(function () {
+            if (this.nextChessmanOutdated) {
                 this.waitForNextChessman = true;
-                this.myMovingCol=col;
-            }else{
+                this.myMovingCol = col;
+            } else {
                 this.move(col);
             }
         }.bind(this),
-        coolingTime * 1000);
+            coolingTime * 1000);
     },
 
     //移动结束后的处理
