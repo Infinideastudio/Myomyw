@@ -27,7 +27,7 @@ var socket = {
     emit: function (action, data, error) {
         if (socket.ws.readyState != WebSocket.OPEN) {
             if (error) {
-                error(txt.mainScene.error);
+                error(txt.connection.error);
             }
             return;
         }
@@ -41,7 +41,7 @@ var socket = {
     emitForReply: function (action, data, handler, error) {
         if (socket.ws.readyState != WebSocket.OPEN) {
             if (error) {
-                error(txt.mainScene.error);
+                error(txt.connection.error);
             }
             return;
         }
@@ -58,7 +58,7 @@ var socket = {
             cc.log("A reply is to be waited while another is still being waited!");
         }
         if (timeout) {
-            socket.replyTimeoutTID = setTimeout(error.bind(null, txt.mainScene.timeout), 5000);
+            socket.replyTimeoutTID = setTimeout(error.bind(null, txt.connection.timeout), 5000);
         }
     },
     on: function (action, handler) {

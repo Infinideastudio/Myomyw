@@ -28,7 +28,7 @@ var connection = {
         });
         socket.onConnect(function () {
             socket.emitForReply("shakehand", { version: "0.8" }, function (data) {
-                data.error_code == 0 ? onSuccess() : onError(txt.mainScene.wrongReply);
+                data.error_code == 0 ? onSuccess() : onError(txt.connection.wrongReply);
             }, onError);
         });
     },
@@ -42,7 +42,7 @@ var connection = {
             if (data.error_code == 0) {
                 onSuccess()
             } else {
-                onError(txt.mainScene.wrongReply);
+                onError(txt.connection.error);
             }
         }, onError);
     }

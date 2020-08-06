@@ -136,13 +136,13 @@ var GameScene = cc.Scene.extend({
         this.exitModalBox = exitModalBox;
         this.addChild(exitModalBox, 11);
 
-        exitButton = creator.createButton("退出", cc.size(150, 60), function () {
+        exitButton = creator.createButton(txt.menu.exit, cc.size(150, 60), function () {
             cc.director.popScene();
         });
         exitButton.setPosition(size.width / 2, size.height / 2 + 50);
         exitModalBox.addChild(exitButton);
 
-        cancelButton = creator.createButton("继续", cc.size(150, 60), function () {
+        cancelButton = creator.createButton(txt.menu.continue, cc.size(150, 60), function () {
             exitModalBox.hide();
         });
         cancelButton.setPosition(size.width / 2, size.height / 2 - 50);

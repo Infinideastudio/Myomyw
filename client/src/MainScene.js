@@ -17,7 +17,7 @@ var MainScene = cc.Scene.extend({
         var renameModalBox = new ModalBox(600, 350);
         this.addChild(renameModalBox, 10);
 
-        var renameModalBoxLabel = creator.createLabel("请输入你的昵称", 30);
+        var renameModalBoxLabel = creator.createLabel(txt.mainScene.enterNameTitle, 30);
         renameModalBoxLabel.setPosition(size.width / 2, size.height / 2 + 100)
         renameModalBox.addChild(renameModalBoxLabel);
 
@@ -25,7 +25,7 @@ var MainScene = cc.Scene.extend({
         nameBox.setPosition(size.width / 2, size.height / 2);
         renameModalBox.addChild(nameBox);
 
-        confirmButton = creator.createButton("确认", cc.size(150, 60), function () {
+        confirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
             var name = nameBox.getString();
             if (name.length == 0) {
                 showMessage(txt.mainScene.emptyName);
@@ -46,7 +46,7 @@ var MainScene = cc.Scene.extend({
         confirmButton.setPosition(size.width / 2 - 100, size.height / 2 - 100);
         renameModalBox.addChild(confirmButton);
 
-        cancelButton = creator.createButton("取消", cc.size(150, 60), function () {
+        cancelButton = creator.createButton(txt.menu.cancel,cc.size(150, 60), function () {
             renameModalBox.hide();
         });
         cancelButton.setPosition(size.width / 2 + 100, size.height / 2 - 100);
@@ -78,7 +78,7 @@ var MainScene = cc.Scene.extend({
                 if (data.error_code == 0) {
                     cc.director.pushScene(new OnlineGameScene());
                 } else if (data.error_code == 1) {
-                    showMessage("未登录");
+                    showMessage("Not Login");
                 } else if (data.error_code == 2) {
                     showMessage(txt.online.serverFull);
                 }

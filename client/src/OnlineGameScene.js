@@ -27,7 +27,7 @@ var OnlineGameScene = GameScene.extend({
         this.exitModalBox = exitModalBox;
         this.addChild(exitModalBox, 11);
 
-        exitButton = creator.createButton("认输", cc.size(150, 60), function () {
+        exitButton = creator.createButton(txt.menu.giveUp, cc.size(150, 60), function () {
             this.clientReason = EndReason.youGiveUp;
             socket.emit("give_up");
             cc.director.popScene();
@@ -35,7 +35,7 @@ var OnlineGameScene = GameScene.extend({
         exitButton.setPosition(size.width / 2, size.height / 2 + 50);
         exitModalBox.addChild(exitButton);
 
-        cancelButton = creator.createButton("继续", cc.size(150, 60), function () {
+        cancelButton = creator.createButton(txt.menu.continue, cc.size(150, 60), function () {
             exitModalBox.hide();
         });
         cancelButton.setPosition(size.width / 2, size.height / 2 - 50);
@@ -53,7 +53,7 @@ var OnlineGameScene = GameScene.extend({
         var str = "";
         switch (this.clientReason) {
             case EndReason.opponentLeft:
-                str = "对手断开连接";
+                str = txt.result.opponentLeft;
                 break;
             case EndReason.youWin:
                 str = txt.result.youWin;
@@ -74,10 +74,10 @@ var OnlineGameScene = GameScene.extend({
             case EndReason.youGiveUp:
                 str = txt.result.youOutOfTime;
                 str += "\n";
-                str += format("{0}认输了", this.opponentName);
+                str += format(txt.result.giveUp, this.opponentName);
                 break;
             case EndReason.opponentGiveUp:
-                str = format("{0}认输了", this.opponentName);
+                str = format(txt.result.giveUp, this.opponentName);
                 str += "\n";
                 str += txt.result.youWin;
                 break;
