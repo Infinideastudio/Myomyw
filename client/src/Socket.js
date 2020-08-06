@@ -35,7 +35,9 @@ var socket = {
             }
             socket.ws.send(action + "$@@$" + data);
         } else {
-            error();
+            if (error) {
+                error();
+            }
         }
     },
     on: function (action, handler) {
@@ -46,7 +48,9 @@ var socket = {
         if (socket.replyTimeoutTID) {
             clearTimeout(socket.replyTimeoutTID);
         }
-        socket.replyTimeoutTID = setTimeout(timeout, 5000);
+        if (timeout) {
+            socket.replyTimeoutTID = setTimeout(timeout, 5000);
+        }
     },
     onConnect: function (handler) {
         socket.ws.onopen = handler;

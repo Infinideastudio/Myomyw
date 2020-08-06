@@ -28,7 +28,7 @@ var MainScene = cc.Scene.extend({
         }
         nameBox.setPosition(size.width / 2, size.height / 2);
         renameModalBox.addChild(nameBox);
-        
+
         confirmButton = creator.createButton("确认", cc.size(150, 60), function () {
             var name = nameBox.getString();
             if (name.length == 0) {
@@ -53,10 +53,11 @@ var MainScene = cc.Scene.extend({
         cancelButton.setPosition(size.width / 2 + 100, size.height / 2 - 100);
         renameModalBox.addChild(cancelButton);
 
+        //主界面
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
         messageLabel.setPosition(size.width / 2, size.height / 2 - 220);
         messageLabel.opacity = 0;
-        renameModalBox.addChild(messageLabel);
+        this.addChild(messageLabel, 11);
 
         var showMessageTID;
         function showMessage(text) {
@@ -69,13 +70,22 @@ var MainScene = cc.Scene.extend({
             }, 2000);
         }
 
-        //主界面
         var playOnlineButton = new ccui.Button(res.PlayOnlineButton_png);
         playOnlineButton.ignoreContentAdaptWithSize(false);
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            cc.director.pushScene(new OnlineGameScene());
+            socket.emit("start_matching", { allow_watching: true }, showMessage.bind(null, txt.mainScene.error));
+            socket.onReply(function (data) {
+                if (data.error_code == 0) {
+                    cc.director.pushScene(new OnlineGameScene());
+                } else if (data.error_code == 1) {
+                    showMessage("未登录");
+                } else if (data.error_code == 2) {
+                    showMessage(txt.online.serverFull);
+                }
+            }, showMessage.bind(null, txt.mainScene.timeout));
+
         });
         this.addChild(playOnlineButton);
 

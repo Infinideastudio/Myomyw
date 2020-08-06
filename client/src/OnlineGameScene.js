@@ -13,13 +13,12 @@ var OnlineGameScene = GameScene.extend({
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);
 
-        socket.on("start", this.onStart.bind(this));
-        socket.on("nextChessman", this.onNextChessman.bind(this));
+        socket.on("matching_success", this.onStart.bind(this));
+        socket.on("next_chessman", this.onNextChessman.bind(this));
         socket.on("move", this.onMove.bind(this));
-        socket.on("endTurn", this.onEndTurn.bind(this));
-        socket.on("endGame", this.onEndGame.bind(this));
+        socket.on("end_turn", this.onEndTurn.bind(this));
+        socket.on("end_game", this.onEndGame.bind(this));
 
-        socket.emit("match", { name: player.name });
         return true;
     },
 
@@ -61,7 +60,7 @@ var OnlineGameScene = GameScene.extend({
                 socket.emit("move", { col: col });
                 this.firstMove = false;
             } else {
-                socket.emit("move", "");
+                socket.emit("move");
             }
         }
     },
@@ -69,7 +68,7 @@ var OnlineGameScene = GameScene.extend({
     onChangedTurn: function () {
         if (this.turn == right) {
             if (!this.disconnected) {
-                socket.emit("endTurn", "");
+                socket.emit("end_turn");
             }
             this.movingCol = null;
         }
@@ -96,16 +95,16 @@ var OnlineGameScene = GameScene.extend({
     },
 
     onStart: function (data) {
-        this.roomLabel.string = format(txt.online.room, data.room);
+        this.roomLabel.string = format(txt.online.room, data.room_id);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
-        this.opponentName = data.opponentName;
-        this.rightNameLabel.string = data.opponentName;
+        this.opponentName = data.opponent_name;
+        this.rightNameLabel.string = data.opponent_name;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.start(data.side);
     },
 
     onNextChessman: function (data) {
-        this.setNextChessman(data.chessman);
+        this.setNextChessman(data.next_ball);
     },
 
     onMove: function (data) {
