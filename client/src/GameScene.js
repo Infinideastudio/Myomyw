@@ -45,6 +45,7 @@ var GameScene = cc.Scene.extend({
     timerStencilDrawNode: null,
     timer: null,
 
+    gameEnded: false,
     exitModalBox: null,
     /*
     leftName 左边玩家的名字
@@ -147,12 +148,17 @@ var GameScene = cc.Scene.extend({
         });
         cancelButton.setPosition(size.width / 2, size.height / 2 - 50);
         exitModalBox.addChild(cancelButton);
-        
+
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            exitModalBox.popup();
-        });
+            if (this.gameEnded) {
+                cc.director.popScene();
+            }
+            else {
+                exitModalBox.popup();
+            }
+        }.bind(this));
         this.addChild(backButton, 10);
     },
 

@@ -100,7 +100,7 @@ var AIGameScene = GameScene.extend({
             str += txt.result.aiWins;
         else
             str += txt.result.youWin;
-
+        this.gameEnded = true;
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     }
 });

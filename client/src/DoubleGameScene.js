@@ -24,6 +24,7 @@ var DoubleGameScene = GameScene.extend({
             str += txt.result.leftWins;
             color = cc.color(0, 255, 0);
         }
+        this.gameEnded = true;
         this.addChild(new ResultLayer(str, color));
     }
 });

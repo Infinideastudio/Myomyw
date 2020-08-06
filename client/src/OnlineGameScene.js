@@ -44,8 +44,13 @@ var OnlineGameScene = GameScene.extend({
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            exitModalBox.popup();
-        });
+            if (this.gameEnded) {
+                cc.director.popScene();
+            }
+            else {
+                exitModalBox.popup();
+            }
+        }.bind(this));
         this.addChild(backButton, 10);
     },
 
@@ -82,6 +87,7 @@ var OnlineGameScene = GameScene.extend({
                 str += txt.result.youWin;
                 break;
         }
+        this.gameEnded = true;
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     },
 
@@ -177,6 +183,7 @@ var OnlineGameScene = GameScene.extend({
         if (this.clientReason == this.serverReason)
             this.win();
         else {
+            this.gameEnded = true;
             this.addChild(new ResultLayer(txt.result.differentResult, cc.color(0, 0, 0)));
             socket.emit("exception", { description: "different result! server reason:" + this.serverReason + ",client reason:" + this.clientReason })
             cc.log("server reason:" + this.serverReason);
