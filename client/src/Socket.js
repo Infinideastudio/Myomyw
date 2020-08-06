@@ -18,39 +18,51 @@ var socket = {
             socket.handlers[action](data);
         }
         if (action == "reply") {
-            socket.handler = null;
+            socket.handlers["reply"] = null;
             if (replyTimeoutTID) {
-                //不应当在正常情况下发生
-                cc.log("A reply is to be waited while another is still being waited!");
                 clearTimeout(replyTimeoutTID);
             }
         }
     },
     emit: function (action, data, error) {
-        if (socket.ws.readyState == WebSocket.OPEN) {
-            if (data) {
-                data = JSON.stringify(data);
-            } else {
-                data = "";
-            }
-            socket.ws.send(action + "$@@$" + data);
-        } else {
+        if (socket.ws.readyState != WebSocket.OPEN) {
             if (error) {
-                error();
+                error(txt.mainScene.error);
             }
+            return;
+        }
+        if (data) {
+            data = JSON.stringify(data);
+        } else {
+            data = "";
+        }
+        socket.ws.send(action + "$@@$" + data);
+    },
+    emitForReply: function (action, data, handler, error) {
+        if (socket.ws.readyState != WebSocket.OPEN) {
+            if (error) {
+                error(txt.mainScene.error);
+            }
+            return;
+        }
+        if (data) {
+            data = JSON.stringify(data);
+        } else {
+            data = "";
+        }
+        socket.ws.send(action + "$@@$" + data);
+        socket.handlers["reply"] = handler;
+        if (socket.replyTimeoutTID) {
+            clearTimeout(socket.replyTimeoutTID);
+            //不应当在正常情况下发生
+            cc.log("A reply is to be waited while another is still being waited!");
+        }
+        if (timeout) {
+            socket.replyTimeoutTID = setTimeout(error.bind(null, txt.mainScene.timeout), 5000);
         }
     },
     on: function (action, handler) {
         socket.handlers[action] = handler;
-    },
-    onReply: function (handler, timeout) {
-        socket.handlers["reply"] = handler;
-        if (socket.replyTimeoutTID) {
-            clearTimeout(socket.replyTimeoutTID);
-        }
-        if (timeout) {
-            socket.replyTimeoutTID = setTimeout(timeout, 5000);
-        }
     },
     onConnect: function (handler) {
         socket.ws.onopen = handler;

@@ -75,8 +75,7 @@ var MainScene = cc.Scene.extend({
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            socket.emit("start_matching", { allow_watching: true }, showMessage.bind(null, txt.mainScene.error));
-            socket.onReply(function (data) {
+            socket.emitForReply("start_matching", { allow_watching: true }, function (data) {
                 if (data.error_code == 0) {
                     cc.director.pushScene(new OnlineGameScene());
                 } else if (data.error_code == 1) {
@@ -84,7 +83,9 @@ var MainScene = cc.Scene.extend({
                 } else if (data.error_code == 2) {
                     showMessage(txt.online.serverFull);
                 }
-            }, showMessage.bind(null, txt.mainScene.timeout));
+            }, function (error) {
+                showMessage(error);
+            });
 
         });
         this.addChild(playOnlineButton);

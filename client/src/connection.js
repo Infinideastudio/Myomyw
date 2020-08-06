@@ -27,9 +27,8 @@ var connection = {
             cc.log(JSON.stringify(e));
         });
         socket.onConnect(function () {
-            socket.emit("shakehand", { version: "0.8" });
-            socket.onReply(function (data) {
-                data.error_code == 0 ? onSuccess() : onError();
+            socket.emitForReply("shakehand", { version: "0.8" }, function (data) {
+                data.error_code == 0 ? onSuccess() : onError(txt.mainScene.wrongReply);
             }, onError);
         });
     },
@@ -39,8 +38,7 @@ var connection = {
     },
 
     login: function (name, onSuccess, onError) {
-        socket.emit("login", { name: name }, onError.bind(null, txt.mainScene.error));
-        socket.onReply(function (data) {
+        socket.emitForReply("login", { name: name }, function (data) {
             if (data.error_code == 0) {
                 player.name = name;
                 player.guest = false;
@@ -49,6 +47,6 @@ var connection = {
             } else {
                 onError(txt.mainScene.wrongReply);
             }
-        }, onError.bind(null, txt.mainScene.timeout));
+        }, onError);
     }
 };
