@@ -13,7 +13,7 @@ var ModalBox = cc.LayerColor.extend({
         });
         cc.eventManager.addListener(this.touchEvent, this);
 
-        var background = new cc.Scale9Sprite(res.Button_png);
+        var background = new cc.Scale9Sprite(res.ModalBox_png);
         background.setPosition(size.width / 2, size.height / 2);
         background.setContentSize(width, height);
         this.addChild(background);

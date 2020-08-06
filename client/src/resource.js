@@ -11,6 +11,7 @@ var res = {
     BackButtonS_png: "res/UI/BackButtonS.png",
     OptionButtonN_png: "res/UI/OptionButtonN.png",
     OptionButtonS_png: "res/UI/OptionButtonS.png",
+    ModalBox_png: "res/UI/ModalBox.png",
     Common_png: "res/Chessman/Common.png",
     Key_png: "res/Chessman/Key.png",
     AddCol_png: "res/Chessman/AddCol.png",
