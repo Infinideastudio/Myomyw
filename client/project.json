@@ -29,6 +29,7 @@
     "src/OnlineGameScene.js",
     "src/TutorialGameScene.js",
     "src/socket.js",
-    "src/connection.js"
+    "src/connection.js",
+    "src/ModalBox.js"
   ]
 }
