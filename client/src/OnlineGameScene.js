@@ -22,16 +22,38 @@ var OnlineGameScene = GameScene.extend({
         return true;
     },
 
-    onExit: function () {
-        this._super();
-        //TODO
+    initUI: function () {
+        exitModalBox = new ModalBox(250, 250);
+        this.exitModalBox = exitModalBox;
+        this.addChild(exitModalBox, 11);
+
+        exitButton = creator.createButton("认输", cc.size(150, 60), function () {
+            this.clientReason = EndReason.youGiveUp;
+            socket.emit("give_up");
+            cc.director.popScene();
+        });
+        exitButton.setPosition(size.width / 2, size.height / 2 + 50);
+        exitModalBox.addChild(exitButton);
+
+        cancelButton = creator.createButton("继续", cc.size(150, 60), function () {
+            exitModalBox.hide();
+        });
+        cancelButton.setPosition(size.width / 2, size.height / 2 - 50);
+        exitModalBox.addChild(cancelButton);
+
+        var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
+        backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
+        backButton.addClickEventListener(function () {
+            exitModalBox.popup();
+        });
+        this.addChild(backButton, 10);
     },
 
     win: function () {
         var str = "";
         switch (this.clientReason) {
             case EndReason.opponentLeft:
-                str = txt.result.opponentLeft;
+                str = "对手断开连接";
                 break;
             case EndReason.youWin:
                 str = txt.result.youWin;
@@ -46,6 +68,16 @@ var OnlineGameScene = GameScene.extend({
                 break;
             case EndReason.opponentOutOfTime:
                 str = format(txt.result.outOfTime, this.opponentName);
+                str += "\n";
+                str += txt.result.youWin;
+                break;
+            case EndReason.youGiveUp:
+                str = txt.result.youOutOfTime;
+                str += "\n";
+                str += format("{0}认输了", this.opponentName);
+                break;
+            case EndReason.opponentGiveUp:
+                str = format("{0}认输了", this.opponentName);
                 str += "\n";
                 str += txt.result.youWin;
                 break;
@@ -84,13 +116,7 @@ var OnlineGameScene = GameScene.extend({
             this.clientReason = this.turn == left ? EndReason.opponentWins : EndReason.youWin;
 
         if (this.serverReason != null) {
-            if (this.serverReason == this.clientReason)
-                this.win();
-            else {
-                this.addChild(new ResultLayer(txt.result.differentResult, cc.color(0, 0, 0)));
-                cc.log("server reason:" + this.serverReason);
-                cc.log("client reason:" + this.clientReason);
-            }
+            this.checkReason();
         }
     },
 
@@ -134,24 +160,27 @@ var OnlineGameScene = GameScene.extend({
     onEndGame: function (data) {
         this.playing = false;
         this.serverReason = data.reason;
-        if (this.serverReason == EndReason.opponentLeft) {
+        if (this.serverReason == EndReason.opponentLeft || this.serverReason == EndReason.opponentGiveUp) {
             this.clientReason = this.serverReason;
             this.stopTimer();
             this.win();
         }
-        else if (this.serverReason == EndReason.serverFull) {
-            this.addChild(new ResultLayer(txt.online.serverFull, cc.color(0, 0, 0)));
-        }
         else {
             if (this.clientReason != null) {
-                if (this.clientReason == this.serverReason)
-                    this.win();
-                else {
-                    this.addChild(new ResultLayer(txt.result.differentResult, cc.color(0, 0, 0)));
-                    cc.log("server reason:" + this.serverReason);
-                    cc.log("client reason:" + this.clientReason);
-                }
+                this.checkReason();
             }
+
+        }
+    },
+
+    checkReason: function () {
+        if (this.clientReason == this.serverReason)
+            this.win();
+        else {
+            this.addChild(new ResultLayer(txt.result.differentResult, cc.color(0, 0, 0)));
+            socket.emit("exception", { description: "different result! server reason:" + this.serverReason + ",client reason:" + this.clientReason })
+            cc.log("server reason:" + this.serverReason);
+            cc.log("client reason:" + this.clientReason);
         }
     }
 });

@@ -15,7 +15,7 @@ var Chessman = { common: 0, key: 1, addCol: 2, delCol: 3, flip: 4 };
 var chessmanTex = [res.Common_png, res.Key_png, res.AddCol_png, res.DelCol_png, res.Flip_png];
 var left = 0, right = 1, both = 2, neither = 3;
 var Action = { nothing: 0, moving: 1, cooling: 2 };
-var EndReason = { opponentLeft: 0, youWin: 1, opponentWins: 2, youOutOfTime: 3, opponentOutOfTime: 4, serverFull: 5 };
+var EndReason = { serverClose: 0, opponentDisconnect: 1, youWin: 2, opponentWins: 3, youOutOfTime: 4, opponentOutOfTime: 5, youGiveUp: 6, opponentGiveUp: 7 };
 
 function getRandomChessman() {
     switch (Math.floor(Math.random() * 11)) {
