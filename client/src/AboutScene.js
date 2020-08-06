@@ -1,7 +1,7 @@
 ﻿var AboutScene = MenuScene.extend({
     ctor: function () {
         this._super(txt.options.about, function () {
-            cc.director.runScene(new OptionScene());
+            cc.director.popScene();
         });
 
         var text = "Myomyw Beta 0.7\nCopyright © 2016 Infinideas";

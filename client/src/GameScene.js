@@ -63,7 +63,7 @@ var GameScene = cc.Scene.extend({
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            cc.director.runScene(new MainScene());
+            cc.director.popScene();
         });
         this.addChild(backButton, 10);
 

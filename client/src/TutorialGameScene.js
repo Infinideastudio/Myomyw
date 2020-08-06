@@ -66,7 +66,7 @@ var TutorialGameScene = GameScene.extend({
                 this.changeText(txt.tutorial.s6);
                 break;
             case 6:
-                cc.director.runScene(new MainScene());
+                cc.director.popScene();
                 break;
         }
     },

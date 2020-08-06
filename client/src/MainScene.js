@@ -96,18 +96,18 @@ var MainScene = cc.Scene.extend({
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            cc.director.runScene(new OnlineGameScene());
+            cc.director.pushScene(new OnlineGameScene());
         });
         mainUI.addChild(playOnlineButton);
 
         var playWithAIButton = creator.createButton(txt.mainScene.playWithAI, cc.size(280, 60), function () {
-            cc.director.runScene(new AIGameScene());
+            cc.director.pushScene(new AIGameScene());
         });
         playWithAIButton.setPosition(size.width / 2, size.height / 2 - 60);
         mainUI.addChild(playWithAIButton);
 
         var playDoubleButton = creator.createButton(txt.mainScene.playDouble, cc.size(280, 60), function () {
-            cc.director.runScene(new DoubleGameScene());
+            cc.director.pushScene(new DoubleGameScene());
         });
         playDoubleButton.setPosition(size.width / 2, size.height / 2 - 150);
         mainUI.addChild(playDoubleButton);
@@ -144,12 +144,12 @@ var MainScene = cc.Scene.extend({
         var optionButton = new ccui.Button(res.OptionButtonN_png, res.OptionButtonS_png);
         optionButton.setPosition(optionButton.width / 2 + 20, optionButton.height / 2 + 20);
         optionButton.addClickEventListener(function () {
-            cc.director.runScene(new OptionScene());
+            cc.director.pushScene(new OptionScene());
         });
         this.addChild(optionButton);
 
         var tutorialButton = creator.createButton(txt.mainScene.tutorial, cc.size(180, 60), function () {
-            cc.director.runScene(new TutorialGameScene());
+            cc.director.pushScene(new TutorialGameScene());
         });
         tutorialButton.setPosition(size.width - tutorialButton.width / 2 - 20, tutorialButton.height / 2 + 20);
         this.addChild(tutorialButton);

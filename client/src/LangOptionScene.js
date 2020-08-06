@@ -1,7 +1,7 @@
 var LangOptionScene = MenuScene.extend({
     ctor: function () {
         this._super(txt.options.lang, function () {
-            cc.director.runScene(new OptionScene());
+            cc.director.popScene();
         });
 
         list = new ccui.ListView();

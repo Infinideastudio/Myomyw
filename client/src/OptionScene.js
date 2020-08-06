@@ -1,7 +1,7 @@
 var OptionScene = MenuScene.extend({
     ctor: function () {
         this._super(txt.options.title, function () {
-            cc.director.runScene(new MainScene());
+            cc.director.popScene();
         });
 
         list = new ccui.ListView();
@@ -30,11 +30,11 @@ var OptionScene = MenuScene.extend({
         }
 
         list.addChild(creator.createButton(txt.options.lang, cc.size(600, 60), function () {
-            cc.director.runScene(new LangOptionScene());
+            cc.director.pushScene(new LangOptionScene());
         }));
 
         list.addChild(creator.createButton(txt.options.about, cc.size(600, 60), function () {
-            cc.director.runScene(new AboutScene());
+            cc.director.pushScene(new AboutScene());
         }));
         return true;
     }
