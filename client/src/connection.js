@@ -3,7 +3,7 @@ var connection = {
 
     loadServer: function (onSuccess, onError) {
         if (cc.game.config.server) {
-            server = cc.game.config.server;
+            connection.server = cc.game.config.server;
         } else {
             var xhr = cc.loader.getXMLHttpRequest();
             var path = cc.sys.isNative ? "http://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "res/server.txt";
@@ -13,7 +13,7 @@ var connection = {
             xhr.ontimeout = onError;
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    server = xhr.responseText;
+                    connection.server = xhr.responseText;
                     onSuccess();
                 }
             };
@@ -39,7 +39,7 @@ var connection = {
     },
 
     login: function (name, onSuccess, onError) {
-        socket.emit("login", { name: name });
+        socket.emit("login", { name: name }, onError.bind(null, txt.mainScene.error));
         socket.onReply(function (data) {
             if (data.error_code == 0) {
                 player.name = name;
@@ -47,8 +47,8 @@ var connection = {
                 player.logged = true;
                 onSuccess()
             } else {
-                onError();
+                onError(txt.mainScene.wrongReply);
             }
-        }, onError);
+        }, onError.bind(null, txt.mainScene.timeout));
     }
 };

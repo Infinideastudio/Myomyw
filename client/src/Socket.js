@@ -26,23 +26,27 @@ var socket = {
             }
         }
     },
-    emit: function (action, data) {
-        if (data) {
-            data = JSON.stringify(data);
+    emit: function (action, data, error) {
+        if (socket.ws.readyState == WebSocket.OPEN) {
+            if (data) {
+                data = JSON.stringify(data);
+            } else {
+                data = "";
+            }
+            socket.ws.send(action + "$@@$" + data);
         } else {
-            data = "";
+            error();
         }
-        socket.ws.send(action + "$@@$" + data);
     },
     on: function (action, handler) {
         socket.handlers[action] = handler;
     },
     onReply: function (handler, timeout) {
         socket.handlers["reply"] = handler;
-        if (replyTimeoutTID) {
-            clearTimeout(replyTimeoutTID);
+        if (socket.replyTimeoutTID) {
+            clearTimeout(socket.replyTimeoutTID);
         }
-        replyTimeoutTID = setTimeout(timeout, 5000);
+        socket.replyTimeoutTID = setTimeout(timeout, 5000);
     },
     onConnect: function (handler) {
         socket.ws.onopen = handler;

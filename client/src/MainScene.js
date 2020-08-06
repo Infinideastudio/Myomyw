@@ -40,7 +40,6 @@ var MainScene = cc.Scene.extend({
                     storage.setItem("name", name);
                     renameModalBox.hide();
                 }, function (error) {
-                    loginUI.enabled = true;
                     showMessage(error);
                 });
             }
@@ -86,7 +85,7 @@ var MainScene = cc.Scene.extend({
         });
         playDoubleButton.setPosition(size.width / 2, size.height / 2 - 150);
         this.addChild(playDoubleButton);
-        
+
         var playerLabel = new ccui.Button();
         playerLabel.addClickEventListener(renameModalBox.popup.bind(renameModalBox));
         playerLabel.titleColor = cc.color(0, 0, 0);
