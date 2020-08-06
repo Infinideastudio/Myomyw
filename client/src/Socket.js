@@ -57,7 +57,7 @@ var socket = {
             //不应当在正常情况下发生
             cc.log("A reply is to be waited while another is still being waited!");
         }
-        if (timeout) {
+        if (error) {
             socket.replyTimeoutTID = setTimeout(error.bind(null, txt.connection.timeout), 5000);
         }
     },
