@@ -43,10 +43,15 @@ var MainScene = cc.Scene.extend({
                     showMessage(error);
                 });
             }
-
         });
-        confirmButton.setPosition(size.width / 2, size.height / 2 - 100);
+        confirmButton.setPosition(size.width / 2 - 100, size.height / 2 - 100);
         renameModalBox.addChild(confirmButton);
+
+        cancelButton = creator.createButton("取消", cc.size(150, 60), function () {
+            renameModalBox.hide();
+        });
+        cancelButton.setPosition(size.width / 2 + 100, size.height / 2 - 100);
+        renameModalBox.addChild(cancelButton);
 
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
         messageLabel.setPosition(size.width / 2, size.height / 2 - 220);
