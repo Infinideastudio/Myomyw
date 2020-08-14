@@ -104,8 +104,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1920,
+      "height": 1080
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -116,8 +116,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        480,
-        320,
+        960,
+        540,
         0,
         0,
         0,
@@ -166,8 +166,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1920,
+      "height": 1080
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -180,7 +180,7 @@
       "array": [
         0,
         0,
-        222.5649361762556,
+        758.6382537151683,
         0,
         0,
         0,
@@ -283,8 +283,8 @@
         0,
         0,
         1,
-        0.6,
-        0.6,
+        1,
+        1,
         1
       ]
     },
@@ -371,14 +371,14 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        113.788,
+        193.603,
         0,
         0,
         0,
         0,
         1,
-        0.5,
-        0.5,
+        0.83,
+        0.83,
         1
       ]
     },
@@ -468,15 +468,15 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        -148,
+        -207.122,
         0,
         0,
         0,
         0,
         1,
-        1,
-        1,
-        0
+        1.67,
+        1.67,
+        1
       ]
     },
     "_eulerAngles": {
@@ -628,8 +628,8 @@
     "_enabled": true,
     "_designResolution": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1920,
+      "height": 1080
     },
     "_fitWidth": false,
     "_fitHeight": true,

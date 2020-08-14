@@ -11,13 +11,13 @@ export class GameScene extends cc.Component {
     @property(cc.Node)
     gridNode: cc.Node = new cc.Node();
     @property(cc.SpriteFrame)
-    greenEjectorSpriteFrame: cc.SpriteFrame = null;
+    greenEjectorSpriteFrame: cc.SpriteFrame = new cc.SpriteFrame();
     @property(cc.SpriteFrame)
-    blueEjectorSpriteFrame: cc.SpriteFrame = null;
+    blueEjectorSpriteFrame: cc.SpriteFrame = new cc.SpriteFrame();
     @property(cc.SpriteFrame)
-    grid1SpriteFrame: cc.SpriteFrame = null;
+    grid1SpriteFrame: cc.SpriteFrame = new cc.SpriteFrame();
     @property(cc.SpriteFrame)
-    grid2SpriteFrame: cc.SpriteFrame = null;
+    grid2SpriteFrame: cc.SpriteFrame = new cc.SpriteFrame();
 
     get halfDiagonal(): number {
         return this.boardLength / (this.lCol + this.rCol + 2);
