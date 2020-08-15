@@ -1,14 +1,26 @@
 import {maxCol, minCol} from "./config";
-import {Chessman} from "./Chessman";
+import {Chessman, ChessmanWithData} from "./Chessman";
 
 export enum Turn {
     Left,
     Right
 }
 
+export enum ChessboardChangeType {
+    Left, Right, Spawn, Despawn
+}
+
+export type ChessboardChange = {
+    target: string,
+    type: ChessboardChangeType,
+    lCol: number,
+    rCol: number
+}
+
 export class Chessboard {
-    public boardUpdate: boolean = false; //表示棋盘和棋子绘图是否需要更新。更新完成后将标志设为false
     public winner: Turn | null = null; //胜利者，游戏未结束时为null
+    public chessboardChanges: ChessboardChange[] = [];
+    public chessboardSizeChanged: boolean = false;
 
     public getLCol(): number {
         return this.lCol;
@@ -18,36 +30,40 @@ export class Chessboard {
         return this.rCol;
     }
 
-    public getChess(x: number, y: number): Chessman {
+    public getChess(x: number, y: number): ChessmanWithData {
         return this.board[x][y];
     }
 
     private lCol: number = 5;
     private rCol: number = 5;
-    private board: Chessman[][] = [];
+    private board: ChessmanWithData[][] = [];
     private handlers: ((turn: Turn) => boolean)[] = []; //返回值表示是否可以继续移动
 
+    private static createCommonChessman(): ChessmanWithData {
+        return {type: Chessman.Common, data: ""};
+    }
+
     private setBoardSize(lCol: number, rCol: number): void { //从原项目抄来的
-        if (lCol <= maxCol && lCol >= minCol && rCol <= maxCol && rCol >= minCol) {
-            //如果棋盘变大，把多出来的部分设置为普通球
-            if (this.lCol < lCol) {
-                for (let l = this.lCol; l < lCol; l++) {
-                    for (let r = 0; r < rCol; r++) {
-                        this.board[l][r] = Chessman.Common;
-                    }
-                }
+        if (lCol > maxCol || lCol < minCol || rCol > maxCol || rCol < minCol) return;
+
+        //如果棋盘变大，把多出来的部分设置为普通球
+        //假设只有一边变大
+        if (this.lCol == lCol - 1) {
+            for (let r = 0; r < rCol; r++) {
+                this.board[lCol][r] = Chessboard.createCommonChessman();
             }
-            if (this.rCol < rCol) {
-                for (let l = 0; l < lCol; l++) {
-                    for (let r = this.rCol; r < rCol; r++) {
-                        this.board[l][r] = Chessman.Common;
-                    }
-                }
+        } else if (this.rCol == rCol - 1) {
+            for (let l = 0; l < lCol; l++) {
+                this.board[l][rCol] = Chessboard.createCommonChessman();
             }
-            this.lCol = lCol;
-            this.rCol = rCol;
-            this.boardUpdate = true;
+        } else {
+            console.error("unexpected (" + this.lCol + "," + this.rCol + ") to (" + lCol + "," + rCol + ")");
         }
+
+        this.chessboardSizeChanged = true;
+
+        this.lCol = lCol;
+        this.rCol = rCol;
     }
 
     private handlerAddCol(turn: Turn): boolean {
@@ -69,7 +85,6 @@ export class Chessboard {
     }
 
     private handlerFlip(turn: Turn): boolean {
-        let larger = Math.max(this.lCol, this.rCol);
         for (let l = 0; l < maxCol; l++) {
             for (let r = l + 1; r < maxCol; r++) {
                 let temp = this.board[l][r];
@@ -80,7 +95,7 @@ export class Chessboard {
         let temp = this.rCol;
         this.rCol = this.lCol;
         this.lCol = temp;
-        this.boardUpdate = true;
+        this.chessboardSizeChanged = true;
         return false;
     }
 
@@ -93,7 +108,7 @@ export class Chessboard {
         for (let l = 0; l < maxCol; l++) {
             this.board[l] = [];
             for (let r = 0; r < maxCol; r++) {
-                this.board[l][r] = Chessman.Common;
+                this.board[l][r] = Chessboard.createCommonChessman();
             }
         }
         this.handlers[Chessman.Common] = (_: Turn) => true;
@@ -103,15 +118,37 @@ export class Chessboard {
         this.handlers[Chessman.Key] = this.handlerKey.bind(this);
     }
 
-    public move(turn: Turn, col: number, nextChessman: Chessman) {
+    public move(turn: Turn, col: number, nextChessman: ChessmanWithData) {
         if (turn === Turn.Left) {
             if (col >= 0 && col < this.lCol) {
                 let lastChessman = this.board[col][this.rCol - 1];
                 for (let i = this.rCol - 1; i > 0; i--) {
                     this.board[col][i] = this.board[col][i - 1];
+
+                    this.chessboardChanges.push({
+                        target: this.board[col][i].data,
+                        type: ChessboardChangeType.Left,
+                        lCol: col,
+                        rCol: i - 1
+                    });
                 }
+
                 this.board[col][0] = nextChessman;
-                this.handlers[lastChessman](turn);
+
+                this.chessboardChanges.push({
+                    target: nextChessman.type.valueOf().toString(),
+                    type: ChessboardChangeType.Spawn,
+                    lCol: col,
+                    rCol: 0
+                });
+
+                this.chessboardChanges.push({
+                    target: lastChessman.data,
+                    type: ChessboardChangeType.Despawn,
+                    lCol: 0,
+                    rCol: 0
+                });
+                this.handlers[lastChessman.type](turn);
             } else {
                 throw (new Error("col is not legal"))
             }
@@ -120,9 +157,30 @@ export class Chessboard {
                 let lastChessman = this.board[this.lCol - 1][col];
                 for (let i = this.lCol - 1; i > 0; i--) {
                     this.board[i][col] = this.board[i - 1][col];
+
+                    this.chessboardChanges.push({
+                        target: this.board[i][col].data,
+                        type: ChessboardChangeType.Right,
+                        lCol: i - 1,
+                        rCol: col
+                    });
                 }
+
                 this.board[0][col] = nextChessman;
-                this.handlers[lastChessman](turn);
+                this.chessboardChanges.push({
+                    target: nextChessman.type.valueOf().toString(),
+                    type: ChessboardChangeType.Spawn,
+                    lCol: 0,
+                    rCol: col
+                });
+
+                this.chessboardChanges.push({
+                    target: lastChessman.data,
+                    type: ChessboardChangeType.Despawn,
+                    lCol: 0,
+                    rCol: 0
+                });
+                this.handlers[lastChessman.type](turn);
             } else {
                 throw (new Error("col is not legal"))
             }

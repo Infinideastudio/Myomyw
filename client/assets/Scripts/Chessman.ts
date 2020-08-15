@@ -5,3 +5,8 @@ export enum Chessman {
     Flip,
     Key
 }
+
+export type ChessmanWithData = {
+    type: Chessman;
+    data: string;
+}

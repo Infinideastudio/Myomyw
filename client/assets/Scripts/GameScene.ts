@@ -1,12 +1,14 @@
 import EventTouch = cc.Event.EventTouch;
-import {Chessboard, Turn} from "./Chessboard";
+import {Chessboard, ChessboardChangeType, Turn} from "./Chessboard";
 import {Chessman} from "./Chessman";
+import {maxCol} from "./config";
 
 const {ccclass, property} = cc._decorator;
 
 @ccclass
 export class GameScene extends cc.Component {
     boardLength: number = 1000;
+    animationDuration: number = 0.5;
 
     @property(cc.Node)
     gridNode: cc.Node = new cc.Node();
@@ -35,6 +37,8 @@ export class GameScene extends cc.Component {
 
     chessBoard: Chessboard = new Chessboard();
     chessmanNode: cc.Node | null = null;
+    boardBusy: boolean = false;
+    touchTimeout: number = 0;
 
     get lCol(): number {
         return this.chessBoard.getLCol();
@@ -46,6 +50,10 @@ export class GameScene extends cc.Component {
 
     get gridWidth(): number {
         return this.boardLength / (this.lCol + this.rCol + 2);
+    }
+
+    get chessmanScale(): number {
+        return this.gridWidth / this.commonChessman.getOriginalSize().width * 0.8;
     }
 
     public onLoad(): void {
@@ -67,23 +75,94 @@ export class GameScene extends cc.Component {
         }
     }
 
+    // Generate a chessman node if type is not Common
+    public generateChessmanNode(type: Chessman, lCol: number, rCol: number): cc.Node | null {
+        let chessmanNode = new cc.Node();
+        let chessmanSprite = chessmanNode.addComponent(cc.Sprite);
+        let spriteFrame = this.getSpriteFrameByChessman(type);
+        if (spriteFrame === null) return null;
+        chessmanSprite.spriteFrame = spriteFrame;
+        chessmanNode.scale = this.chessmanScale;
+        chessmanNode.setPosition(
+            this.gridWidth * (lCol + 1),
+            this.gridWidth * (rCol + 1)
+        );
+        chessmanNode.name = GameScene.getNameFromLoc(lCol, rCol);
+        this.chessmanNode!.addChild(chessmanNode);
+        return chessmanNode
+    }
+
     private onEjectorClicked(e: EventTouch) {
+        if (this.boardBusy || this.touchTimeout != 0) return;
+        this.boardBusy = true;
+        setTimeout(() => {
+            this.boardBusy = false;
+        }, this.animationDuration * 1000);
+        this.touchTimeout = setTimeout(() => {
+            this.touchTimeout = 0;
+            this.onEjectorClicked(e);
+        }, this.animationDuration * 1100);
+
+        const movementAnimation = (target: cc.Node, movement: cc.Vec2) => {
+            cc.tween(target)
+                .by(this.animationDuration, {position: cc.v3(movement)}, {easing: 'smooth'})
+                .call(this.renderChessman.bind(this))
+                .start();
+        };
+
         const turn = e.target.name[0] === "L" ? Turn.Left : Turn.Right;
         const col = Number(e.target.name.substr(1));
-        this.chessBoard.move(turn, col, this.generateNextChessman());
-        if (this.chessBoard.boardUpdate) {
-            this.chessBoard.boardUpdate = false;
-            this.buildChessboard(); // also updates chessman
-        } else {
-            this.renderChessman();
+        this.chessBoard.move(turn, col, {type: this.generateNextChessman(), data: ""});
+
+        for (let change of this.chessBoard.chessboardChanges) {
+            let l = change.lCol, r = change.rCol;
+            let target: cc.Node | null = null;
+
+            if (change.type !== ChessboardChangeType.Spawn) {
+                target = this.chessmanNode!.getChildByName(GameScene.getNameFromLoc(l, r));
+                if (!target) continue;
+            }
+
+            switch (change.type) {
+                case ChessboardChangeType.Left:
+                    // noinspection JSSuspiciousNameCombination
+                    movementAnimation(target!, cc.v2(0, this.gridWidth));
+                    break;
+                case ChessboardChangeType.Right:
+                    movementAnimation(target!, cc.v2(this.gridWidth, 0));
+                    break;
+                case ChessboardChangeType.Spawn: {
+                    let target = this.generateChessmanNode(+change.target, l, r);
+                    if (target === null) break;
+                    target.opacity = 0;
+                    cc.tween(target)
+                        .to(this.animationDuration, {opacity: 255}, {easing: 'smooth'})
+                        .start();
+                    break;
+                }
+                case ChessboardChangeType.Despawn: {
+                    cc.tween(target!)
+                        .to(this.animationDuration, {opacity: 0}, {easing: 'smooth'})
+                        .call(this.renderChessman.bind(this))
+                        .start();
+                    break;
+                }
+            }
+        }
+        this.chessBoard.chessboardChanges = [];
+        if (this.chessBoard.chessboardSizeChanged) {
+            this.buildChessboard();
+            this.chessBoard.chessboardSizeChanged = false;
         }
     }
 
     private onEjectorLeave(e: EventTouch) {
+        clearTimeout(this.touchTimeout);
+        this.touchTimeout = 0;
     }
 
     public buildChessboard(): void {
-        let drawLCol = this.lCol + 1, drawRCol = this.rCol + 1; // Number of grids including ejectors
+        let drawLCol = maxCol + 1, drawRCol = maxCol + 1; // Number of grids including ejectors
 
         // Grids (including ejectors)
         this.gridNode.removeAllChildren();
@@ -105,15 +184,20 @@ export class GameScene extends cc.Component {
                     grid.spriteFrame = this.blueEjectorSpriteFrame;
                     gridNode.name = "R" + (r - 1).toString();
                     ejector = true;
-                } else if ((l + r) % 2 == 0) {
-                    grid.spriteFrame = this.grid1SpriteFrame;
                 } else {
-                    grid.spriteFrame = this.grid2SpriteFrame;
+                    if ((l + r) % 2 == 0) {
+                        grid.spriteFrame = this.grid1SpriteFrame;
+                    } else {
+                        grid.spriteFrame = this.grid2SpriteFrame;
+                    }
+                    gridNode.name = GameScene.getNameFromLoc(l, r);
                 }
+
                 if (ejector) {
                     gridNode.on(cc.Node.EventType.TOUCH_START, this.onEjectorClicked, this);
                     gridNode.on(cc.Node.EventType.TOUCH_END, this.onEjectorLeave, this);
                 }
+                if (l > this.lCol || r > this.rCol) gridNode.opacity = 0;
 
                 gridNode.scale = scale;
                 gridNode.setPosition(l * this.gridWidth, r * this.gridWidth);
@@ -126,27 +210,8 @@ export class GameScene extends cc.Component {
         this.renderChessman();
     }
 
-    public renderChessman() {
-        let chessmenNode = this.chessmanNode!;
-        const gridSpriteFrameWidth = this.commonChessman.getOriginalSize().width;
-        const scale = this.gridWidth / gridSpriteFrameWidth * 0.8;
-        chessmenNode.removeAllChildren();
-        for (let l = 0; l < this.lCol; l++) {
-            for (let r = 0; r < this.rCol; r++) {
-                let chessmanNode = new cc.Node();
-                let chessmanSprite = chessmanNode.addComponent(cc.Sprite);
-                let spriteFrame = this.getSpriteFrameByChessman(this.chessBoard.getChess(l, r));
-                if (spriteFrame === null) continue;
-                chessmanSprite.spriteFrame = spriteFrame;
-                chessmanNode.setPosition(
-                    (l + 1) * this.gridWidth,
-                    (r + 1) * this.gridWidth
-                );
-                chessmanNode.name = (l * this.rCol + r).toString();
-                chessmanNode.scale = scale;
-                chessmenNode.addChild(chessmanNode);
-            }
-        }
+    private static getNameFromLoc(lCol: number, rCol: number): string {
+        return lCol.toString() + "," + rCol.toString()
     }
 
     private getSpriteFrameByChessman(chessman: Chessman): cc.SpriteFrame | null {
@@ -162,5 +227,16 @@ export class GameScene extends cc.Component {
             case Chessman.Common:
                 return null;
         }
+    }
+
+    public renderChessman() {
+        let chessmenNode = this.chessmanNode!;
+        chessmenNode.removeAllChildren();
+        for (let l = 0; l < this.lCol; l++) {
+            for (let r = 0; r < this.rCol; r++) {
+                this.generateChessmanNode(this.chessBoard.getChess(l, r).type, l, r)
+            }
+        }
+        this.boardBusy = false;
     }
 }
