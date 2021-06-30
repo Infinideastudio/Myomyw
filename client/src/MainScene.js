@@ -18,12 +18,12 @@ var MainScene = cc.Scene.extend({
         this.addChild(renameModalBox, 10);
 
         var renameModalBoxLabel = creator.createLabel(txt.mainScene.enterNameTitle, 30);
-        renameModalBoxLabel.setPosition(size.width / 2, size.height / 2 + 100)
-        renameModalBox.addChild(renameModalBoxLabel);
+        renameModalBoxLabel.setPosition(300, 275)
+        renameModalBox.box.addChild(renameModalBoxLabel);
 
         var nameBox = creator.createEditBox(txt.mainScene.enterName, cc.size(400, 60));
-        nameBox.setPosition(size.width / 2, size.height / 2);
-        renameModalBox.addChild(nameBox);
+        nameBox.setPosition(300, 175);
+        renameModalBox.box.addChild(nameBox);
 
         confirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
             var name = nameBox.getString();
@@ -43,14 +43,14 @@ var MainScene = cc.Scene.extend({
                 });
             }
         });
-        confirmButton.setPosition(size.width / 2 - 100, size.height / 2 - 100);
-        renameModalBox.addChild(confirmButton);
+        confirmButton.setPosition(200, 75);
+        renameModalBox.box.addChild(confirmButton);
 
         cancelButton = creator.createButton(txt.menu.cancel,cc.size(150, 60), function () {
             renameModalBox.hide();
         });
-        cancelButton.setPosition(size.width / 2 + 100, size.height / 2 - 100);
-        renameModalBox.addChild(cancelButton);
+        cancelButton.setPosition(400, 75);
+        renameModalBox.box.addChild(cancelButton);
 
         //主界面
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));

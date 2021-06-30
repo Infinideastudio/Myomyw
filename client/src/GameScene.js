@@ -133,21 +133,21 @@ var GameScene = cc.Scene.extend({
     },
 
     initUI: function () {
-        exitModalBox = new ModalBox(250, 250);
+        exitModalBox = new ModalBox(300, 250);
         this.exitModalBox = exitModalBox;
         this.addChild(exitModalBox, 11);
 
-        exitButton = creator.createButton(txt.menu.exit, cc.size(150, 60), function () {
+        exitButton = creator.createButton(txt.menu.exit, cc.size(200, 60), function () {
             cc.director.popScene();
         });
-        exitButton.setPosition(size.width / 2, size.height / 2 + 50);
-        exitModalBox.addChild(exitButton);
+        exitButton.setPosition(150, 175);
+        exitModalBox.box.addChild(exitButton);
 
-        cancelButton = creator.createButton(txt.menu.continue, cc.size(150, 60), function () {
+        cancelButton = creator.createButton(txt.menu.continue, cc.size(200, 60), function () {
             exitModalBox.hide();
         });
-        cancelButton.setPosition(size.width / 2, size.height / 2 - 50);
-        exitModalBox.addChild(cancelButton);
+        cancelButton.setPosition(150, 75);
+        exitModalBox.box.addChild(cancelButton);
 
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);

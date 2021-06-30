@@ -13,15 +13,18 @@ var ModalBox = cc.LayerColor.extend({
         });
         cc.eventManager.addListener(this.touchEvent, this);
 
-        var background = new cc.Scale9Sprite(res.ModalBox_png);
-        background.setPosition(size.width / 2, size.height / 2);
-        background.setContentSize(width, height);
-        this.addChild(background);
+        this.box = new cc.Scale9Sprite(res.ModalBox_png);
+        this.box.setPosition(size.width / 2, size.height / 2);
+        this.box.setContentSize(width, height);
+        this.addChild(this.box);
         return true;
     },
 
     popup: function () {
         this.setVisible(true);
+        this.box.setScale(0, 0);
+        var scaleAction = cc.scaleTo(0.3, 1, 1).easing(cc.easeElasticOut(1));
+        this.box.runAction(scaleAction);
         this.touchEvent.setSwallowTouches(true);
     },
 
