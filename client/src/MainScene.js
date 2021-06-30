@@ -32,10 +32,9 @@ var MainScene = cc.Scene.extend({
             } else if (name.length > 15) {
                 showMessage(txt.mainScene.nameTooLong);
             } else {
-                player.setName(name);
+                storage.setItem("name", name);
                 updatePlayerLabel();
                 connection.login(nameBox.getString(), function () {
-                    storage.setItem("name", name);
                     renameModalBox.hide();
                 }, function (error) {
                     showMessage(error);
@@ -107,17 +106,19 @@ var MainScene = cc.Scene.extend({
             if (name) {
                 nameBox.setString(name);
             }
+            cancelButton.enabled = true;
             renameModalBox.popup();
         });
         playerLabel.titleColor = cc.color(0, 0, 0);
         playerLabel.titleFontSize = 25;
         this.addChild(playerLabel);
         function updatePlayerLabel() {
-            playerLabel.titleText = player.getName();
+            playerLabel.titleText = storage.getItem("name");
             playerLabel.setPosition(playerLabel.width / 2 + 30, size.height - playerLabel.height / 2 - 30);
         }
         updatePlayerLabel();
         if (!storage.getItem("name")) {
+            cancelButton.enabled = false;
             renameModalBox.popup();
         }
         //固定界面

@@ -15,7 +15,6 @@
     "src/definitions.js",
     "src/creator.js",
     "src/lang.js",
-    "src/player.js",
     "src/WelcomeScene.js",
     "src/MainScene.js",
     "src/MenuScene.js",

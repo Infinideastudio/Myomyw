@@ -8,7 +8,7 @@ var OnlineGameScene = GameScene.extend({
     clientReason: null,
 
     ctor: function () {
-        this._super(player.getName(), txt.names.opponent, left, null, true);
+        this._super(storage.getItem("name"), txt.names.opponent, left, null, true);
         this.roomLabel = creator.createLabel(txt.online.waiting, 25);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.addChild(this.roomLabel);

@@ -4,7 +4,7 @@ var TutorialGameScene = GameScene.extend({
     tutorialLabel: null,
 
     ctor: function () {
-        this._super(player.getName(), txt.names.ai, left, this.createNewChessman.bind(this), true);
+        this._super(storage.getItem("name"), txt.names.ai, left, this.createNewChessman.bind(this), true);
         cc.eventManager.addListener({
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
             onTouchBegan: this.touched.bind(this)
