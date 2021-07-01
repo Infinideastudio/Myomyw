@@ -6,7 +6,6 @@ var OnlineGameScene = GameScene.extend({
     firstMove: true,
     serverReason: null, //null为未定胜负
     clientReason: null,
-    started: false,
 
     ctor: function () {
         this._super(storage.getItem("name"), txt.names.opponent, left, null, true);
@@ -21,8 +20,9 @@ var OnlineGameScene = GameScene.extend({
         socket.on("end_game", this.onEndGame.bind(this));
         socket.onDisconnect(this.onDisconnect.bind(this));
 
-        socket.emit("start_matching", { name: storage.getItem("name")});
-        
+        socket.emit("start_matching", { name: storage.getItem("name") });
+
+        this.showExitModalBox = false;
         return true;
     },
 
@@ -37,7 +37,7 @@ var OnlineGameScene = GameScene.extend({
             cc.director.popScene();
         });
         exitButton.setPosition(150, 175);
-        //exitButton.setColor
+        exitButton.titleColor = cc.color(255, 50, 50);
         exitModalBox.box.addChild(exitButton);
 
         cancelButton = creator.createButton(txt.menu.continue, cc.size(200, 60), function () {
@@ -49,11 +49,11 @@ var OnlineGameScene = GameScene.extend({
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            if (!this.started || this.gameEnded) {
-                cc.director.popScene();
+            if (this.showExitModalBox) {
+                exitModalBox.popup();
             }
             else {
-                exitModalBox.popup();
+                cc.director.popScene();
             }
         }.bind(this));
         this.addChild(backButton, 10);
@@ -103,7 +103,7 @@ var OnlineGameScene = GameScene.extend({
                 str += txt.result.youWin;
                 break;
         }
-        this.gameEnded = true;
+        this.showExitModalBox = false;
         this.exitModalBox.hide();
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     },
@@ -150,7 +150,7 @@ var OnlineGameScene = GameScene.extend({
         this.rightNameLabel.string = data.opponent_name;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.start(data.side);
-        this.started = true;
+        this.showExitModalBox = true;
     },
 
     onFillPool: function (data) {
@@ -201,7 +201,7 @@ var OnlineGameScene = GameScene.extend({
         this.disconnected = true;
         if (this.serverReason == null) {
             this.playing = false;
-            this.gameEnded = true;
+            this.showExitModalBox = false;
             this.exitModalBox.hide();
             this.addChild(new ResultLayer(txt.result.unknownDisconnection, cc.color(0, 0, 0)));
         }
@@ -211,7 +211,7 @@ var OnlineGameScene = GameScene.extend({
         if (this.clientReason == this.serverReason)
             this.win();
         else {
-            this.gameEnded = true;
+            this.showExitModalBox = false;
             this.addChild(new ResultLayer(txt.result.differentResult, cc.color(0, 0, 0)));
             socket.emit("exception", { description: "different result! server reason:" + this.serverReason + ",client reason:" + this.clientReason })
             cc.log("server reason:" + this.serverReason);

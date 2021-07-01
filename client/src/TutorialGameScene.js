@@ -94,7 +94,7 @@ var TutorialGameScene = GameScene.extend({
 
     onWin: function (timeout) {
         if (this.turn == left && timeout) {
-            this.gameEnded = true;
+            this.showExitModalBox = false;
             this.addChild(new ResultLayer(txt.result.youOutOfTime, cc.color(0, 0, 0)));
         }
     }

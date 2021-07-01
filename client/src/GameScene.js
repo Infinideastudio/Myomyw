@@ -45,7 +45,7 @@ var GameScene = cc.Scene.extend({
     timerStencilDrawNode: null,
     timer: null,
 
-    gameEnded: false,
+    showExitModalBox: true,
     exitModalBox: null,
     /*
     leftName 左边玩家的名字
@@ -156,11 +156,11 @@ var GameScene = cc.Scene.extend({
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            if (this.gameEnded) {
-                cc.director.popScene();
+            if (this.showExitModalBox) {
+                exitModalBox.popup();
             }
             else {
-                exitModalBox.popup();
+                cc.director.popScene();
             }
         }.bind(this));
         this.addChild(backButton, 10);
