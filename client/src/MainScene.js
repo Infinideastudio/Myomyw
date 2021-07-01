@@ -34,18 +34,13 @@ var MainScene = cc.Scene.extend({
             } else {
                 storage.setItem("name", name);
                 updatePlayerLabel();
-                connection.login(nameBox.getString(), function () {
-                    renameModalBox.hide();
-                }, function (error) {
-                    showMessage(error);
-                    renameModalBox.hide();
-                });
+                renameModalBox.hide();
             }
         });
         confirmButton.setPosition(200, 75);
         renameModalBox.box.addChild(confirmButton);
 
-        cancelButton = creator.createButton(txt.menu.cancel,cc.size(150, 60), function () {
+        cancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
             renameModalBox.hide();
         });
         cancelButton.setPosition(400, 75);
@@ -73,18 +68,11 @@ var MainScene = cc.Scene.extend({
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            socket.emitForReply("start_matching", { allow_watching: true }, function (data) {
-                if (data.error_code == 0) {
-                    cc.director.pushScene(new OnlineGameScene());
-                } else if (data.error_code == 1) {
-                    showMessage("Not Login");
-                } else if (data.error_code == 2) {
-                    showMessage(txt.online.serverFull);
-                }
-            }, function (error) {
-                showMessage(error);
+            connection.connect(function () {
+                cc.director.pushScene(new OnlineGameScene());
+            }, function () {
+                showMessage(txt.connection.error);
             });
-
         });
         this.addChild(playOnlineButton);
 

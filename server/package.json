@@ -4,7 +4,7 @@
   "description": "Myomyw Server",
   "main": "src/server.js",
   "dependencies": {
-    "socket.io": "^1.4.5"
+    "ws": "^7.5.1"
   },
   "repository": {
     "type": "git",

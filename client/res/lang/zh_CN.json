@@ -52,7 +52,8 @@
     "aiOutOfTime": "电脑超时了",
     "outOfTime": "{0}超时了",
     "giveUp": "{0}认输了",
-    "opponentLeft": "对手断开连接",
+    "opponentDisconnect": "对手断开连接",
+    "serverClose": "服务器已关闭",
     "unknownDisconnection": "与服务器断开了连接",
     "differentResult": "客户端与服务端的胜负判定不符"
   },

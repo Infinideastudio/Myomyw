@@ -14,11 +14,14 @@ var OnlineGameScene = GameScene.extend({
         this.addChild(this.roomLabel);
 
         socket.on("matching_success", this.onStart.bind(this));
-        socket.on("next_chessman", this.onNextChessman.bind(this));
+        socket.on("fill_pool", this.onFillPool.bind(this));
         socket.on("move", this.onMove.bind(this));
         socket.on("end_turn", this.onEndTurn.bind(this));
         socket.on("end_game", this.onEndGame.bind(this));
+        socket.onDisconnect(this.onDisconnect.bind(this));
 
+        socket.emit("start_matching", { name: storage.getItem("name")});
+        
         return true;
     },
 
@@ -54,11 +57,22 @@ var OnlineGameScene = GameScene.extend({
         this.addChild(backButton, 10);
     },
 
+    onExit: function () {
+        this._super();
+        if (!this.disconnected) {
+            socket.disconnect();
+            this.disconnected = true;
+        }
+    },
+
     win: function () {
         var str = "";
         switch (this.clientReason) {
-            case EndReason.opponentLeft:
-                str = txt.result.opponentLeft;
+            case EndReason.serverClose:
+                str = txt.result.serverClose;
+                break;
+            case EndReason.opponentDisconnect:
+                str = txt.result.opponentDisconnect;
                 break;
             case EndReason.youWin:
                 str = txt.result.youWin;
@@ -135,8 +149,8 @@ var OnlineGameScene = GameScene.extend({
         this.start(data.side);
     },
 
-    onNextChessman: function (data) {
-        this.setNextChessman(data.next_ball);
+    onFillPool: function (data) {
+        this.setNextChessman(data.ball_seq[0]);
     },
 
     onMove: function (data) {
@@ -166,7 +180,7 @@ var OnlineGameScene = GameScene.extend({
     onEndGame: function (data) {
         this.playing = false;
         this.serverReason = data.reason;
-        if (this.serverReason == EndReason.opponentLeft || this.serverReason == EndReason.opponentGiveUp) {
+        if (this.serverReason == EndReason.serverClose || this.serverReason == EndReason.opponentDisconnect || this.serverReason == EndReason.opponentLeft || this.serverReason == EndReason.opponentGiveUp) {
             this.clientReason = this.serverReason;
             this.stopTimer();
             this.win();
@@ -176,6 +190,14 @@ var OnlineGameScene = GameScene.extend({
                 this.checkReason();
             }
 
+        }
+    },
+
+    onDisconnect: function () {
+        this.disconnected = true;
+        if (this.serverReason == null) {
+            this.playing = false;
+            this.addChild(new ResultLayer(txt.result.unknownDisconnection, cc.color(0, 0, 0)));
         }
     },
 

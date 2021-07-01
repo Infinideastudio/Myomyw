@@ -1,5 +1,5 @@
 ﻿var config = require('./config.js');
-var EndReason = { opponentLeft: 0, youWin: 1, opponentWins: 2, youOutOfTime: 3, opponentOutOfTime: 4, serverFull: 5 };
+var EndReason = { serverClose: 0, opponentDisconnect: 1, youWin: 2, opponentWins: 3, youOutOfTime: 4, opponentOutOfTime: 5, youGiveUp: 6, opponentGiveUp: 7 };
 var Chessman = { common: 0, key: 1, addCol: 2, delCol: 3, flip: 4 };
 var left = 0, right = 1;
 
@@ -18,23 +18,24 @@ function Room(leftPlayer, rightPlayer, closeHandler, id) {
     this.movingCol = null;
     this.totalMovementTimes = 0;
     this.timeOutTID = null;
-    this.ended = false;
+    this.closed = false;
     this.leftPlayer = leftPlayer;
     this.rightPlayer = rightPlayer;
     this.closeHandler = closeHandler;
 
     this.setPlayer(this.leftPlayer, left);
     this.setPlayer(this.rightPlayer, right);
-    this.leftPlayer.emit('start', { side: left, room: id, opponentName: this.rightPlayer.name });
-    this.rightPlayer.emit('start', { side: right, room: id, opponentName: this.leftPlayer.name });
+    this.leftPlayer.emit('matching_success', { side: left, room_id: id, opponent_name: this.rightPlayer.name });
+    this.rightPlayer.emit('matching_success', { side: right, room_id: id, opponent_name: this.leftPlayer.name });
 
     this.createAndTellNextChessman();
 }
 
 Room.prototype.setPlayer = function (player, side) {
     player.on('move', this.onMove.bind(this, side));
-    player.on('endTurn', this.onEndTurn.bind(this, side));
-    player.on('disconnect', this.onDisconnect.bind(this, side));
+    player.on('end_turn', this.onEndTurn.bind(this, side));
+    player.on('give_up', this.onGiveUp.bind(this, side));
+    player.socket.ws.on('close', this.onDisconnect.bind(this, side));
 };
 
 Room.prototype.currentPlayer = function () {
@@ -55,8 +56,8 @@ Room.prototype.onMove = function (side, data) {
         this.totalMovementTimes++;
         this.waitingPlayer().emit('move', { col: data.col });
         if (this.move(this.movingCol, this.nextChessman)) {
-            this.currentPlayer().emit('endGame', { reason: EndReason.opponentWins });
-            this.waitingPlayer().emit('endGame', { reason: EndReason.youWin });
+            this.currentPlayer().emit('end_game', { reason: EndReason.opponentWins });
+            this.waitingPlayer().emit('end_game', { reason: EndReason.youWin });
             clearTimeout(this.timeOutTID);
             this.close();
         } else {
@@ -72,21 +73,27 @@ Room.prototype.onEndTurn = function (side) {
     if (side == this.turn && this.movingCol != null && this.totalMovementTimes <= config.maxMovementTimes) {
         this.movingCol = null;
         this.setTurn(this.turn == left ? right : left);
-        this.currentPlayer().emit('endTurn');
+        this.currentPlayer().emit('end_turn');
     }
 };
 
+Room.prototype.onGiveUp = function (side) {
+    (side == left ? this.rightPlayer : this.leftPlayer).emit('end_game', { reason: EndReason.opponentGiveUp });
+    clearTimeout(this.timeOutTID);
+    this.close();
+}
+
 Room.prototype.onDisconnect = function (side) {
-    if (!this.ended) {
-        (side == left ? this.rightPlayer : this.leftPlayer).emit('endGame', { reason: EndReason.opponentLeft });
+    if (!this.closed) {
+        (side == left ? this.rightPlayer : this.leftPlayer).emit('end_game', { reason: EndReason.opponentDisconnect });
         clearTimeout(this.timeOutTID);
         this.close();
     }
 };
 
 Room.prototype.close = function () {
-    if (!this.ended) {
-        this.ended = true;
+    if (!this.closed) {
+        this.closed = true;
         this.leftPlayer.disconnect();
         this.rightPlayer.disconnect();
         this.closeHandler();
@@ -102,15 +109,15 @@ Room.prototype.setTurn = function (turn) {
 };
 
 Room.prototype.timeOut = function () {
-    this.currentPlayer().emit('endGame', { reason: EndReason.youOutOfTime });
-    this.waitingPlayer().emit('endGame', { reason: EndReason.opponentOutOfTime });
+    this.currentPlayer().emit('end_game', { reason: EndReason.youOutOfTime });
+    this.waitingPlayer().emit('end_game', { reason: EndReason.opponentOutOfTime });
     this.close();
 };
 
 Room.prototype.createAndTellNextChessman = function () {
     this.nextChessman = this.getRandomChessman();
-    this.leftPlayer.emit('nextChessman', { chessman: this.nextChessman });
-    this.rightPlayer.emit('nextChessman', { chessman: this.nextChessman });
+    this.leftPlayer.emit('fill_pool', { ball_seq: [this.nextChessman] });
+    this.rightPlayer.emit('fill_pool', { ball_seq: [this.nextChessman] });
 };
 
 Room.prototype.getRandomChessman = function () {

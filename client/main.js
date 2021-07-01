@@ -15,9 +15,9 @@ cc.game.onStart = function () {
     connection.loadServer(loaded, loaded);
     function loaded() {
         if (ready) {
-            connection.connect(function(){},function(){});
             if (storage.getItem("playedBefore") == "true") {
                 cc.director.runScene(new MainScene());
+                connection.handshake(function () { }, function () { });
             }
             else {
                 cc.director.runScene(new WelcomeScene());

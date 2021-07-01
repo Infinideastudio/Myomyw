@@ -1,22 +1,35 @@
 ﻿var http = require('http');
 var url = require('url');
+var WebSocket = require('ws');
 var config = require('./config.js');
-var socket = require('./socket.js');
+var Socket = require('./Socket.js');
+var Player = require('./Player.js');
 var Room = require('./Room.js');
 
-var app = http.createServer(httpHandler);
+var httpServer = http.createServer(httpHandler);
+var wsServer = new WebSocket.Server({ server: httpServer });
+wsServer.on('connection', wsHandler);
+httpServer.listen(config.port);
+console.log('listening on port ' + config.port);
+
 var rooms = [];
 var matchingPlayer = null;
 var EndReason = { serverFull: 5 };
-var serverInfo = JSON.stringify({ version: config.version });
+var message = '';
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
     res.setHeader('Cache-Control', 'no-cache, must-revalidate')
-    switch (url.parse(req.url).pathname) {
-        case "/is-server":
+    var parsedUrl = url.parse(req.url, true);
+    switch (parsedUrl.pathname) {
+        case "/handshake":
             res.writeHead(200);
-            res.end(serverInfo);
+            if (parsedUrl.query.version == '0.8') {
+                res.end(JSON.stringify({ errorcode: 0, message: message }));
+            }
+            else {
+                res.end(JSON.stringify({ errorcode: 1, message: message }));
+            }
             break;
         default:
             res.writeHead(400);
@@ -25,43 +38,47 @@ function httpHandler(req, res) {
     }
 }
 
-app.listen(config.port);
-socket.listen(app, connectHandler);
-console.log('listening on port ' + config.port);
+function wsHandler(ws) {
+    var socket = new Socket(ws);
+    console.log('#' + socket.id + ' connected');
+    socket.on('start_matching', function (data) {
+        if (!data.name || data.name.length == 0 || data.name.length > 15) {
+            socket.disconnect();
+            return;
+        }
+        var player = new Player(socket, data.name);
+        startMatching(player);
+        ws.on('close', function () {
+            console.log('#' + socket.id + ' disconnected');
+            stopMatching(player);
+        });
+    });
+}
 
-function connectHandler(player) {
-    player.on('match', function (data) {
-        if (rooms.length < config.maxRooms) {
-            if (data.name.length > 0 && data.name.length <= 15) {
-                player.name = data.name;
-                console.log(player.getDescription() + " is matching");
-                if (matchingPlayer == null) {
-                    matchingPlayer = player;
-                }
-                else {
-                    if (player.id != matchingPlayer.id) {
-                        openRoom(matchingPlayer, player);
-                        matchingPlayer = null;
-                    }
-                }
-            }
-            else {
-                player.disconnect();
-            }
+function startMatching(player) {
+    if (rooms.length < config.maxRooms) {
+        console.log(player.getDescription() + " is matching");
+        if (matchingPlayer == null) {
+            matchingPlayer = player;
         }
         else {
-            console.log("Server is full!");
-            player.emit('endGame', { reason: EndReason.serverFull });
-            player.disconnect();
+            if (player.id != matchingPlayer.id) {
+                openRoom(matchingPlayer, player);
+                matchingPlayer = null;
+            }
         }
-    });
+    }
+    else {
+        console.log("Server is full!");
+        player.emit('endGame', { reason: EndReason.serverFull });
+        player.disconnect();
+    }
+}
 
-    player.on('disconnect', function () {
-        console.log(player.id + ' disconnected');
-        if (matchingPlayer && player.id == matchingPlayer.id) {
-            matchingPlayer = null;
-        }
-    });
+function stopMatching(player) {
+    if (matchingPlayer && player.id == matchingPlayer.id) {
+        matchingPlayer = null;
+    }
 }
 
 function openRoom(leftPlayer, rightPlayer) {

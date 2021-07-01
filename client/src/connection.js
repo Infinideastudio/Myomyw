@@ -18,29 +18,30 @@ var connection = {
         }
     },
 
-    connect: function (onSuccess, onError) {
+    handshake: function (onSuccess, onError) {
+        http.request("GET", "http://" + connection.server + "/handshake?version=0.8", null,
+            function (data, status) {
+                if (status != "success") {
+                    onError(txt.connection.error)
+                }
+                else if (data.error_code != 0) {
+                    onError(txt.connection.wrongReply)
+                }
+                else {
+                    onSuccess();
+                }
+            });
+    },
+
+    connect: function (onConnect, onError) {
         socket.connect("ws://" + connection.server);
         socket.onError(function (e) {
-            cc.log(JSON.stringify(e));
+            onError(JSON.stringify(e));
         });
-        socket.onConnect(function () {
-            socket.emitForReply("shakehand", { version: "0.8" }, function (data) {
-                data.error_code == 0 ? onSuccess() : onError(txt.connection.wrongReply);
-            }, onError);
-        });
+        socket.onConnect(onConnect);
     },
 
     disconnect: function () {
         socket.disconnect();
-    },
-
-    login: function (name, onSuccess, onError) {
-        socket.emitForReply("login", { name: name }, function (data) {
-            if (data.error_code == 0) {
-                onSuccess()
-            } else {
-                onError(txt.connection.error);
-            }
-        }, onError);
     }
 };
