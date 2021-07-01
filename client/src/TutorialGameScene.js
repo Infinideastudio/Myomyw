@@ -9,9 +9,16 @@ var TutorialGameScene = GameScene.extend({
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
             onTouchBegan: this.touched.bind(this)
         }, this);
+
+        var label = creator.createLabel(txt.mainScene.tutorial, 25);
+        label.setPosition(225, 680);
+        this.sideBar.addChild(label);
+
         this.tutorialLabel = creator.createLabel("", 25);
+        this.tutorialLabel.setDimensions(cc.size(400,0));
         this.changeText(txt.tutorial.s0);
-        this.addChild(this.tutorialLabel);
+        this.sideBar.addChild(this.tutorialLabel);
+        
         return true;
     },
 

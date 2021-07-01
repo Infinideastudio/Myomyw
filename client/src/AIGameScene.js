@@ -4,6 +4,16 @@ var AIGameScene = GameScene.extend({
     ctor: function () {
         this._super(storage.getItem("name"), txt.names.ai, left, getRandomChessman,
             storage.getItem("standaloneTimer") != "false");
+
+        var label = creator.createLabel(txt.mainScene.playWithAI, 25);
+        label.setPosition(225, 680);
+        this.sideBar.addChild(label);
+        
+        var mainTitle = new cc.Sprite(res.Title_png);
+        mainTitle.setPosition(225, 200);
+        mainTitle.scale = 0.5;
+        this.sideBar.addChild(mainTitle);
+
         this.start(left);
         return true;
     },

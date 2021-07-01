@@ -70,7 +70,7 @@ var GameScene = cc.Scene.extend({
         this.board.attr({
             width: this.boardLength,
             height: this.boardLength,
-            x: size.width / 2,
+            x: size.width / 2 - 220,
             y: size.height / 2
         });
         this.addChild(this.board);
@@ -109,8 +109,12 @@ var GameScene = cc.Scene.extend({
         this.leftNameLabel.setPosition(this.leftNameLabel.width / 2 + 30, size.height - this.leftNameLabel.height / 2 - 30);
         this.addChild(this.leftNameLabel);
         this.rightNameLabel = creator.createLabel(rightName, 25);
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 30, size.height - this.rightNameLabel.height / 2 - 30);
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 470, size.height - this.rightNameLabel.height / 2 - 30);
         this.addChild(this.rightNameLabel);
+
+        this.sideBar = new cc.LayerColor(cc.color(204, 233, 255, 255), 450, size.height);
+        this.sideBar.setPosition(size.width - 450, 0);
+        this.addChild(this.sideBar);
 
         var touchEvent = {
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
@@ -299,7 +303,7 @@ var GameScene = cc.Scene.extend({
         nextChessmanSprite.attr({
             opacity: 0,
             scale: 0.8,
-            x: size.width - 60,
+            x: size.width - 500,
             y: size.height - 100
         });
         nextChessmanSprite.setName("next");
