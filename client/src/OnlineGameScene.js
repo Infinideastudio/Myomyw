@@ -6,6 +6,7 @@ var OnlineGameScene = GameScene.extend({
     firstMove: true,
     serverReason: null, //null为未定胜负
     clientReason: null,
+    started: false,
 
     ctor: function () {
         this._super(storage.getItem("name"), txt.names.opponent, left, null, true);
@@ -36,6 +37,7 @@ var OnlineGameScene = GameScene.extend({
             cc.director.popScene();
         });
         exitButton.setPosition(150, 175);
+        //exitButton.setColor
         exitModalBox.box.addChild(exitButton);
 
         cancelButton = creator.createButton(txt.menu.continue, cc.size(200, 60), function () {
@@ -47,7 +49,7 @@ var OnlineGameScene = GameScene.extend({
         var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
         backButton.setPosition(backButton.width / 2 + 20, backButton.height / 2 + 20);
         backButton.addClickEventListener(function () {
-            if (this.gameEnded) {
+            if (!this.started || this.gameEnded) {
                 cc.director.popScene();
             }
             else {
@@ -102,6 +104,7 @@ var OnlineGameScene = GameScene.extend({
                 break;
         }
         this.gameEnded = true;
+        this.exitModalBox.hide();
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     },
 
@@ -147,6 +150,7 @@ var OnlineGameScene = GameScene.extend({
         this.rightNameLabel.string = data.opponent_name;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
         this.start(data.side);
+        this.started = true;
     },
 
     onFillPool: function (data) {
@@ -197,6 +201,8 @@ var OnlineGameScene = GameScene.extend({
         this.disconnected = true;
         if (this.serverReason == null) {
             this.playing = false;
+            this.gameEnded = true;
+            this.exitModalBox.hide();
             this.addChild(new ResultLayer(txt.result.unknownDisconnection, cc.color(0, 0, 0)));
         }
     },
