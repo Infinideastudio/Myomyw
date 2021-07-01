@@ -68,10 +68,12 @@ var MainScene = cc.Scene.extend({
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            connection.connect(function () {
-                cc.director.pushScene(new OnlineGameScene());
-            }, function () {
+            socket.connect("ws://" + server.address);
+            socket.onError(function (e) {
                 showMessage(txt.connection.error);
+            });
+            socket.onConnect(function () {
+                cc.director.pushScene(new OnlineGameScene());
             });
         });
         this.addChild(playOnlineButton);

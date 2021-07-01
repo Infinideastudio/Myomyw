@@ -12,12 +12,12 @@ cc.game.onStart = function () {
     creator.init();
     lang.init();
     var ready = false;
-    connection.loadServer(loaded, loaded);
+    server.load(loaded, loaded);
     function loaded() {
         if (ready) {
             if (storage.getItem("playedBefore") == "true") {
                 cc.director.runScene(new MainScene());
-                connection.handshake(function () { }, function () { });
+                server.handshake(function () { }, function () { });
             }
             else {
                 cc.director.runScene(new WelcomeScene());
