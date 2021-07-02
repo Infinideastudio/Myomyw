@@ -23,7 +23,40 @@ var OnlineGameScene = GameScene.extend({
         socket.emit("start_matching", { name: storage.getItem("name") });
 
         this.showExitModalBox = false;
+
+        var label = creator.createLabel(txt.mainScene.playOnline, 25);
+        label.setPosition(225, 680);
+        this.sideBar.addChild(label);
+
+        this.list = new ccui.ListView();
+        this.list.setItemsMargin(5);
+        this.list.setContentSize(400, 520);
+        this.list.setPosition(20, 120);
+        this.sideBar.addChild(this.list);
+
+        var inputbox = creator.createEditBox("输入聊天内容", cc.size(400, 50));
+        inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
+        inputbox.delegate = {
+            editBoxReturn: function () {
+                this.addText(inputbox.string, cc.color(0, 0, 0));
+                inputbox.string = "";
+            }.bind(this)
+        };
+        inputbox.setPosition(220, 50);
+        this.sideBar.addChild(inputbox);
+        this.addText(txt.online.matching,cc.color(0,0,0));
         return true;
+    },
+
+    addText: function (string, color) {
+        var text = new ccui.Text();
+        text.color = color;
+        text.fontName = creator.normalFont;
+        text.fontSize = 25;
+        text.string = string;
+        text.boundingWidth = 400;
+        this.list.pushBackCustomItem(text);
+        this.list.jumpToBottom();
     },
 
     initUI: function () {
@@ -144,6 +177,7 @@ var OnlineGameScene = GameScene.extend({
     },
 
     onStart: function (data) {
+        this.addText(format(txt.online.start, data.room_id),cc.color(0,0,0));
         this.roomLabel.string = format(txt.online.room, data.room_id);
         this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.opponentName = data.opponent_name;

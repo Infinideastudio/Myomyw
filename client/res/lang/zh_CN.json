@@ -15,6 +15,7 @@
     "enterName": "输入昵称",
     "emptyName": "昵称不能为空",
     "nameTooLong": "昵称最长15个字符",
+    "playOnline": "在线对战",
     "playWithAI": "人机对战",
     "playDouble": "同屏对战",
     "tutorial": "教程"
@@ -60,8 +61,10 @@
   },
   "online": {
     "connecting": "连接中",
+    "matching": "匹配中...",
     "waiting": "等待中",
     "room": "房间{0}",
+    "start":"游戏开始，房间号为{0}",
     "serverFull": "服务器已满"
   },
   "tutorial": {
