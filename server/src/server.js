@@ -25,10 +25,10 @@ function httpHandler(req, res) {
         case "/handshake":
             res.writeHead(200);
             if (parsedUrl.query.version == '0.8') {
-                res.end(JSON.stringify({ errorcode: 0, message: message }));
+                res.end(JSON.stringify({ error_code: 0, message: message }));
             }
             else {
-                res.end(JSON.stringify({ errorcode: 1, message: message }));
+                res.end(JSON.stringify({ error_code: 1, message: message }));
             }
             break;
         default:

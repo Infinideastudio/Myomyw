@@ -5,6 +5,7 @@
     "skip": "跳过"
   },
   "connection": {
+    "fetchError": "获取服务器地址失败",
     "error": "连接错误",
     "timeout": "连接超时",
     "wrongReply": "错误的服务器或版本不兼容"

@@ -11,28 +11,40 @@ cc.game.onStart = function () {
     size = cc.winSize;
     creator.init();
     lang.init();
-    var ready = false;
-    server.load(loaded, loaded);
-    function loaded() {
-        if (ready) {
-            if (storage.getItem("playedBefore") == "true") {
-                cc.director.runScene(new MainScene());
-                server.handshake(function () { }, function () { });
-            }
-            else {
-                cc.director.runScene(new WelcomeScene());
-            }
+
+    var serverInited = false;
+    var showingWaitingBox = false, closeWaitingBox = null;
+    var errorMessage = null;
+    server.init(loadSuccess, loadError);
+    function loadSuccess() {
+        serverInited = true;
+        if (showingWaitingBox) { closeWaitingBox(); }
+    }
+    function loadError(error) {
+        serverInited = true;
+        if (showingWaitingBox) {
+            closeWaitingBox();
+            messageBox(error);
         }
         else {
-            ready = true;
+            errorMessage = error;
         }
     }
 
     if (!cc.sys.isNative) {
-        cc._loaderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC";
+        cc._loaderImage = null;
     }
+    
     cc.LoaderScene.preload(g_resources, function () {
-        loaded();
+        var firstScene = (storage.getItem("playedBefore") == "true") ? new MainScene() : new WelcomeScene();
+        cc.director.runScene(firstScene);
+        if (!serverInited) {
+            closeWaitingBox = waitingBox("正在连接服务器...", firstScene);
+            showingWaitingBox = true;
+        }
+        if (errorMessage) {
+            messageBox(errorMessage, firstScene);
+        }
     }, this);
 };
 
