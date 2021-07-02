@@ -35,6 +35,7 @@ Room.prototype.setPlayer = function (player, side) {
     player.on('move', this.onMove.bind(this, side));
     player.on('end_turn', this.onEndTurn.bind(this, side));
     player.on('give_up', this.onGiveUp.bind(this, side));
+    player.on('send_chat', this.onSendChat.bind(this, side));
     player.socket.ws.on('close', this.onDisconnect.bind(this, side));
 };
 
@@ -81,6 +82,10 @@ Room.prototype.onGiveUp = function (side) {
     (side == left ? this.rightPlayer : this.leftPlayer).emit('end_game', { reason: EndReason.opponentGiveUp });
     clearTimeout(this.timeOutTID);
     this.close();
+}
+
+Room.prototype.onSendChat = function (side, data) {
+    (side == left ? this.rightPlayer : this.leftPlayer).emit('chat', { text: data.text });
 }
 
 Room.prototype.onDisconnect = function (side) {

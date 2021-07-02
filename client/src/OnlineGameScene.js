@@ -1,4 +1,5 @@
 var OnlineGameScene = GameScene.extend({
+    myName: null,
     opponentName: null,
     disconnected: false,
     movingCol: null,
@@ -7,11 +8,13 @@ var OnlineGameScene = GameScene.extend({
     clientReason: null,
 
     ctor: function () {
-        this._super(storage.getItem("name"), txt.names.opponent, left, null, true);
+        this.myName = storage.getItem("name");
+        this._super(this.myName, txt.names.opponent, left, null, true);
 
         socket.on("matching_success", this.onStart.bind(this));
         socket.on("fill_pool", this.onFillPool.bind(this));
         socket.on("move", this.onMove.bind(this));
+        socket.on("chat", this.onChat.bind(this));
         socket.on("end_turn", this.onEndTurn.bind(this));
         socket.on("end_game", this.onEndGame.bind(this));
         socket.onDisconnect(this.onDisconnect.bind(this));
@@ -34,13 +37,14 @@ var OnlineGameScene = GameScene.extend({
         inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
         inputbox.delegate = {
             editBoxReturn: function () {
-                this.addText(inputbox.string, cc.color(0, 0, 0));
+                this.addText(this.myName + ": " + inputbox.string, cc.color(130, 204, 81));
+                socket.emit("send_chat", { text: inputbox.string });
                 inputbox.string = "";
             }.bind(this)
         };
         inputbox.setPosition(220, 50);
         this.sideBar.addChild(inputbox);
-        this.addText(txt.online.matching,cc.color(0,0,0));
+        this.addText(txt.online.matching, cc.color(0, 0, 0));
         return true;
     },
 
@@ -86,6 +90,10 @@ var OnlineGameScene = GameScene.extend({
             }
         }.bind(this));
         this.addChild(backButton, 10);
+    },
+
+    onChat: function (data) {
+        this.addText(this.opponentName + ": " + data.text, cc.color(102, 163, 255));
     },
 
     onExit: function () {
@@ -173,7 +181,7 @@ var OnlineGameScene = GameScene.extend({
     },
 
     onStart: function (data) {
-        this.addText(format(txt.online.start, data.room_id),cc.color(0,0,0));
+        this.addText(format(txt.online.start, data.room_id), cc.color(0, 0, 0));
         this.opponentName = data.opponent_name;
         this.rightNameLabel.string = data.opponent_name;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
