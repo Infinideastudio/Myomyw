@@ -103,7 +103,10 @@ var MainScene = cc.Scene.extend({
         playerLabel.titleFontSize = 25;
         this.addChild(playerLabel);
         function updatePlayerLabel() {
-            playerLabel.titleText = storage.getItem("name");
+            var name = storage.getItem("name")
+            if (name) {
+                playerLabel.titleText = name;
+            }
             playerLabel.setPosition(playerLabel.width / 2 + 30, size.height - playerLabel.height / 2 - 30);
         }
         updatePlayerLabel();

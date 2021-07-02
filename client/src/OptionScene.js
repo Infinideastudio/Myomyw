@@ -77,13 +77,13 @@ var OptionScene = MenuScene.extend({
                 }
             });
         });
-        confirmButton.setPosition(300, 75);
+        confirmButton.setPosition(250, 75);
         modalBox.box.addChild(confirmButton);
 
         cancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
             modalBox.hide();
         });
-        cancelButton.setPosition(500, 75);
+        cancelButton.setPosition(550, 75);
         modalBox.box.addChild(cancelButton);
 
         modalBox.popup();
@@ -120,13 +120,13 @@ var OptionScene = MenuScene.extend({
                 messageBox(error);
             });
         });
-        confirmButton.setPosition(300, 75);
+        confirmButton.setPosition(250, 75);
         modalBox.box.addChild(confirmButton);
 
         cancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
             modalBox.hide();
         });
-        cancelButton.setPosition(500, 75);
+        cancelButton.setPosition(550, 75);
         modalBox.box.addChild(cancelButton);
 
         modalBox.popup();
