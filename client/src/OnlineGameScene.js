@@ -29,10 +29,21 @@ var OnlineGameScene = GameScene.extend({
 
         this.list = new ccui.ListView();
         this.list.setItemsMargin(5);
+        this.list.setScrollBarEnabled(true);
         this.list.setContentSize(400, 520);
         this.list.setPosition(20, 120);
         this.sideBar.addChild(this.list);
-
+        /*
+        if ('mouse' in cc.sys.capabilities) {
+            cc.eventManager.addListener({
+                event: cc.EventListener.MOUSE,
+                onMouseScroll: function (event) {
+                    var delta = cc.sys.isNative ? event.getScrollY() * 6 : -event.getScrollY();
+                    event.getCurrentTarget().moveMenu({y : delta});
+                    return true;
+                }
+            }, this);
+        */
         var inputbox = creator.createEditBox("输入聊天内容", cc.size(400, 50));
         inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
         inputbox.delegate = {
@@ -184,7 +195,7 @@ var OnlineGameScene = GameScene.extend({
         this.addText(format(txt.online.start, data.room_id), cc.color(0, 0, 0));
         this.opponentName = data.opponent_name;
         this.rightNameLabel.string = data.opponent_name;
-        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);
+        this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 470, size.height - this.rightNameLabel.height / 2 - 30);
         this.start(data.side);
         this.showExitModalBox = true;
     },

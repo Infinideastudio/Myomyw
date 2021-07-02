@@ -56,6 +56,8 @@ var GameScene = cc.Scene.extend({
     */
     ctor: function (leftName, rightName, controllableSide, createNextChessman, enableTimer) {
         this._super();
+        var background = new cc.LayerColor(cc.color(255, 255, 255));
+        this.addChild(background);
         this.initUI();
         this.chessmen = [];
         for (var i = 0; i < maxLCol; i++) {
