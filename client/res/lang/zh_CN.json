@@ -5,6 +5,7 @@
     "skip": "跳过"
   },
   "connection": {
+    "connecting": "正在连接服务器",
     "fetchError": "获取服务器地址失败",
     "error": "连接错误",
     "timeout": "连接超时",
@@ -35,6 +36,8 @@
     "inputBackgroundUrl": "自定义游戏背景的URL（留空取消）",
     "settingBackground": "正在获取背景...",
     "setBackgroundError": "发生了一些错误",
+    "setServer": "自定义服务器",
+    "inputServer": "自定义服务器地址（留空取消）",
     "lang": "语言",
     "autoLang": "自动设置语言",
     "about": "关于"

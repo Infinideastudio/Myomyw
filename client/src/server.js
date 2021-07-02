@@ -10,9 +10,15 @@ var server = {
     },
 
     fetch: function (onSuccess, onError) {
-        if (cc.game.config.server) {
+        var customServer = storage.getItem("customServer");
+        if (customServer) {
+            server.address = customServer;
+            onSuccess();
+            return;
+        } else if (cc.game.config.server) {
             server.address = cc.game.config.server;
             onSuccess();
+            return;
         }
         var url = cc.sys.isNative ? "http://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "res/server.txt";
         cc.loader.loadTxt(url, function (error, data) {

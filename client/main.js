@@ -52,7 +52,7 @@ cc.game.onStart = function () {
         var firstScene = (storage.getItem("playedBefore") == "true") ? new MainScene() : new WelcomeScene();
         cc.director.runScene(firstScene);
         if (!serverInited) {
-            closeWaitingBox = waitingBox("正在连接服务器...", firstScene);
+            closeWaitingBox = waitingBox(txt.connection.connecting, firstScene);
             showingWaitingBox = true;
         }
         else if (server.message) {

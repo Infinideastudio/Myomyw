@@ -31,6 +31,8 @@ var OptionScene = MenuScene.extend({
 
         list.addChild(creator.createButton(txt.options.setBackground, cc.size(600, 60), this.setBackground.bind(this)));
 
+        list.addChild(creator.createButton(txt.options.setServer, cc.size(600, 60), this.setServer.bind(this)));
+
         list.addChild(creator.createButton(txt.options.lang, cc.size(600, 60), function () {
             cc.director.pushScene(new LangOptionScene());
         }));
@@ -73,6 +75,49 @@ var OptionScene = MenuScene.extend({
                     storage.setItem("customBackgroundUrl", url);
                     modalBox.hide();
                 }
+            });
+        });
+        confirmButton.setPosition(300, 75);
+        modalBox.box.addChild(confirmButton);
+
+        cancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
+            modalBox.hide();
+        });
+        cancelButton.setPosition(500, 75);
+        modalBox.box.addChild(cancelButton);
+
+        modalBox.popup();
+    },
+
+    setServer: function () {
+        var modalBox = new ModalBox(800, 350);
+        this.addChild(modalBox, 10);
+
+        var label = creator.createLabel(txt.options.inputServer, 30);
+        label.setPosition(400, 275)
+        modalBox.box.addChild(label);
+
+        var inputBox = creator.createEditBox("", cc.size(650, 50));
+        inputBox.setPosition(400, 175);
+        var customServer = storage.getItem("customServer");
+        inputBox.string = customServer ? customServer : "";
+        modalBox.box.addChild(inputBox);
+
+        confirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
+            modalBox.hide();
+            storage.setItem("customServer", inputBox.string);
+            closeWaitingBox = waitingBox(txt.connection.connecting);
+            server.init(function () {
+                closeWaitingBox();
+                if (server.message) {
+                    messageBox(server.message);
+                }
+            }, function (error) {
+                closeWaitingBox();
+                if (server.message) {
+                    messageBox(server.message);
+                }
+                messageBox(error);
             });
         });
         confirmButton.setPosition(300, 75);
