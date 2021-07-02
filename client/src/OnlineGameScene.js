@@ -1,5 +1,4 @@
 var OnlineGameScene = GameScene.extend({
-    roomLabel: null,
     opponentName: null,
     disconnected: false,
     movingCol: null,
@@ -9,9 +8,6 @@ var OnlineGameScene = GameScene.extend({
 
     ctor: function () {
         this._super(storage.getItem("name"), txt.names.opponent, left, null, true);
-        this.roomLabel = creator.createLabel(txt.online.waiting, 25);
-        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
-        this.addChild(this.roomLabel);
 
         socket.on("matching_success", this.onStart.bind(this));
         socket.on("fill_pool", this.onFillPool.bind(this));
@@ -178,8 +174,6 @@ var OnlineGameScene = GameScene.extend({
 
     onStart: function (data) {
         this.addText(format(txt.online.start, data.room_id),cc.color(0,0,0));
-        this.roomLabel.string = format(txt.online.room, data.room_id);
-        this.roomLabel.setPosition(size.width - this.roomLabel.width / 2 - 10, this.roomLabel.height / 2 + 10);
         this.opponentName = data.opponent_name;
         this.rightNameLabel.string = data.opponent_name;
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 20, size.height - this.rightNameLabel.height / 2 - 20);

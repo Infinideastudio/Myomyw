@@ -60,10 +60,7 @@
     "differentResult": "客户端与服务端的胜负判定不符"
   },
   "online": {
-    "connecting": "连接中",
     "matching": "匹配中...",
-    "waiting": "等待中",
-    "room": "房间{0}",
     "start":"游戏开始，房间号为{0}",
     "serverFull": "服务器已满"
   },
