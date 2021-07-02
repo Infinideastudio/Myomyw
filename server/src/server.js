@@ -25,7 +25,7 @@ console.log('listening on port ' + config.port);
 
 var rooms = [];
 var matchingPlayer = null;
-var EndReason = { serverFull: 5 };
+var EndReason = { serverClose: 0, opponentDisconnect: 1, youWin: 2, opponentWins: 3, youOutOfTime: 4, opponentOutOfTime: 5, youGiveUp: 6, opponentGiveUp: 7 };
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
@@ -80,7 +80,7 @@ function startMatching(player) {
     }
     else {
         console.log("Server is full!");
-        player.emit('endGame', { reason: EndReason.serverFull });
+        player.emit('end_game', { reason: EndReason.serverClose });
         player.disconnect();
     }
 }
