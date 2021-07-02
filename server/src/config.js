@@ -1,4 +1,7 @@
 ﻿var config = {
+    https: false,
+    cert: "cert.pem",
+    key: "key.pem",
     port: 8650,
     allowOrigin: '*',
     maxRooms: 100,

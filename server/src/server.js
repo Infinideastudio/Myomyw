@@ -1,4 +1,6 @@
-﻿var http = require('http');
+﻿var fs = require('fs');
+var http = require('http');
+var https = require('https');
 var url = require('url');
 var WebSocket = require('ws');
 var config = require('./config.js');
@@ -6,7 +8,16 @@ var Socket = require('./Socket.js');
 var Player = require('./Player.js');
 var Room = require('./Room.js');
 
-var httpServer = http.createServer(httpHandler);
+var httpServer;
+if (config.https) {
+    httpServer = https.createServer({
+        cert: fs.readFileSync(config.cert),
+        key: fs.readFileSync(config.key)
+    }, httpHandler);
+}
+else {
+    httpServer = http.createServer(httpHandler);
+}
 var wsServer = new WebSocket.Server({ server: httpServer });
 wsServer.on('connection', wsHandler);
 httpServer.listen(config.port);

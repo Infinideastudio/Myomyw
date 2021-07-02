@@ -68,7 +68,7 @@ var MainScene = cc.Scene.extend({
         playOnlineButton.setContentSize(130, 130);
         playOnlineButton.setPosition(size.width / 2, size.height / 2 + 100);
         playOnlineButton.addClickEventListener(function () {
-            socket.connect("ws://" + server.address);
+            socket.connect(server.getWsAddress());
             socket.onError(function (e) {
                 showMessage(txt.connection.error);
             });

@@ -1,6 +1,20 @@
 var server = {
     address: null,
     message: null,
+    getHttpAddress: function () {
+        if (server.address.substr(0, 3) == "/s/") {
+            return "https://" + server.address.substr(3);
+        } else {
+            return "http://" + server.address;
+        }
+    },
+    getWsAddress: function () {
+        if (server.address.substr(0, 3) == "/s/") {
+            return "wss://" + server.address.substr(3);
+        } else {
+            return "ws://" + server.address;
+        }
+    },
     init: function (onSuccess, onError) {
         server.fetch(function () {
             server.handshake(onSuccess, function (error) { onError(error); });
@@ -20,7 +34,7 @@ var server = {
             onSuccess();
             return;
         }
-        var url = cc.sys.isNative ? "http://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "res/server.txt";
+        var url = cc.sys.isNative ? "https://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "res/server.txt";
         cc.loader.loadTxt(url, function (error, data) {
             if (error) {
                 cc.log(error);
@@ -34,7 +48,7 @@ var server = {
     },
 
     handshake: function (onSuccess, onError) {
-        var url = "http://" + server.address + "/handshake?version=0.8";
+        var url = server.getHttpAddress() + "/handshake?version=0.8";
         cc.loader.loadJson(url, function (error, data) {
             if (error) {
                 cc.log(error);
