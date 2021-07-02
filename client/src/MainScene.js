@@ -21,7 +21,7 @@ var MainScene = cc.Scene.extend({
         renameModalBoxLabel.setPosition(300, 275)
         renameModalBox.box.addChild(renameModalBoxLabel);
 
-        var nameBox = creator.createEditBox(txt.mainScene.enterName, cc.size(400, 60));
+        var nameBox = creator.createEditBox(txt.mainScene.enterName, cc.size(400, 50));
         nameBox.setPosition(300, 175);
         renameModalBox.box.addChild(nameBox);
 
