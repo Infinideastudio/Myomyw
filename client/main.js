@@ -43,6 +43,11 @@ cc.game.onStart = function () {
         cc._loaderImage = null;
     }
 
+    var url = storage.getItem("customBackgroundUrl");
+    if (url) {
+        g_resources.push(url);
+    }
+
     cc.LoaderScene.preload(g_resources, function () {
         var firstScene = (storage.getItem("playedBefore") == "true") ? new MainScene() : new WelcomeScene();
         cc.director.runScene(firstScene);
@@ -61,6 +66,7 @@ cc.game.onStart = function () {
 };
 
 storage = cc.sys.localStorage;
+
 if (!cc.sys.isNative && storage.getItem("forceCanvas") == "true") {
     cc.loader.loadJson("project.json", function (err, data) {
         if (err) return cc.log("load project file failed " + err);

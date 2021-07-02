@@ -56,8 +56,19 @@ var GameScene = cc.Scene.extend({
     */
     ctor: function (leftName, rightName, controllableSide, createNextChessman, enableTimer) {
         this._super();
-        var background = new cc.LayerColor(cc.color(255, 255, 255));
-        this.addChild(background);
+        var customBackroundUrl = storage.getItem("customBackgroundUrl");
+        if (customBackroundUrl) {
+            var background = new cc.Sprite(customBackroundUrl);
+            background.x = size.width / 2;
+            background.y = size.height / 2;
+            background.scale = Math.max(size.width / background.width, size.height / background.height);
+            this.addChild(background);
+        }
+        else {
+            var background = new cc.LayerColor(cc.color(255, 255, 255));
+            this.addChild(background);
+        }
+
         this.initUI();
         this.chessmen = [];
         for (var i = 0; i < maxLCol; i++) {
@@ -114,7 +125,7 @@ var GameScene = cc.Scene.extend({
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 470, size.height - this.rightNameLabel.height / 2 - 30);
         this.addChild(this.rightNameLabel);
 
-        this.sideBar = new cc.LayerColor(cc.color(204, 233, 255, 255), 450, size.height);
+        this.sideBar = new cc.LayerColor(cc.color(204, 233, 255, 178), 450, size.height);
         this.sideBar.setPosition(size.width - 450, 0);
         this.addChild(this.sideBar);
 
@@ -360,7 +371,8 @@ var GameScene = cc.Scene.extend({
                     rotation: 45,
                     scale: ejectorScale,
                     x: (r - l) * this.halfDiagonal + this.topVertX,
-                    y: this.boardLength - (l + r + 1) * this.halfDiagonal
+                    y: this.boardLength - (l + r + 1) * this.halfDiagonal,
+                    opacity: 178
                 });
                 this.gridNode.addChild(grid);
             }
