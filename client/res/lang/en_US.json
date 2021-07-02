@@ -4,33 +4,44 @@
     "ok": "OK",
     "skip": "Skip"
   },
+  "connection": {
+    "connecting": "Connecting to the server...",
+    "fetchError": "Failed to get the server address",
+    "error": "Connection error",
+    "wrongReply": "Wrong server or the versions are not compatible"
+  },
   "mainScene": {
-    "loginTitle": "Please Login",
+    "enterNameTitle": "Please enter your name",
     "enterName": "Enter your name",
     "emptyName": "The name cannot be empty",
     "nameTooLong": "The name is at most 15 characters",
-    "login": "Login",
-    "loginAsGuest": "Login as Guest",
-    "error": "Connection error",
-    "timeout": "Connection timed out",
-    "wrongReply": "Wrong server or the versions are not compatible",
-    "logout": "Logout",
+    "playOnline": "Play Online",
     "playWithAI": "Play with Computer",
     "playDouble": "Two Players",
-    "tutorial": "Tutorial",
-    "homepage": "Homepage"
+    "tutorial": "Tutorial"
+  },
+  "menu": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "exit": "Exit",
+    "giveUp": "Give up"
   },
   "options": {
     "title": "Options",
     "standaloneTimer": "Enable time limit in singleplayer games",
     "forceCanvas": "Forced canvas rendering\n(If the image is incorrect, try this option.\nRefresh to take effect)",
+    "setBackground": "Customize the game background",
+    "inputBackgroundUrl": "The URL of the game background(leave it empty to cancel)",
+    "settingBackground": "Getting background...",
+    "setBackgroundError": "Some errors have occurred",
+    "setServer": "Customize the server",
+    "inputServer": "The address of the server(leave it empty to cancel)",
     "lang": "Languages",
     "autoLang": "Auto-detect",
     "about": "About"
   },
   "names": {
-    "notLogged": "Not logged in",
-    "guest": "Guest",
     "left": "Green",
     "right": "Blue",
     "ai": "Computer"
@@ -46,18 +57,19 @@
     "youOutOfTime": "You are out of time",
     "aiOutOfTime": "Computer is out of time",
     "outOfTime": "{0} is out of time",
-    "opponentLeft": "Your opponent has left",
+    "giveUp": "{0} gives up",
+    "opponentDisconnect": "Your opponent has disconnected",
+    "serverClose": "The server has closed",
     "unknownDisconnection": "The server disconnected without any reason",
-    "differentResult": "The client and the server have different result"
+    "differentResult": "The client and the server have different results"
   },
   "online": {
-    "connecting": "Connecting",
-    "waiting": "Waiting",
-    "room": "Room{0}",
-    "serverFull": "The server is full"
+    "matching": "matching...",
+    "start": "Game begins. The rome number is {0}",
+    "chatPlaceholder": "Enter what you want to say"
   },
   "tutorial": {
-    "s0": "Welcome to the tutorial of\nMyomyw, The two sides\nshould push balls in turns.\nNow the black balls on\nthe chessboard are\n'common balls'.\nOn the upper\nleft and\nupper\nright of\nthe\nchessboard,\nthere are ejectors.\nTouch to continue...",
+    "s0": "Welcome to the tutorial of Myomyw, The two sides should push balls in turns. Now the black balls on the chessboard are 'common balls'. On the upper\nleft and upper right of the chessboard,there are ejectors. Touch to continue...",
     "s1": "Now it's your turn. Try to touch one of your ejectors. Long press to fire up to five pieces. The grid on the top is the Timer. Do not exceed the time.",
     "s2": "Quite good. The red ball you've pushed out is the Victory Ball. If you push it off the board, you loses. Touch to continue...",
     "s3": "These are another two types of balls. The green one, when it is pushed off, your opponent gain an extra column. The yellow one, on the contrary, removes a column. There are 10 columns at most and 3 at least.",

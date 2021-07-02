@@ -8,7 +8,6 @@
     "connecting": "正在连接服务器",
     "fetchError": "获取服务器地址失败",
     "error": "连接错误",
-    "timeout": "连接超时",
     "wrongReply": "错误的服务器或版本不兼容"
   },
   "mainScene": {
@@ -43,8 +42,6 @@
     "about": "关于"
   },
   "names": {
-    "notLogged": "未登录",
-    "guest": "游客",
     "left": "绿方",
     "right": "蓝方",
     "ai": "电脑"
@@ -69,7 +66,7 @@
   "online": {
     "matching": "匹配中...",
     "start": "游戏开始，房间号为{0}",
-    "serverFull": "服务器已满"
+    "chatPlaceholder": "输入聊天内容"
   },
   "tutorial": {
     "s0": "欢迎来到Myomyw教程，游戏中双方需要轮流推球。现在棋盘上的黑球是普通球，棋盘上方两边的是双方的发射器。点击继续...",

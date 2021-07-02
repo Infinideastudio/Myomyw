@@ -33,18 +33,8 @@ var OnlineGameScene = GameScene.extend({
         this.list.setContentSize(400, 520);
         this.list.setPosition(20, 120);
         this.sideBar.addChild(this.list);
-        /*
-        if ('mouse' in cc.sys.capabilities) {
-            cc.eventManager.addListener({
-                event: cc.EventListener.MOUSE,
-                onMouseScroll: function (event) {
-                    var delta = cc.sys.isNative ? event.getScrollY() * 6 : -event.getScrollY();
-                    event.getCurrentTarget().moveMenu({y : delta});
-                    return true;
-                }
-            }, this);
-        */
-        var inputbox = creator.createEditBox("输入聊天内容", cc.size(400, 50));
+
+        var inputbox = creator.createEditBox(txt.online.chatPlaceholder, cc.size(400, 50));
         inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
         inputbox.delegate = {
             editBoxReturn: function () {

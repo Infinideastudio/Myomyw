@@ -4,33 +4,44 @@
     "ok": "好的",
     "skip": "跳過"
   },
+  "connection": {
+    "connecting": "正在連接伺服器",
+    "fetchError": "獲取伺服器位址失敗",
+    "error": "連接出錯",
+    "wrongReply": "錯誤的伺服器或版本不相容"
+  },
   "mainScene": {
-    "loginTitle": "請登入",
+    "enterNameTitle": "請輸入你的昵稱",
     "enterName": "輸入昵稱",
     "emptyName": "昵稱不能為空",
     "nameTooLong": "昵稱最長15字元",
-    "login": "登入",
-    "loginAsGuest": "遊客登入",
-    "error": "連接出錯",
-    "timeout": "連接超時",
-    "wrongReply": "錯誤的伺服器或版本不相容",
-    "logout": "登出",
+    "playOnline": "在線對戰",
     "playWithAI": "人機對戰",
     "playDouble": "同屏對戰",
-    "tutorial": "教程",
-    "homepage": "團隊首頁"
+    "tutorial": "教程"
+  },
+  "menu": {
+    "ok": "確認",
+    "cancel": "取消",
+    "continue": "繼續",
+    "exit": "退出",
+    "giveUp": "認輸"
   },
   "options": {
     "title": "設定",
     "standaloneTimer": "在單機遊戲中限時",
     "forceCanvas": "強制Canvas渲染（如果畫面有問題，\n請嘗試打開此項，刷新生效）",
+    "setBackground": "自訂遊戲背景",
+    "inputBackgroundUrl": "自訂遊戲背景的 URL（留空取消）",
+    "settingBackground": "抓取背景中...",
+    "setBackgroundError": "發生了一些錯誤",
+    "setServer": "自訂伺服器",
+    "inputServer": "自訂伺服器地址 （留空取消）",
     "lang": "語言",
     "autoLang": "自動選擇語言",
     "about": "關於"
   },
   "names": {
-    "notLogged": "未登入",
-    "guest": "遊客",
     "left": "綠方",
     "right": "藍方",
     "ai": "電腦"
@@ -46,15 +57,16 @@
     "youOutOfTime": "你超時了",
     "aiOutOfTime": "電腦超時了",
     "outOfTime": "{0}超時了",
-    "opponentLeft": "對手已離開",
+    "giveUp": "{0}認輸了",
+    "opponentDisconnect": "對手斷開連接",
+    "serverClose": "伺服器已關閉",
     "unknownDisconnection": "與伺服器斷開了連接",
     "differentResult": "與伺服器的勝負結果不同"
   },
   "online": {
-    "connecting": "連接中",
-    "waiting": "等待中",
-    "room": "房間{0}",
-    "serverFull": "伺服器已滿"
+    "matching": "匹配中...",
+    "start": "遊戲開始，房間號為{0}",
+    "chatPlaceholder": "輸入聊天內容"
   },
   "tutorial": {
     "s0": "歡迎來到Myomyw教程，遊戲中\n雙方需要輪流推球。現在棋盤\n上的黑球是普通球，棋盤上\n方兩邊的是雙方的發射器。\n輕點繼續...",
