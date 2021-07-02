@@ -47,7 +47,7 @@ function messageBox(text, scene) {
     var width = textLabel.width + 80, height = textLabel.height + 170;
     var box = new ModalBox(width, height);
 
-    textLabel.setPosition(width / 2, height/2+40);
+    textLabel.setPosition(width / 2, height / 2 + 40);
     box.box.addChild(textLabel);
 
     okButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
@@ -59,4 +59,30 @@ function messageBox(text, scene) {
 
     targetScene.addChild(box, 10);
     box.popup();
+}
+
+//返回一个用于关闭该框的函数
+function waitingBox(text, scene) {
+    var targetScene = scene ? scene : cc.director.getRunningScene();
+    var textLabel = creator.createLabel(text, 25);
+    if (textLabel.width > 600) {
+        textLabel.setDimensions(cc.size(600, 0));
+    }
+    else if (textLabel.width < 200) {
+        textLabel.setDimensions(cc.size(200, 0));
+        textLabel.textAlign = cc.TEXT_ALIGNMENT_CENTER;
+    }
+    var width = textLabel.width + 80, height = textLabel.height + 80;
+    var box = new ModalBox(width, height);
+
+    textLabel.setPosition(width / 2, height / 2);
+    box.box.addChild(textLabel);
+
+    targetScene.addChild(box, 10);
+    box.popup();
+
+    return function () {
+        box.hide();
+        targetScene.removeChild(box);
+    }
 }
