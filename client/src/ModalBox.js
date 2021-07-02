@@ -33,3 +33,30 @@ var ModalBox = cc.LayerColor.extend({
         this.touchEvent.setSwallowTouches(false);
     }
 });
+
+function messageBox(text, scene) {
+    var targetScene = scene ? scene : cc.director.getRunningScene();
+    var textLabel = creator.createLabel(text, 25);
+    if (textLabel.width > 600) {
+        textLabel.setDimensions(cc.size(600, 0));
+    }
+    else if (textLabel.width < 200) {
+        textLabel.setDimensions(cc.size(200, 0));
+        textLabel.textAlign = cc.TEXT_ALIGNMENT_CENTER;
+    }
+    var width = textLabel.width + 80, height = textLabel.height + 170;
+    var box = new ModalBox(width, height);
+
+    textLabel.setPosition(width / 2, height/2+40);
+    box.box.addChild(textLabel);
+
+    okButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
+        box.hide();
+        targetScene.removeChild(box);
+    });
+    okButton.setPosition(width / 2, 60);
+    box.box.addChild(okButton);
+
+    targetScene.addChild(box, 10);
+    box.popup();
+}
