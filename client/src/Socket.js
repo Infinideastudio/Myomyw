@@ -11,8 +11,11 @@ var socket = {
         socket.ws.onmessage = socket.onmessage;
     },
     onmessage: function (e) {
-        var substr = e.data.split("$@@$");
-        var action = substr[0], data = substr[1] ? JSON.parse(substr[1]) : {};
+        var index = e.data.indexOf("$@@$");
+        if (index == -1) return;
+        var action = e.data.substr(0, index);
+        var datastr = e.data.substr(index + 4);
+        var data = datastr ? JSON.parse(datastr) : {};
         if (socket.handlers[action]) {
             socket.handlers[action](data);
         }

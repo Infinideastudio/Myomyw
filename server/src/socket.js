@@ -6,8 +6,11 @@ function Socket(ws) {
   this.handlers = {};
   ws.on('message', function (message) {
     try {
-      var substr = message.split("$@@$");
-      var action = substr[0], data = substr[1] ? JSON.parse(substr[1]) : {};
+      var index = message.indexOf('$@@$');
+      if (index == -1) throw 'invalid data';
+      var action = message.substr(0, index);
+      var datastr = message.substr(index + 4);
+      var data = datastr ? JSON.parse(datastr) : {};
     }
     catch (e) {
       console.log('#%s sent invalid data: %s', this.id, message);
