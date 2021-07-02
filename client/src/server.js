@@ -1,5 +1,6 @@
 var server = {
     address: null,
+    message: null,
     init: function (onSuccess, onError) {
         server.fetch(function () {
             server.handshake(onSuccess, function (error) { onError(error); });
@@ -37,6 +38,7 @@ var server = {
                 onError(txt.connection.wrongReply)
             }
             else {
+                server.message = data.message;
                 onSuccess();
             }
         });

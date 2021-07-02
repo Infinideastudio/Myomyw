@@ -15,7 +15,6 @@ console.log('listening on port ' + config.port);
 var rooms = [];
 var matchingPlayer = null;
 var EndReason = { serverFull: 5 };
-var message = '';
 
 function httpHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', config.allowOrigin);
@@ -25,10 +24,10 @@ function httpHandler(req, res) {
         case "/handshake":
             res.writeHead(200);
             if (parsedUrl.query.version == '0.8') {
-                res.end(JSON.stringify({ error_code: 0, message: message }));
+                res.end(JSON.stringify({ error_code: 0, message: config.message }));
             }
             else {
-                res.end(JSON.stringify({ error_code: 1, message: message }));
+                res.end(JSON.stringify({ error_code: 1, message: config.message }));
             }
             break;
         default:

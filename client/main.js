@@ -18,12 +18,20 @@ cc.game.onStart = function () {
     server.init(loadSuccess, loadError);
     function loadSuccess() {
         serverInited = true;
-        if (showingWaitingBox) { closeWaitingBox(); }
+        if (showingWaitingBox) {
+            closeWaitingBox();
+            if (server.message) {
+                messageBox(server.message);
+            }
+        }
     }
     function loadError(error) {
         serverInited = true;
         if (showingWaitingBox) {
             closeWaitingBox();
+            if (server.message) {
+                messageBox(server.message);
+            }
             messageBox(error);
         }
         else {
@@ -34,7 +42,7 @@ cc.game.onStart = function () {
     if (!cc.sys.isNative) {
         cc._loaderImage = null;
     }
-    
+
     cc.LoaderScene.preload(g_resources, function () {
         var firstScene = (storage.getItem("playedBefore") == "true") ? new MainScene() : new WelcomeScene();
         cc.director.runScene(firstScene);
@@ -42,9 +50,13 @@ cc.game.onStart = function () {
             closeWaitingBox = waitingBox("正在连接服务器...", firstScene);
             showingWaitingBox = true;
         }
+        else if (server.message) {
+            messageBox(server.message, firstScene);
+        }
         if (errorMessage) {
             messageBox(errorMessage, firstScene);
         }
+
     }, this);
 };
 

@@ -3,6 +3,7 @@
     allowOrigin: '*',
     maxRooms: 100,
     version: '0.7',
+    message: '',
 
     defaultLCol: 6,
     defaultRCol: 6,
