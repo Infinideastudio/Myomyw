@@ -22,18 +22,16 @@ var LangOptionScene = MenuScene.extend({
             highlightedButton.bright = true;
             highlightedButton = button;
             button.bright = false;
-
+            function success() {
+                cc.director.runScene(new MainScene());
+                cc.director.pushScene(new OptionScene());
+                cc.director.pushScene(new LangOptionScene());
+            }
             if (button.tag == -1) {
-                lang.loadAutoLang(function () {
-                    title.string = txt.options.lang;
-                    autoLangButton.titleText = txt.options.autoLang;
-                });
+                lang.loadAutoLang(success);
             }
             else {
-                lang.loadLang(lang.langs[button.tag][1], function () {
-                    title.string = txt.options.lang;
-                    autoLangButton.titleText = txt.options.autoLang;
-                });
+                lang.loadLang(lang.langs[button.tag][1], success);
             }
         }
 

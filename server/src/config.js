@@ -4,7 +4,7 @@
     key: "key.pem",
     port: 8650,
     allowOrigin: '*',
-    maxRooms: 0,
+    maxRooms: 100,
     version: '0.7',
     message: '',
 
