@@ -1,115 +1,70 @@
 var AIGameScene = GameScene.extend({
-    aiMovements: null, //null代表不在移动,0代表刚移动完
+    ai1: null,
+    ai2: null,
 
-    ctor: function () {
-        this._super(storage.getItem("name"), txt.names.ai, left, getRandomChessman,
+    ctor: function (ai2, ai1) {
+        this._super(ai1 ? ai1.name : storage.getItem("name"), ai2.name, ai1 ? neither : left, getRandomChessman,
             storage.getItem("standaloneTimer") != "false");
+        this.ai1 = ai1;
+        this.ai2 = ai2;
 
         var label = creator.createLabel(txt.mainScene.playWithAI, 25);
         label.setPosition(225, 680);
         this.sideBar.addChild(label);
-        
+
         var mainTitle = new cc.Sprite(res.Title_png);
         mainTitle.setPosition(225, 200);
         mainTitle.scale = 0.5;
         this.sideBar.addChild(mainTitle);
 
         this.start(left);
+        if (this.ai2) {
+            setTimeout(this.aiMove.bind(this), aiThinkingTime * 1000);
+        }
         return true;
     },
 
-    onBeganMoving: function (col, last) {
-        if (last == Chessman.flip) {
-            this.aiMovements = null;
-        }
-    },
-
     onEndedMoving: function (col, last) {
-        if (this.aiMovements > 0) {
-            this.aiMovements--;
-            this.coolAndMove(col);
-        }
-        else if (this.aiMovements == 0) {
-            this.changeTurn();
-            this.aiMovements = null;
+        if ((this.turn == right || this.ai1) && last != Chessman.flip) {
+            var currentAI = (this.turn == left ? this.ai1 : this.ai2);
+            if (currentAI.continue(this.nextChessman)) {
+                this.coolAndMove(col);
+            }
+            else {
+                this.changeTurn();
+            }
         }
     },
 
     onChangedTurn: function () {
-        if (this.turn == right) {
-            //切换回合后冷却一下再让AI下(否则看起来太突然)
+        if (this.turn == right || this.ai1) {
             setTimeout(this.aiMove.bind(this), aiThinkingTime * 1000);
         }
     },
 
     aiMove: function () {
-        var maxWeighting = -100;
-        var bestCol = 0;
-        for (var r = 0; r < this.rCol; r++) {
-            var weighting = 0;
-            for (var l = 0; l < this.lCol; l++) {
-                var change = 0;
-                switch (this.chessmen[l][r]) {
-                    case Chessman.common:
-                        change = 1;
-                        break;
-                    case Chessman.key:
-                        //对最下面一列的红球给予特别特别关注
-                        if (l == this.lCol - 1)
-                            change = -10;
-                        else
-                            change = -3;
-                        break;
-                    case Chessman.addCol:
-                        change = -1;
-                        break;
-                    case Chessman.delCol:
-                        change = 2;
-                        break;
-                    case Chessman.filp:
-                        if (this.lCol > this.rCol)
-                            change = 1;
-                        else
-                            change = -1;
-                }
-                //离出口越近权重越大
-                weighting += change * ((l + 1) / this.lCol);
-            }
-            if (weighting > maxWeighting) {
-                maxWeighting = weighting;
-                bestCol = r;
-            }
+        var gameNode = new GameNode(this.chessmen, this.lCol, this.rCol);
+        if (this.turn == right) {
+            gameNode.flip();
         }
-
-        //移动次数根据权重而变
-        var times = Math.round(maxWeighting);
-        //确定实际移动次数
-        if (times < 1) {
-            this.aiMovements = 1;
-        }
-        else if (times > maxMovements) {
-            this.aiMovements = maxMovements;
-        }
-        else {
-            this.aiMovements = times;
-        }
-        this.move(bestCol);
-        this.aiMovements--;
+        var currentAI = (this.turn == left ? this.ai1 : this.ai2);
+        currentAI.loadGame(gameNode);
+        this.move(currentAI.firstMove(this.nextChessman));
     },
 
     onWin: function (timeout) {
         var str = "";
         if (timeout) {
             if (this.turn == left)
-                str = txt.result.youOutOfTime;
+                str = (this.ai1 ? txt.result.leftOutOfTime : txt.result.youOutOfTime);
             else
-                str = txt.result.aiOutOfTime;
+                str = (this.ai1 ? txt.result.rightOutOfTime : txt.result.aiOutOfTime);
             str += "\n";
         }
         if (this.turn == left)
-            str += txt.result.aiWins;
+            str += (this.ai1 ? txt.result.rightWins : txt.result.aiWins);
         else
-            str += txt.result.youWin;
+            str += (this.ai2 ? txt.result.leftWins : txt.result.youWin);
         this.showExitModalBox = false;
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     }

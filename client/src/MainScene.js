@@ -79,7 +79,7 @@ var MainScene = cc.Scene.extend({
         this.addChild(playOnlineButton);
 
         var playWithAIButton = creator.createButton(txt.mainScene.playWithAI, cc.size(280, 60), function () {
-            cc.director.pushScene(new AIGameScene());
+            cc.director.pushScene(new AIGameScene(new AI()));
         });
         playWithAIButton.setPosition(size.width / 2, size.height / 2 - 60);
         this.addChild(playWithAIButton);
