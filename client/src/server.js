@@ -49,18 +49,22 @@ var server = {
 
     handshake: function (onSuccess, onError) {
         var url = server.getHttpAddress() + "/handshake?version=0.8";
-        cc.loader.loadJson(url, function (error, data) {
-            if (error) {
-                cc.log(error);
-                onError(txt.connection.error)
-            }
-            else if (data.error_code != 0) {
-                onError(txt.connection.wrongReply)
-            }
-            else {
-                server.message = data.message;
-                onSuccess();
-            }
-        });
+        try {
+            cc.loader.loadJson(url, function (error, data) {
+                if (error) {
+                    cc.log(error);
+                    onError(txt.connection.error);
+                }
+                else if (data.error_code != 0) {
+                    onError(txt.connection.wrongReply);
+                }
+                else {
+                    server.message = data.message;
+                    onSuccess();
+                }
+            });
+        } catch {
+            onError(txt.connection.wrongReply);
+        }
     }
 };
