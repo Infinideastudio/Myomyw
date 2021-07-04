@@ -46,6 +46,11 @@
     "right": "蓝方",
     "ai": "电脑"
   },
+  "ai": {
+    "easy": "简单",
+    "normal": "一般",
+    "hard": "困难"
+  },
   "result": {
     "leftWins": "绿方赢了",
     "rightWins": "蓝方赢了",

@@ -46,6 +46,40 @@ var MainScene = cc.Scene.extend({
         cancelButton.setPosition(400, 75);
         renameModalBox.box.addChild(cancelButton);
 
+        //选择ai框
+        var selectAIBox = new ModalBox(800, 250);
+        this.addChild(selectAIBox, 10);
+
+        var selectAIBoxLabel = creator.createLabel(txt.mainScene.playWithAI, 30);
+        selectAIBoxLabel.setPosition(400, 180)
+        selectAIBox.box.addChild(selectAIBoxLabel);
+
+        easyButton = creator.createButton(txt.ai.easy, cc.size(150, 60), function () {
+            cc.director.pushScene(new AIGameScene(null, new WeakAI(), txt.ai.easy));
+            selectAIBox.hide();
+        });
+        easyButton.setPosition(200, 80);
+        selectAIBox.box.addChild(easyButton);
+        normalButton = creator.createButton(txt.ai.normal, cc.size(150, 60), function () {
+            cc.director.pushScene(new AIGameScene(null, new StrongAI(1, 10), txt.ai.normal));
+            selectAIBox.hide();
+        });
+        normalButton.setPosition(400, 80);
+        selectAIBox.box.addChild(normalButton);
+        hardButton = creator.createButton(txt.ai.hard, cc.size(150, 60), function () {
+            cc.director.pushScene(new AIGameScene(null, new StrongAI(2, 10), txt.ai.hard));
+            selectAIBox.hide();
+        });
+        hardButton.setPosition(600, 80);
+        selectAIBox.box.addChild(hardButton);
+
+        var backButton = new ccui.Button(res.BackButtonN_png, res.BackButtonS_png);
+        backButton.setPosition(60, 180);
+        backButton.addClickEventListener(function () {
+            selectAIBox.hide();
+        });
+        selectAIBox.box.addChild(backButton);
+
         //主界面
         var messageLabel = creator.createLabel("", 30, cc.color(255, 20, 20));
         messageLabel.setPosition(size.width / 2, size.height / 2 - 220);
@@ -79,7 +113,7 @@ var MainScene = cc.Scene.extend({
         this.addChild(playOnlineButton);
 
         var playWithAIButton = creator.createButton(txt.mainScene.playWithAI, cc.size(280, 60), function () {
-            cc.director.pushScene(new AIGameScene(new StrongAI(1, 1)));
+            selectAIBox.popup();
         });
         playWithAIButton.setPosition(size.width / 2, size.height / 2 - 60);
         this.addChild(playWithAIButton);

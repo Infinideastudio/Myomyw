@@ -2,13 +2,15 @@ var AIGameScene = GameScene.extend({
     ai1: null,
     ai2: null,
 
-    ctor: function (ai2, ai1) {
-        this._super(ai1 ? ai1.name : storage.getItem("name"), ai2.name, ai1 ? neither : left, getRandomChessman,
+    ctor: function (ai1, ai2, info) {
+        this._super(ai1 ? ai1.name : storage.getItem("name"), ai1 ? ai2.name : txt.names.ai, ai1 ? neither : left, getRandomChessman,
             storage.getItem("standaloneTimer") != "false");
         this.ai1 = ai1;
         this.ai2 = ai2;
 
-        var label = creator.createLabel(txt.mainScene.playWithAI, 25);
+        var title = txt.mainScene.playWithAI + " - " + info;
+        if (ai1) title = "AI vs AI";
+        var label = creator.createLabel(title, 25);
         label.setPosition(225, 680);
         this.sideBar.addChild(label);
 
@@ -16,7 +18,7 @@ var AIGameScene = GameScene.extend({
         mainTitle.setPosition(225, 200);
         mainTitle.scale = 0.5;
         this.sideBar.addChild(mainTitle);
-        
+
         this.start(left);
         if (this.ai1) {
             setTimeout(this.aiMove.bind(this), aiThinkingTime * 1000);

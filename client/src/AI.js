@@ -1,6 +1,6 @@
 //AI为左方
 function WeakAI() {
-    this.name = txt.names.ai;
+    this.name = "WeakAI";
 }
 WeakAI.prototype.loadGame = function (gameNode) {
     this.gameNode = gameNode;
@@ -75,9 +75,8 @@ WeakAI.prototype.continue = function (nextChessman) {
     }
 }
 
-
 function StrongAI(maxDepth, fillout) {
-    this.name = txt.names.ai + "maxDepth:" + maxDepth + "fillout" + fillout;
+    this.name = "StrongAI(maxDepth:" + maxDepth + ",fillout" + fillout + ")";
     this.maxDepth = maxDepth;
     this.fillout = fillout;
 }
