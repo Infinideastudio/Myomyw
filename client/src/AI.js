@@ -76,7 +76,7 @@ WeakAI.prototype.continue = function (nextChessman) {
 }
 
 function StrongAI(maxDepth, fillout) {
-    this.name = "StrongAI(maxDepth:" + maxDepth + ",fillout" + fillout + ")";
+    this.name = "StrongAI(maxDepth:" + maxDepth + ",fillout:" + fillout + ")";
     this.maxDepth = maxDepth;
     this.fillout = fillout;
 }
