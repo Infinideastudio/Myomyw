@@ -27,39 +27,39 @@ GameNode.prototype.moveOnce = function (side, col, nextChessman) {
         this.chessmen[0][col] = nextChessman;
     }
     if (lastChessman == Chessman.addCol) {
-        if (side == left)
-            this.setBoardSize(this.lCol, Math.min(this.rCol + 1, maxRCol));
-        else
-            this.setBoardSize(Math.min(this.lCol + 1, maxLCol), this.rCol);
+        if (side == left) {
+            if (this.rCol < maxRCol) {
+                this.rCol++;
+                for (var l = 0; l < this.lCol; l++) {
+                    this.chessmen[l][this.rCol - 1] = Chessman.common;
+                }
+            }
+        }
+        else {
+            if (this.lCol < maxLCol) {
+                this.lCol++;
+                for (var r = 0; r < this.rCol; r++) {
+                    this.chessmen[this.lCol - 1][r] = Chessman.common;
+                }
+            }
+        }
     } else if (lastChessman == Chessman.delCol) {
-        if (side == left)
-            this.setBoardSize(this.lCol, Math.max(this.rCol - 1, minRCol));
-        else
-            this.setBoardSize(Math.max(this.lCol - 1, minLCol), this.rCol);
+        if (side == left) {
+            if (this.rCol > minRCol) {
+                this.rCol--;
+            }
+        }
+        else {
+            if (this.lCol > minLCol) {
+                this.lCol--;
+            }
+        }
     } else if (lastChessman == Chessman.flip) {
         this.flip();
     }
     return lastChessman;
 }
 
-GameNode.prototype.setBoardSize = function (lCol, rCol) {
-    if (this.lCol < lCol) {
-        for (var l = this.lCol; l < lCol; l++) {
-            for (var r = 0; r < rCol; r++) {
-                this.chessmen[l][r] = Chessman.common;
-            }
-        }
-    }
-    if (this.rCol < rCol) {
-        for (var l = 0; l < lCol; l++) {
-            for (var r = this.rCol; r < rCol; r++) {
-                this.chessmen[l][r] = Chessman.common;
-            }
-        }
-    }
-    this.lCol = lCol;
-    this.rCol = rCol;
-}
 GameNode.prototype.flip = function () {
     for (var l = 0; l < maxLCol; l++) {
         for (var r = l + 1; r < maxRCol; r++) {

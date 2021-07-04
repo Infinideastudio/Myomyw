@@ -16,9 +16,9 @@ var AIGameScene = GameScene.extend({
         mainTitle.setPosition(225, 200);
         mainTitle.scale = 0.5;
         this.sideBar.addChild(mainTitle);
-
+        
         this.start(left);
-        if (this.ai2) {
+        if (this.ai1) {
             setTimeout(this.aiMove.bind(this), aiThinkingTime * 1000);
         }
         return true;
@@ -64,7 +64,7 @@ var AIGameScene = GameScene.extend({
         if (this.turn == left)
             str += (this.ai1 ? txt.result.rightWins : txt.result.aiWins);
         else
-            str += (this.ai2 ? txt.result.leftWins : txt.result.youWin);
+            str += (this.ai1 ? txt.result.leftWins : txt.result.youWin);
         this.showExitModalBox = false;
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
     }
