@@ -37,10 +37,12 @@ var OnlineGameScene = GameScene.extend({
         var inputbox = creator.createEditBox(txt.online.chatPlaceholder, cc.size(400, 50));
         inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
         inputbox.delegate = {
-            editBoxReturn: function () {
-                this.addText(this.myName + ": " + inputbox.string, cc.color(130, 204, 81));
-                socket.emit("send_chat", { text: inputbox.string });
-                inputbox.string = "";
+            editBoxEditingDidEnd: function () {
+                if (editing && inputbox.string != "") {
+                    this.addText(this.myName + ": " + inputbox.string, cc.color(130, 204, 81));
+                    socket.emit("send_chat", { text: inputbox.string });
+                    inputbox.string = "";
+                }
             }.bind(this)
         };
         inputbox.setPosition(220, 50);

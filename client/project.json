@@ -27,6 +27,7 @@
     "src/AIGameScene.js",
     "src/OnlineGameScene.js",
     "src/TutorialGameScene.js",
+    "src/http.js",
     "src/socket.js",
     "src/server.js",
     "src/ModalBox.js",

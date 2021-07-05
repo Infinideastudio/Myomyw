@@ -35,10 +35,9 @@ var server = {
             return;
         }
         var url = cc.sys.isNative ? "https://myomyw-1251252796.cos-website.ap-shanghai.myqcloud.com/res/server.txt" : "res/server.txt";
-        cc.loader.loadTxt(url, function (error, data) {
+        http.get(url, function (data, error) {
             if (error) {
-                cc.log(error);
-                onError(txt.connection.fetchError);
+                onError(txt.connection.fetchError + error);
             }
             else {
                 server.address = data;
@@ -49,22 +48,17 @@ var server = {
 
     handshake: function (onSuccess, onError) {
         var url = server.getHttpAddress() + "/handshake?version=0.8";
-        try {
-            cc.loader.loadJson(url, function (error, data) {
-                if (error) {
-                    cc.log(error);
-                    onError(txt.connection.error);
-                }
-                else if (data.error_code != 0) {
-                    onError(txt.connection.wrongReply);
-                }
-                else {
-                    server.message = data.message;
-                    onSuccess();
-                }
-            });
-        } catch (e) {
-            onError(txt.connection.wrongReply);
-        }
+        http.getJson(url, function (data, error) {
+            if (error) {
+                onError(txt.connection.error + error);
+            }
+            else if (data.error_code != 0) {
+                onError(txt.connection.wrongReply);
+            }
+            else {
+                server.message = data.message;
+                onSuccess();
+            }
+        });
     }
 };
