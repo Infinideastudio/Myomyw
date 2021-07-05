@@ -38,7 +38,7 @@ var OnlineGameScene = GameScene.extend({
         inputbox.returnType = cc.KEYBOARD_RETURNTYPE_SEND;
         inputbox.delegate = {
             editBoxEditingDidEnd: function () {
-                if (editing && inputbox.string != "") {
+                if (inputbox.string != "") {
                     this.addText(this.myName + ": " + inputbox.string, cc.color(130, 204, 81));
                     socket.emit("send_chat", { text: inputbox.string });
                     inputbox.string = "";
