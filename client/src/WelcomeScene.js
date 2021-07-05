@@ -2,14 +2,8 @@ var WelcomeScene = cc.Scene.extend({
     ctor: function () {
         this._super();
         var background = new cc.Sprite(res.MainSceneBG_png);
-        background.attr({
-            scale: Math.max(size.width / background.width, size.height / background.width),
-            anchorX: 0.5,
-            anchorY: 1,
-            x: size.width / 2,
-            y: size.height,
-            opacity: 100
-        });
+        background.x = size.width / 2;
+        background.y = size.height / 2;
         this.addChild(background);
 
         var label = creator.createLabel(txt.welcomeScene.title, 40);

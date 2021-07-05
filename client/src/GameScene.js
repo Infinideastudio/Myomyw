@@ -56,9 +56,8 @@ var GameScene = cc.Scene.extend({
     */
     ctor: function (leftName, rightName, controllableSide, createNextChessman, enableTimer) {
         this._super();
-        var customBackroundUrl = storage.getItem("customBackgroundUrl");
-        if (customBackroundUrl) {
-            var background = new cc.Sprite(customBackroundUrl);
+        if (storage.getItem("customBackgroundUrl") && img.customBackground) {
+            var background = new cc.Sprite(img.customBackground);
             background.x = size.width / 2;
             background.y = size.height / 2;
             background.scale = Math.max(size.width / background.width, size.height / background.height);

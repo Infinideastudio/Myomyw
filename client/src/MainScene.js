@@ -25,7 +25,7 @@ var MainScene = cc.Scene.extend({
         nameBox.setPosition(300, 175);
         renameModalBox.box.addChild(nameBox);
 
-        confirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
+        renameConfirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
             var name = nameBox.getString();
             if (name.length == 0) {
                 showMessage(txt.mainScene.emptyName);
@@ -37,14 +37,14 @@ var MainScene = cc.Scene.extend({
                 renameModalBox.hide();
             }
         });
-        confirmButton.setPosition(200, 75);
-        renameModalBox.box.addChild(confirmButton);
+        renameConfirmButton.setPosition(200, 75);
+        renameModalBox.box.addChild(renameConfirmButton);
 
-        cancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
+        renameCancelButton = creator.createButton(txt.menu.cancel, cc.size(150, 60), function () {
             renameModalBox.hide();
         });
-        cancelButton.setPosition(400, 75);
-        renameModalBox.box.addChild(cancelButton);
+        renameCancelButton.setPosition(400, 75);
+        renameModalBox.box.addChild(renameCancelButton);
 
         //选择ai框
         var selectAIBox = new ModalBox(800, 250);
@@ -147,7 +147,6 @@ var MainScene = cc.Scene.extend({
         avaBox.box.addChild(quickCheckBox);
         avaConfirmButton = creator.createButton(txt.menu.ok, cc.size(150, 60), function () {
             cc.director.pushScene(new AIGameScene(ai1, ai2, "", quickCheckBox.children[0].isSelected()));
-            avaBox.hide();
         });
         avaConfirmButton.setPosition(300, 75);
         avaBox.box.addChild(avaConfirmButton);
@@ -218,10 +217,10 @@ var MainScene = cc.Scene.extend({
             if (name) {
                 nameBox.setString(name);
             }
-            cancelButton.enabled = true;
+            renameCancelButton.enabled = true;
             renameModalBox.popup();
         });
-        playerLabel.titleColor = cc.color(0, 0, 0);
+        playerLabel.setTitleColor(cc.color(0, 0, 0));
         playerLabel.titleFontSize = 25;
         this.addChild(playerLabel);
         function updatePlayerLabel() {
@@ -233,7 +232,7 @@ var MainScene = cc.Scene.extend({
         }
         updatePlayerLabel();
         if (!storage.getItem("name")) {
-            cancelButton.enabled = false;
+            renameCancelButton.enabled = false;
             renameModalBox.popup();
         }
         //固定界面

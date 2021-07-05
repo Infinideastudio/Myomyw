@@ -29,7 +29,7 @@ var creator = {
     createEditBox: function (placeHolder, size) {
         var editBox = new cc.EditBox(size, new cc.Scale9Sprite(res.EditBox_png));
         editBox.setInputMode(cc.EDITBOX_INPUT_MODE_SINGLELINE);
-        editBox.setInputFlag(null);
+        editBox.setInputFlag(cc.EDITBOX_INPUT_FLAG_SENSITIVE);
         editBox.setFont(creator.normalFont, 25);
         editBox.setFontColor(cc.color(0, 0, 0));
         editBox.setPlaceHolder(placeHolder);

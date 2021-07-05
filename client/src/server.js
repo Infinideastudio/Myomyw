@@ -63,7 +63,7 @@ var server = {
                     onSuccess();
                 }
             });
-        } catch {
+        } catch (e) {
             onError(txt.connection.wrongReply);
         }
     }

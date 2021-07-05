@@ -65,14 +65,32 @@ var OptionScene = MenuScene.extend({
                 return;
             }
             var closeWaitingBox = waitingBox(txt.options.settingBackground);
-            cc.loader.load(url, function (error) {
+            if (cc.textureCache.getTextureForKey(url)) {
+                cc.textureCache.removeTextureForKey(url);
+            }
+            cc.loader.loadImg(url, function (error, data) {
                 closeWaitingBox();
                 if (error) {
                     cc.log(error);
                     messageBox(txt.options.setBackgroundError);
                 }
                 else {
-                    storage.setItem("customBackgroundUrl", url);
+                    if (cc.sys.isNative) {
+                        img.customBackground = data;
+                        storage.setItem("customBackgroundUrl", url);
+                    }
+                    else {
+                        try {
+                            var texture2d = new cc.Texture2D();
+                            texture2d.initWithElement(data);
+                            texture2d.handleLoadedTexture();
+                            img.customBackground = texture2d;
+                            storage.setItem("customBackgroundUrl", url);
+                        }
+                        catch (e) {
+                            messageBox(txt.options.setBackgroundError + "(CORS)");
+                        }
+                    }
                     modalBox.hide();
                 }
             });

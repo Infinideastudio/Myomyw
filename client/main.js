@@ -7,7 +7,7 @@ cc.game.onStart = function () {
     cc.view.setDesignResolutionSize(1280, 720, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     cc.view.setOrientation(cc.ORIENTATION_LANDSCAPE)
-    cc.director.setClearColor(cc.color(255, 255, 255));
+    cc.director.setClearColor(cc.color(0, 0, 0));
     size = cc.winSize;
     creator.init();
     lang.init();
@@ -43,11 +43,6 @@ cc.game.onStart = function () {
         cc._loaderImage = null;
     }
 
-    var url = storage.getItem("customBackgroundUrl");
-    if (url) {
-        g_resources.push(url);
-    }
-
     cc.LoaderScene.preload(g_resources, function () {
         var firstScene = (storage.getItem("playedBefore") == "true") ? new MainScene() : new WelcomeScene();
         cc.director.runScene(firstScene);
@@ -63,6 +58,32 @@ cc.game.onStart = function () {
         }
 
     }, this);
+
+    var url = storage.getItem("customBackgroundUrl");
+    if (url) {
+        cc.loader.loadImg(url, function (error, data) {
+            if (error) {
+                cc.log(error);
+                messageBox(txt.options.setBackgroundError);
+            }
+            else {
+                if (cc.sys.isNative) {
+                    img.customBackground = data;
+                }
+                else {
+                    try {
+                        var texture2d = new cc.Texture2D();
+                        texture2d.initWithElement(data);
+                        texture2d.handleLoadedTexture();
+                        img.customBackground = texture2d;
+                    }
+                    catch (e) {
+                        messageBox(txt.options.setBackgroundError + "(CORS)");
+                    }
+                }
+            }
+        });
+    }
 };
 
 storage = cc.sys.localStorage;
