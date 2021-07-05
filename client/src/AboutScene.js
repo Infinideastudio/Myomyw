@@ -4,8 +4,8 @@
             cc.director.popScene();
         });
 
-        var text = "Myomyw Beta 0.7\nCopyright © 2016 Infinideas";
-        var label = creator.createLabel(text, 20);
+        var text = "Myomyw Beta 0.8\nCopyright © 2021 Infinideas";
+        var label = creator.createLabel(text, 30);
         label.textAlign = cc.TEXT_ALIGNMENT_CENTER;
         label.setPosition(size.width / 2, size.height / 2);
         this.addChild(label);

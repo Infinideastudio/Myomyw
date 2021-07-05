@@ -5,7 +5,7 @@
     port: 8650,
     allowOrigin: '*',
     maxRooms: 100,
-    version: '0.7',
+    version: '0.8',
     message: '',
 
     defaultLCol: 6,
