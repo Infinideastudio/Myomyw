@@ -124,7 +124,7 @@ var GameScene = cc.Scene.extend({
         this.rightNameLabel.setPosition(size.width - this.rightNameLabel.width / 2 - 470, size.height - this.rightNameLabel.height / 2 - 30);
         this.addChild(this.rightNameLabel);
 
-        this.sideBar = new cc.LayerColor(cc.color(204, 233, 255, 178), 450, size.height);
+        this.sideBar = new cc.LayerColor(cc.color(204, 233, 255, 200), 450, size.height);
         this.sideBar.setPosition(size.width - 450, 0);
         this.addChild(this.sideBar);
 
@@ -371,7 +371,7 @@ var GameScene = cc.Scene.extend({
                     scale: ejectorScale,
                     x: (r - l) * this.halfDiagonal + this.topVertX,
                     y: this.boardLength - (l + r + 1) * this.halfDiagonal,
-                    opacity: 178
+                    opacity: 200
                 });
                 this.gridNode.addChild(grid);
             }
