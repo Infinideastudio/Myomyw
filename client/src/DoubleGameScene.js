@@ -36,5 +36,6 @@ var DoubleGameScene = GameScene.extend({
         }
         this.showExitModalBox = false;
         this.addChild(new ResultLayer(str, color));
+        this.exitModalBox.hide();
     }
 });

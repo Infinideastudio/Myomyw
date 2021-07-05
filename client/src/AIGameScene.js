@@ -84,5 +84,6 @@ var AIGameScene = GameScene.extend({
             str += (this.ai1 ? txt.result.leftWins : txt.result.youWin);
         this.showExitModalBox = false;
         this.addChild(new ResultLayer(str, cc.color(0, 0, 0)));
+        this.exitModalBox.hide();
     }
 });
