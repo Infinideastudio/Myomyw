@@ -23,6 +23,7 @@ var LangOptionScene = MenuScene.extend({
             highlightedButton = button;
             button.bright = false;
             function success() {
+                cc.director.popToRootScene();
                 cc.director.runScene(new MainScene());
                 cc.director.pushScene(new OptionScene());
                 cc.director.pushScene(new LangOptionScene());

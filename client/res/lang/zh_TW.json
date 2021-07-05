@@ -34,7 +34,7 @@
     "setBackground": "自訂遊戲背景",
     "inputBackgroundUrl": "自訂遊戲背景的 URL（留空取消）",
     "settingBackground": "抓取背景中...",
-    "setBackgroundError": "發生了一些錯誤",
+    "setBackgroundError": "抓取背景時遇到了一些錯誤",
     "setServer": "自訂伺服器",
     "inputServer": "自訂伺服器地址 （留空取消）",
     "lang": "語言",
@@ -45,6 +45,11 @@
     "left": "綠方",
     "right": "藍方",
     "ai": "電腦"
+  },
+  "ai": {
+    "easy": "簡單",
+    "normal": "一般",
+    "hard": "困難"
   },
   "result": {
     "leftWins": "綠方贏了",

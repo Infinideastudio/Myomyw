@@ -34,7 +34,7 @@
     "setBackground": "Customize the game background",
     "inputBackgroundUrl": "The URL of the game background(leave it empty to cancel)",
     "settingBackground": "Getting background...",
-    "setBackgroundError": "Some errors have occurred",
+    "setBackgroundError": "Some errors have occurred when getting the background",
     "setServer": "Customize the server",
     "inputServer": "The address of the server(leave it empty to cancel)",
     "lang": "Languages",
@@ -45,6 +45,11 @@
     "left": "Green",
     "right": "Blue",
     "ai": "Computer"
+  },
+  "ai": {
+    "easy": "Easy",
+    "normal": "Normal",
+    "hard": "Hard"
   },
   "result": {
     "leftWins": "Green wins",
