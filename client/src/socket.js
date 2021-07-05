@@ -7,7 +7,7 @@ var socket = {
         if (socket.ws && !cc.sys.isNative) {
             socket.ws.close();
         }
-        socket.ws = new WebSocket(address);
+        socket.ws = new WebSocket(address, [], "res/cacert.pem");
         socket.ws.onmessage = socket.onmessage;
     },
     onmessage: function (e) {
