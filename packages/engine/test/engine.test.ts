@@ -28,7 +28,7 @@ const initialBoard = (): BoardSnapshot => ({
 });
 
 describe("rules", () => {
-  it("are exactly those of the original game (Beta 0.8 GameNode.js)", () => {
+  it("move balls and apply effects exactly like the original game (Beta 0.8 GameNode.js)", () => {
     const legacy = loadLegacy();
     const rng = testRng(12345);
     for (let game = 0; game < 200; game++) {

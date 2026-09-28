@@ -4,8 +4,9 @@
 
 This document is the authoritative description of the rules. The reference
 implementation is the engine: [`game.rs`](../packages/engine/src/game.rs) and
-[`board.rs`](../packages/engine/src/board.rs); the test suite checks that it
-behaves exactly like the original game (Beta 0.8).
+[`board.rs`](../packages/engine/src/board.rs). The test suite checks that pushes
+and ball effects work exactly as in the original game (Beta 0.8); the only
+rule changed since then is the ball odds (§3).
 
 ## 1. Overview
 
@@ -54,14 +55,14 @@ everything else:
 
 | Ball | Probability |
 | --- | --- |
-| Common | 7/11 |
-| Key | 1/11 |
-| Add line | 1/11 |
-| Remove line | 1/11 |
-| Flip | 1/11 |
+| Common | 6/10 |
+| Key | 1/10 |
+| Add line | 1/10 |
+| Remove line | 1/10 |
+| Flip | 1/10 |
 
-(Earlier documentation stated 6/10 and 1/10 each; the game has always used
-elevenths.)
+(Beta 0.8 and earlier versions of the rewrite drew common balls with
+probability 7/11 and each special ball with probability 1/11.)
 
 ## 4. A push
 
@@ -153,7 +154,7 @@ sequence of decisions, each taken with knowledge of the ball it will insert.
 
 - **Players:** $\mathcal{N} = \{\mathsf{L}, \mathsf{R}\}$ (Green, Blue). Write $-i$ for the opponent of $i$.
 - **Balls:** $\mathcal{B} = \{\mathtt{C}, \mathtt{K}, \mathtt{A}, \mathtt{D}, \mathtt{F}\}$ (Common, Key, Add line, Remove line, Flip),
-  drawn from $p(\mathtt{C}) = 7/11$ and $p(\mathtt{K}) = p(\mathtt{A}) = p(\mathtt{D}) = p(\mathtt{F}) = 1/11$.
+  drawn from $p(\mathtt{C}) = 6/10$ and $p(\mathtt{K}) = p(\mathtt{A}) = p(\mathtt{D}) = p(\mathtt{F}) = 1/10$.
 - **Line counts:** $m, n \in \{3, \dots, 10\}$ = number of ejectors of $\mathsf{L}$ and $\mathsf{R}$.
 - **Board:** $X \in \mathcal{B}^{m \times n}$; $X_{g,h}$ is the ball where Green line $g$
   meets Blue line $h$ (0-based; $g = 0$ and $h = 0$ are next to the top corner).
@@ -234,7 +235,7 @@ $$
 The payoff of a play is the undiscounted sum of rewards: $+1$ or $-1$ for the
 winner and loser, and $0$ for both if the play never ends. Nothing in the rules
 forces termination, but in practice every game ends (built-in AIs finish in
-about 50–100 turns).
+about 45–75 turns).
 
 ### 9.6 Properties
 

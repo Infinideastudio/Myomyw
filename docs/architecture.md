@@ -50,7 +50,7 @@ one mask, one shift and one merge per plane; a board is an 80-byte `Copy`
 value and a whole `Game` state barely more, so search and simulation copy
 positions freely. The static evaluation walks only the (sparse) Key plane.
 
-**Performance** (desktop, one thread): about 1.1 million random playouts per
+**Performance** (desktop, one thread): about 1.2 million random playouts per
 second (≈60 million actions/s). `tournament` spreads games over all cores with
 results independent of the thread count.
 

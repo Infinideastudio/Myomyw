@@ -18,6 +18,8 @@ screen, or online. Available in English, 简体中文 and 正體中文.
   the **next ball** (shown to both players) and pushes the last ball of the
   line off the far edge. Press and hold an ejector to keep pushing; release to
   end your turn.
+- After every push a new next ball is drawn: common with probability 6/10,
+  each of the four special balls below with probability 1/10.
 - What falls off takes effect:
   - **Key** (red): the pusher loses.
   - **Add line** (green +): the opponent gains a line (at most 10).
@@ -90,11 +92,12 @@ Documentation:
 ## History
 
 Versions up to Beta 0.8 were built with Cocos2d-x (JavaScript) and a Node.js
-server; that code remains in the Git history (last commit `a38f32e`). This version is a
-complete rewrite that keeps the game rules exactly the same — the test suite
-checks this against the original source. The computer players use the original
-algorithms with several bugs fixed, which made each of them stronger (see
-[docs/ai.md](docs/ai.md#history)).
+server; that code remains in the Git history (last commit `a38f32e`). This
+version is a complete rewrite. Pushes and ball effects work exactly as before —
+the test suite checks this against the original source — and the only rule
+change is the ball odds: 6/10 common and 1/10 per special ball (previously 7/11
+and 1/11). The computer players use the original algorithms with several bugs
+fixed, which made each of them stronger (see [docs/ai.md](docs/ai.md#history)).
 Native Android/Windows builds of the old client are not carried over; the new
 client is a responsive web app that works on desktop and mobile browsers.
 

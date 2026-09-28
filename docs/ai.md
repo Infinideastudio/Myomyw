@@ -120,21 +120,26 @@ whether to stop.
 
 ## Baseline strength
 
-`npm run arena -- --a <agent> --b <agent> --games 1000 --seed 1`
-(native, all cores; results do not depend on the number of threads). Agents alternate sides; Green moves first. With 1000 games
-the 95% confidence interval of a win rate is about ±3 percentage points.
+`npm run arena -- --a <agent> --b <agent> --games 10000 --seed 1`
+(native, all cores; results do not depend on the number of threads). Agents
+alternate sides; Green moves first. With 10 000 games the 95% confidence
+interval of a win rate is about ±1 percentage point (±3 with 1000 games —
+enough for identical agents to land anywhere between 47% and 53%).
 
 | A vs B | A wins | Avg. turns |
 | --- | --- | --- |
-| Hard vs Normal | 76.1% | 70 |
-| Normal vs Easy | 92.1% | 53 |
-| Hard vs Easy | 96.5% | 50 |
-| Hard vs Hard | 49.3% | 77 |
+| Hard vs Normal | 74.6% | 67 |
+| Normal vs Easy | 91.6% | 51 |
+| Hard vs Easy | 97.1% | 47 |
+| Hard vs Hard | 49.9% | 72 |
 
-In Hard vs Hard, the first mover won 49.1% of games: moving first is no
-measurable advantage. Hard takes about 80 µs per turn, and the 1000-game
-Hard-vs-Hard tournament about 1 s on 24 threads (6.6 s on one), so a stronger
-agent has a large time budget to work with.
+Over 30 000 Hard-vs-Hard games (seeds 1–3), the first mover won 50.5%: moving
+first is no meaningful advantage. Hard takes about 75 µs per turn; the
+10 000-game Hard-vs-Hard tournament takes about 9 s on 24 threads, so a
+stronger agent has a large time budget to work with.
+
+These numbers use the current ball odds (6/10 common, 1/10 per special ball);
+see [rules.md §3](rules.md#3-the-next-ball).
 
 ## Writing a new agent
 
@@ -163,13 +168,14 @@ then retired). Names in the table are those of the original code.
 | 1 | `WeakAI` never scored Flip balls: the case label was misspelled (`Chessman.filp`). | Scored as intended: ±1. |
 | 2 | The search generated Right's moves from *Left's* line count, skipping some of Right's lines or pushing nonexistent ones (reading hidden off-board cells). | Each side iterates its own lines. |
 | 3 | `search` passed `maxMovements` (5) as `searchCol`'s "best value so far", which cut the search off after one push whenever β ≤ 5. | Standard cut-off on the column's own best value. |
-| 4 | Samples drawn from the true distribution (7/11, 1/11) were additionally weighted by a mismatched probability (0.6 / 0.1 per ball). | Plain averaging. |
+| 4 | Samples drawn from the true distribution (then 7/11 and 1/11) were additionally weighted by a mismatched probability (0.6 / 0.1 per ball). | Plain averaging. |
 | 5 | `continue` (push again?) used `maxDepth` samples instead of `fillout`. | `fillout` samples. |
 | 6 | "Stop now" was searched at depth 1 but "push more" at depth `maxDepth − 1`. | Same depth `max(1, maxDepth − 1)` for every plan. |
 | 7 | When one sample hit a Key or Flip, the number of plans considered shrank for *all later samples*. | Handled per sample (see above). |
 | 8 | Some `continue` searches read past the filled part of the ball pool. | Pool sized correctly. |
 
-Each fixed AI beats its original version (1000 games, alternating sides):
+Each fixed AI beats its original version (1000 games, alternating sides,
+measured with the ball odds of the time, 7/11 and 1/11):
 Easy 54.6%, Normal 66.0%, Hard 70.5%. For fix 6, making both plans use depth
 `maxDepth − 1` (0 for Normal) instead was tried first; that Normal lost to the
 original (46.7%), which is why the depth is at least 1.

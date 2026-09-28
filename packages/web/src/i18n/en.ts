@@ -124,7 +124,7 @@ export const en = {
       "The ball that falls off takes effect immediately.",
     ],
     nextTitle: "The next ball",
-    next: "Both players can see the next ball. It is inserted by the next push, whoever makes it, and a new one is drawn after every push: a common ball with probability 7/11, each special ball with probability 1/11.",
+    next: "Both players can see the next ball. It is inserted by the next push, whoever makes it, and a new one is drawn after every push: a common ball with probability 6/10, each special ball with probability 1/10.",
     ballsTitle: "Balls",
     common: "Common — no effect.",
     key: "Key — the player who pushed it off loses.",

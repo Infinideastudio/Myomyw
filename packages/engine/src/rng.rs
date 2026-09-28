@@ -35,11 +35,11 @@ impl Rng {
         ((u64::from(self.next_u32()) * u64::from(n)) >> 32) as u32
     }
 
-    /// A ball from the official distribution: 1/11 for each special kind, 7/11 common.
+    /// A ball from the official distribution: 1/10 for each special kind, 6/10 common.
     #[inline]
     pub fn ball(&mut self) -> Ball {
-        // Equals floor(next_f64() * 11) exactly.
-        match self.below(11) {
+        // Equals floor(next_f64() * 10) exactly.
+        match self.below(10) {
             0 => Ball::Key,
             1 => Ball::AddCol,
             2 => Ball::DelCol,
@@ -61,6 +61,6 @@ mod tests {
 
         let mut rng = Rng::new(42);
         let balls: Vec<u8> = (0..20).map(|_| rng.ball() as u8).collect();
-        assert_eq!(balls, [0, 0, 0, 0, 2, 0, 4, 0, 0, 0, 3, 0, 0, 4, 3, 0, 0, 0, 1, 0]);
+        assert_eq!(balls, [0, 0, 0, 0, 2, 0, 3, 0, 0, 0, 3, 0, 0, 4, 2, 0, 0, 0, 1, 0]);
     }
 }

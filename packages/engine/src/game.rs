@@ -342,14 +342,14 @@ mod tests {
     fn balls_are_drawn_with_the_official_probabilities() {
         let mut rng = Rng::new(7);
         let mut counts = [0u32; 5];
-        let n = 110_000;
+        let n = 100_000;
         for _ in 0..n {
             counts[rng.ball() as usize] += 1;
         }
         let p = |count: u32| f64::from(count) / f64::from(n);
-        assert!((p(counts[0]) - 7.0 / 11.0).abs() < 0.005);
+        assert!((p(counts[0]) - 0.6).abs() < 0.005);
         for &count in &counts[1..] {
-            assert!((p(count) - 1.0 / 11.0).abs() < 0.005);
+            assert!((p(count) - 0.1).abs() < 0.005);
         }
     }
 }
