@@ -1,46 +1,85 @@
 # Myomyw
-**Beta 0.8 已发布！**
-## 概述 Overview
-Myomyw是一款半棋牌游戏。不同于其他对战游戏的是，你的操作决定的是对方的胜负，因此你需要思考如何迫使对方让自己赢，这也是Myomyw这个名字的由来：Make your opponent make you win。
-## 在线游戏 Play online
-https://www.newinfinideas.cn/myomyw/index.html
-## 游戏规则 Game rule
-游戏界面中左上和右上有两排发射器，中间是棋盘，轮到你时你可以点击或你的一个发射器，把对应列的球推出去，按住发射器可以连续发射球，但最多只能发射五次。
 
-发射器发射出的球有6/10的几率是普通球（黑色），1/10的几率是决胜球（红色），1/10是增列球（绿色带加号），1/10是减列球（黄色带减号），1/10是翻转球（蓝色带曲箭头）。
+**Make your opponent make you win.**
 
-* 如果一方把决胜球推出棋盘，那么对方胜利。
-* 如果一方把增列球推出棋盘，那么推出球的那一边就会增加一列(最多10列)。
-* 如果一方把减列球推出棋盘，那么推出球的那一边就会减少一列(最少3列)。
-* 如果一方把翻转球推出棋盘，那么棋盘就会左右翻转，需要注意翻转后会立刻转入对手回合。
+Myomyw is a two-player pushing game. Players take turns pushing balls across a
+diamond-shaped board; whoever pushes the red Key ball off the board loses. Every
+push also changes what your opponent can do next — so the way to win is to
+leave them nothing but losing moves.
 
-最上面的格子是计时器，目前计时20秒，超时后对方直接胜利。（在联机对战中始终存在，在单机双人、人机对战中可进行设置。）
+Play against the computer (three difficulty levels), with a friend on the same
+screen, or online. Available in English, 简体中文 and 正體中文.
 
-目前有单机双人、人机对战和联机对战三个模式。
-## 配置 Configure
-### 客户端 Client
-1. 首先在[这里](https://download.cocos.com/Cocos2D-X/cocos2d-x-3.17.2.zip)下载Cocos2d-x 3.17.2。
-2. 使用引擎目录下的`setup.py`进行配置安装。（需要使用Python2.x。）如果你要编译到Android上，你需要配置NDK，Android SDK和Ant；如果你要发布Web的Release版，你需要配置Ant；否则你可以跳过这几项的配置。
-3. 在Repo目录下执行`cocos new Myomyw -l js -p org.infinideas.myomyw`。
-4. 完成后Repo目录下会多出一个名为`Myomyw`的目录。把这个目录里的`frameworks`文件夹移动到Repo目录下的`client`中。
-5. 删除`Myomyw`目录。
-6. 将`client/platform-res`中的内容复制到`client/frameworks/runtime-src`中。（如果`platform-res`中的内容更新请再次执行此操作。）
+## Rules in brief
 
-### 服务端 Server
-确保你安装了node.js和npm后，在`server`目录下运行`npm install`安装依赖模块。
+- Green (moves first) owns the ejectors on the upper-left edge, Blue those on
+  the upper-right edge. Each ejector pushes one line of balls across the board.
+- On your turn, pick one of your lines and push it 1–5 times. Each push inserts
+  the **next ball** (shown to both players) and pushes the last ball of the
+  line off the far edge. Press and hold an ejector to keep pushing; release to
+  end your turn.
+- What falls off takes effect:
+  - **Key** (red): the pusher loses.
+  - **Add line** (green +): the opponent gains a line (at most 10).
+  - **Remove line** (yellow −): the opponent loses a line (at least 3).
+  - **Flip** (blue arrow): the board is mirrored and the pusher's turn ends.
+- You have 20 seconds to make the first push of each turn.
 
-如果有提供html5网页的服务器，你需要把服务器的地址写在`server/src/config.js`的allowOrigin中。
+The complete rules, including a formal model of the game as a zero-sum Markov
+game, are in **[docs/rules.md](docs/rules.md)**.
 
-建议使用VS插件NTVS以方便调试，请将.sln和.njsproj文件都放在`server`下。（已对`.gitignore`进行相应设置。）
-## 运行 Run 
-### 客户端 Client
-#### Web
-在`client`目录下运行`cocos run -p web -m {debug/release}`。在Release模式下`client/publish/html5`中会生成打包后的Web发布包。
-此时在`res/server.txt`中设置服务器地址
-#### 原生平台 
-在`client`目录下运行`cocos run -p (相应平台) -m {debug/release}`或用相应的编译工具编译`client/frameworks/runtime-src`下的对应项目。你也可以使用CMake。
-此时从`https://www.newinfinideas.cn/myomyw/server.txt`获取服务器地址
-### 服务端 Server
-在`server`目录下使用脚本或运行`node src/server.js`启动服务器。
-## 协议 License
-The MIT License
+## Getting started
+
+Requires Node.js 22.18 or newer.
+
+```sh
+npm install
+npm run dev          # web client with hot reload: http://localhost:5173
+npm run dev:server   # game server for online play: ws://localhost:8650
+```
+
+Production:
+
+```sh
+npm run build        # builds the web client into packages/web/dist
+npm start            # serves the client and the game server on http://localhost:8650
+```
+
+Server settings are environment variables: `PORT` (8650), `HOST`,
+`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`. To host the client separately from the
+server, build it with `VITE_SERVER_URL=wss://your-server` (players can also
+set a custom server in Settings).
+
+## Development
+
+```sh
+npm test             # all tests (rules, AI equivalence, server, match controller)
+npm run typecheck    # type-check all packages
+npm run arena -- --a hard --b normal --games 1000   # AI-vs-AI tournament
+```
+
+| Package | Contents |
+| --- | --- |
+| [`packages/core`](packages/core) | Rules engine, AI players, protocol types, arena script. No dependencies. |
+| [`packages/server`](packages/server) | Authoritative WebSocket game server (Node + `ws`). |
+| [`packages/web`](packages/web) | Web client (React, Vite, SVG + Motion). |
+
+Documentation:
+
+- [docs/rules.md](docs/rules.md) — the rules and their formal model
+- [docs/ai.md](docs/ai.md) — how the computer players work
+- [docs/architecture.md](docs/architecture.md) — code structure
+- [docs/protocol.md](docs/protocol.md) — client/server protocol
+
+## History
+
+Versions up to Beta 0.8 were built with Cocos2d-x (JavaScript) and a Node.js
+server; that code remains in the Git history (last commit `a38f32e`). This version is a
+complete rewrite that keeps the game rules and the computer players' algorithms
+exactly the same — the test suite checks this against the original source.
+Native Android/Windows builds of the old client are not carried over; the new
+client is a responsive web app that works on desktop and mobile browsers.
+
+## License
+
+[MIT](LICENSE)

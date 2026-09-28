@@ -1,0 +1,10 @@
+{
+  "name": "Myomyw",
+  "short_name": "Myomyw",
+  "description": "Make your opponent make you win.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1f2a30",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@myomyw/core",
+  "private": true,
+  "version": "0.9.0",
+  "description": "Myomyw rules engine, AI players and network protocol types",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

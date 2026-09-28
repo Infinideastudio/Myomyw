@@ -1,0 +1,30 @@
+{
+  "name": "myomyw",
+  "private": true,
+  "version": "0.9.0",
+  "description": "Myomyw - Make your opponent make you win",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/server",
+    "packages/web"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @myomyw/web",
+    "dev:server": "npm run dev -w @myomyw/server",
+    "build": "npm run build -w @myomyw/web",
+    "start": "npm run start -w @myomyw/server",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/core && tsc -p packages/server && tsc -p packages/web",
+    "arena": "node packages/core/scripts/arena.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}

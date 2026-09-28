@@ -1,0 +1,11 @@
+export * from "./constants.ts";
+export * from "./random.ts";
+export * from "./grid.ts";
+export * from "./board.ts";
+export * from "./game.ts";
+export * from "./protocol.ts";
+export type { Agent } from "./ai/agent.ts";
+export { WeakAI } from "./ai/weak.ts";
+export { StrongAI } from "./ai/strong.ts";
+export * from "./ai/presets.ts";
+export * from "./ai/match.ts";
