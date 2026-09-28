@@ -1,0 +1,17 @@
+{
+  "name": "@myomyw/engine",
+  "private": true,
+  "version": "0.9.0",
+  "description": "Fast Myomyw engine (Rust) compiled to WebAssembly, with TypeScript bindings",
+  "type": "module",
+  "exports": {
+    ".": "./js/index.ts",
+    "./wasm": "./dist/myomyw_engine.wasm"
+  },
+  "scripts": {
+    "build": "node scripts/build-wasm.ts"
+  },
+  "dependencies": {
+    "@myomyw/core": "*"
+  }
+}

@@ -5,3 +5,6 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Rust
+target/

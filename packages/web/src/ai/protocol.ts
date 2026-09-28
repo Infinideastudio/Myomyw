@@ -1,0 +1,12 @@
+import type { Ball, BoardSnapshot } from "@myomyw/core";
+
+/** Messages from the page to the AI worker. Agents are identified by page-assigned ids. */
+export type WorkerRequest =
+  | { op: "create"; agent: number; spec: string; seed: number }
+  | { op: "begin"; agent: number; board: BoardSnapshot }
+  | { op: "first"; id: number; agent: number; next: Ball }
+  | { op: "again"; id: number; agent: number; next: Ball }
+  | { op: "free"; agent: number };
+
+/** Replies to "first" / "again" requests. */
+export type WorkerResponse = { id: number; value: number } | { id: number; error: string };

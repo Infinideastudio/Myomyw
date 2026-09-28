@@ -12,6 +12,21 @@ AIs with their bugs fixed (see [History](#history)).
 Presets are created with `createAgent(difficulty, rng?)`, or from a string
 spec with `agentFromSpec` (`easy`, `normal`, `hard`, `strong:<depth>,<fillout>`).
 
+## Implementations
+
+Each agent exists twice, with identical behaviour:
+
+| | TypeScript (`@myomyw/core`) | Rust (`@myomyw/engine`) |
+| --- | --- | --- |
+| Agents | `WeakAI`, `StrongAI`, `PoolSearch` | `WeakAi`, `StrongAi`, `PoolSearch` |
+| Create | `agentFromSpec(spec, seededRng(seed))` | `agent_from_spec(spec, seed)`; in JS `engine.createAgent(spec, seed)` |
+| Runs in | Node, the browser main thread | natively (fast, multi-threaded) and as WebAssembly |
+
+Both use the same random generator (mulberry32), so an agent created with the
+same seed makes the same decisions in either language; the test suite checks
+this over full games. The web client runs the WebAssembly agents in a Web
+Worker (see [architecture.md](architecture.md#computer-players)).
+
 ## The agent interface
 
 ```ts
@@ -115,8 +130,9 @@ whether to stop.
 ## Baseline strength
 
 `npm run arena -- --a <agent> --b <agent> --games 1000 --seed 1`
-(agents alternate sides; Green moves first). With 1000 games the 95% confidence
-interval of a win rate is about ±3 percentage points.
+(native, all cores; `npm run arena:ts` is the TypeScript version and prints
+the same results). Agents alternate sides; Green moves first. With 1000 games
+the 95% confidence interval of a win rate is about ±3 percentage points.
 
 | A vs B | A wins | Avg. turns |
 | --- | --- | --- |
@@ -126,19 +142,29 @@ interval of a win rate is about ±3 percentage points.
 | Hard vs Hard | 49.3% | 77 |
 
 In Hard vs Hard, the first mover won 49.1% of games: moving first is no
-measurable advantage. Hard averages well under a millisecond per turn on a
-desktop, so a stronger agent has a large time budget to work with.
+measurable advantage. Natively, Hard takes about 80 µs per turn and the
+1000-game Hard-vs-Hard tournament about 1 s on 24 threads (6.6 s on one), so a
+stronger agent has a large time budget to work with.
 
 ## Writing a new agent
 
-1. Implement `Agent` in `packages/core/src/ai/`, taking an `Rng` if it uses
-   randomness (for reproducible tournaments). `PoolSearch` and `evaluate` are
-   exported for reuse.
-2. Add a spec for it in `agentFromSpec` ([`presets.ts`](../packages/core/src/ai/presets.ts))
-   and measure it against `hard` with `npm run arena`.
-3. To offer it in the app, add a difficulty to `createAgent` and the i18n
-   dictionaries. The web client calls agents on the main thread; an agent that
-   thinks for more than a few milliseconds should be moved into a Web Worker.
+Simulation-heavy agents belong in Rust:
+
+1. Implement the `Agent` trait in `packages/engine/src/ai/`, seeded with a
+   `u32` for reproducible tournaments. `Game` is a cheap `Copy` state with
+   `actions()` / `apply(action, rng)` for simulations; `Board::evaluate`,
+   `Board::hash64` and `PoolSearch` are available. `npm run bench` measures
+   raw engine throughput.
+2. Add a spec for it in `agent_from_spec` (`src/ai/mod.rs`) and measure it
+   against `hard` with `npm run arena`.
+3. To offer it in the app: expose it in `agent_new` (`src/ffi.rs`) and
+   `parseSpec` (`js/index.ts`), then add a difficulty to the web client's
+   screens and i18n dictionaries. It runs in the AI worker, so thinking time
+   does not block the page; keep it within the 20 s turn limit.
+
+The TypeScript agents remain the reference used by tests and the worker's
+fallback when WebAssembly is unavailable. Porting a new agent to TypeScript is
+optional; without a port, it simply is not available in that fallback.
 
 ## History
 

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Side, StrongAI, WeakAI, playMatch, randomBall, seededRng, type PushOutcome } from "@myomyw/core";
+import { syncAgent } from "../src/ai/agents.ts";
 import { LocalMatch } from "../src/match/LocalMatch.ts";
 import { QUICK_TIMING } from "../src/match/timing.ts";
 
@@ -11,31 +12,31 @@ afterEach(() => {
 });
 
 /** Runs a LocalMatch between two agents to completion on fake timers. */
-function runLocal(seed: number, withTimer: boolean) {
+async function runLocal(seed: number, withTimer: boolean) {
   const balls = seededRng(seed);
   const match = new LocalMatch({
     seats: [
-      { kind: "ai", agent: new StrongAI(2, 10, seededRng(seed + 1)) },
-      { kind: "ai", agent: new StrongAI(1, 10, seededRng(seed + 2)) },
+      { kind: "ai", agent: syncAgent(new StrongAI(2, 10, seededRng(seed + 1))) },
+      { kind: "ai", agent: syncAgent(new StrongAI(1, 10, seededRng(seed + 2))) },
     ],
     names: ["A", "B"],
     timer: withTimer,
     timing: QUICK_TIMING,
     ballSource: () => randomBall(balls),
   });
-  for (let i = 0; i < 100_000 && match.getSnapshot().phase !== "over"; i++) vi.advanceTimersByTime(50);
+  for (let i = 0; i < 100_000 && match.getSnapshot().phase !== "over"; i++) await vi.advanceTimersByTimeAsync(50);
   return match;
 }
 
 describe("LocalMatch", () => {
-  it("drives AIs exactly like the headless playMatch", () => {
+  it("drives AIs exactly like the headless playMatch", async () => {
     for (let seed = 1; seed <= 5; seed++) {
       const pushes: PushOutcome[] = [];
       const headless = playMatch(new StrongAI(2, 10, seededRng(seed + 1)), new StrongAI(1, 10, seededRng(seed + 2)), {
         rng: seededRng(seed),
         onPush: (o) => pushes.push(o),
       });
-      const local = runLocal(seed, true);
+      const local = await runLocal(seed, true);
       const snapshot = local.getSnapshot();
       expect(snapshot.result).toEqual(headless.game.result);
 
@@ -50,7 +51,7 @@ describe("LocalMatch", () => {
 
   it("repeats pushes while an ejector is held and ends the turn on release", () => {
     const match = new LocalMatch({
-      seats: [{ kind: "human" }, { kind: "ai", agent: new WeakAI() }],
+      seats: [{ kind: "human" }, { kind: "ai", agent: syncAgent(new WeakAI()) }],
       names: ["Human", "AI"],
       timer: false,
       timing: QUICK_TIMING,

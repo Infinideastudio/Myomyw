@@ -14,7 +14,7 @@ export abstract class MatchBase implements MatchController {
   private snapshot: MatchSnapshot;
   private readonly listeners = new Set<() => void>();
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
-  private disposed = false;
+  protected disposed = false;
 
   constructor(options: { names: readonly [string, string]; controllable: readonly [boolean, boolean]; timing: Timing; board?: Board }) {
     this.timing = options.timing;

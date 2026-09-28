@@ -7,6 +7,7 @@
   "type": "module",
   "workspaces": [
     "packages/core",
+    "packages/engine",
     "packages/server",
     "packages/web"
   ],
@@ -14,13 +15,18 @@
     "node": ">=22.18"
   },
   "scripts": {
+    "build:wasm": "npm run build -w @myomyw/engine",
+    "predev": "npm run build:wasm",
     "dev": "npm run dev -w @myomyw/web",
     "dev:server": "npm run dev -w @myomyw/server",
-    "build": "npm run build -w @myomyw/web",
+    "build": "npm run build:wasm && npm run build -w @myomyw/web",
     "start": "npm run start -w @myomyw/server",
-    "test": "vitest run",
-    "typecheck": "tsc -p packages/core && tsc -p packages/server && tsc -p packages/web",
-    "arena": "node packages/core/scripts/arena.ts"
+    "pretest": "npm run build:wasm",
+    "test": "vitest run && cargo test --release -q",
+    "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p packages/server && tsc -p packages/web",
+    "arena": "cargo run --release -q --bin arena --",
+    "arena:ts": "node packages/core/scripts/arena.ts",
+    "bench": "cargo run --release -q --bin bench"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

@@ -30,9 +30,11 @@ game, are in **[docs/rules.md](docs/rules.md)**.
 
 ## Getting started
 
-Requires Node.js 22.18 or newer.
+Requires Node.js 22.18 or newer and a Rust toolchain (1.85+, for the AI engine)
+with the WebAssembly target:
 
 ```sh
+rustup target add wasm32-unknown-unknown
 npm install
 npm run dev          # web client with hot reload: http://localhost:5173
 npm run dev:server   # game server for online play: ws://localhost:8650
@@ -41,7 +43,7 @@ npm run dev:server   # game server for online play: ws://localhost:8650
 Production:
 
 ```sh
-npm run build        # builds the web client into packages/web/dist
+npm run build        # builds the AI engine (WebAssembly) and the web client into packages/web/dist
 npm start            # serves the client and the game server on http://localhost:8650
 ```
 
@@ -53,14 +55,17 @@ set a custom server in Settings).
 ## Development
 
 ```sh
-npm test             # all tests (rules, equivalence with the original, AI, server, match controller)
-npm run typecheck    # type-check all packages
-npm run arena -- --a hard --b normal --games 1000   # AI-vs-AI tournament
+npm test             # all TypeScript and Rust tests (builds the WebAssembly module first)
+npm run typecheck    # type-check all TypeScript packages
+npm run arena -- --a hard --b normal --games 1000   # native AI-vs-AI tournament (all cores)
+npm run arena:ts -- --a hard --b normal             # the same in TypeScript (identical results)
+npm run bench        # engine throughput
 ```
 
 | Package | Contents |
 | --- | --- |
-| [`packages/core`](packages/core) | Rules engine, AI players, protocol types, arena script. No dependencies. |
+| [`packages/core`](packages/core) | Rules engine, AI players, protocol types (TypeScript reference). No dependencies. |
+| [`packages/engine`](packages/engine) | Fast engine and AI players in Rust, native and WebAssembly, with TypeScript bindings. |
 | [`packages/server`](packages/server) | Authoritative WebSocket game server (Node + `ws`). |
 | [`packages/web`](packages/web) | Web client (React, Vite, SVG + Motion). |
 

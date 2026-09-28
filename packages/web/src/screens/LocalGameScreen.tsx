@@ -1,5 +1,6 @@
-import { Side, createAgent } from "@myomyw/core";
+import { Side } from "@myomyw/core";
 import { useState } from "react";
+import { workerAgent } from "../ai/agents.ts";
 import { GameLayout } from "../components/GameLayout.tsx";
 import { Button } from "../components/ui.tsx";
 import { useMessages, type Messages } from "../i18n/index.tsx";
@@ -15,7 +16,7 @@ function matchOptions(route: LocalRoute, t: Messages, settings: Settings): Local
   switch (route.name) {
     case "vsComputer":
       return {
-        seats: [{ kind: "human" }, { kind: "ai", agent: createAgent(route.difficulty) }],
+        seats: [{ kind: "human" }, { kind: "ai", agent: workerAgent(route.difficulty) }],
         names: [settings.name || t.names.you, `${t.names.computer} · ${t.difficulty[route.difficulty]}`],
         timer: settings.timer,
       };
@@ -24,8 +25,8 @@ function matchOptions(route: LocalRoute, t: Messages, settings: Settings): Local
     case "aiVsAi":
       return {
         seats: [
-          { kind: "ai", agent: createAgent(route.left) },
-          { kind: "ai", agent: createAgent(route.right) },
+          { kind: "ai", agent: workerAgent(route.left) },
+          { kind: "ai", agent: workerAgent(route.right) },
         ],
         names: [`${t.names.green} · ${t.difficulty[route.left]}`, `${t.names.blue} · ${t.difficulty[route.right]}`],
         timer: settings.timer,

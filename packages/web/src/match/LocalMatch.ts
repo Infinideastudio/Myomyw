@@ -1,11 +1,12 @@
-import { Game, RULES, type Agent, type Ball, type GameResult, type PushOutcome } from "@myomyw/core";
+import { Game, RULES, type Ball, type GameResult, type PushOutcome, type Side } from "@myomyw/core";
+import type { AsyncAgent } from "../ai/agents.ts";
 import { MatchBase } from "./MatchBase.ts";
 import { NORMAL_TIMING, type Timing } from "./timing.ts";
 
 /** Who plays a side in a local match. */
 export type Seat =
   | { kind: "human" }
-  | { kind: "ai"; agent: Agent }
+  | { kind: "ai"; agent: AsyncAgent }
   /** Nobody: the side never moves (used by the tutorial). */
   | { kind: "idle" };
 
@@ -28,7 +29,8 @@ export interface LocalMatchOptions {
  *   press → push (animated) → [hold? cool down → push again] → release → next turn
  *
  * A computer player follows the same rhythm, asking its agent after every
- * push whether to continue.
+ * push whether to continue. Agents answer asynchronously (they may think in a
+ * Web Worker); answers that arrive after the situation changed are ignored.
  */
 export class LocalMatch extends MatchBase {
   protected readonly game: Game;
@@ -47,6 +49,11 @@ export class LocalMatch extends MatchBase {
     this.game = new Game({ ballSource: options.ballSource });
     this.update({ next: this.game.next });
     if (options.autoStart ?? true) this.start();
+  }
+
+  override dispose(): void {
+    super.dispose();
+    for (const seat of this.seats) if (seat.kind === "ai") seat.agent.dispose();
   }
 
   start(): void {
@@ -88,7 +95,9 @@ export class LocalMatch extends MatchBase {
     if (seat.kind === "ai") {
       this.cancelPhase = this.later(() => {
         seat.agent.beginTurn(this.game.board.viewFor(side));
-        this.push(seat.agent.firstPush(this.game.next));
+        seat.agent.firstPush(this.game.next).then((col) => {
+          if (this.stillDeciding(side, 0)) this.push(col);
+        }, agentFailed);
       }, this.timing.aiThinkMs);
     }
     this.onTurnStart();
@@ -109,10 +118,23 @@ export class LocalMatch extends MatchBase {
     if (outcome.turnEnded) return this.startTurn();
 
     const seat = this.seats[outcome.side];
-    const again = seat.kind === "human" ? this.holding : seat.kind === "ai" && seat.agent.pushAgain(this.game.next);
+    if (seat.kind === "human") return this.continueTurn(outcome.col, this.holding);
+    if (seat.kind === "ai") {
+      seat.agent.pushAgain(this.game.next).then((again) => {
+        if (this.stillDeciding(outcome.side, outcome.pushes)) this.continueTurn(outcome.col, again);
+      }, agentFailed);
+    }
+  }
+
+  private continueTurn(col: number, again: boolean): void {
     if (!again) return this.endTurn();
     this.update({ phase: "cooling" });
-    this.cancelPhase = this.later(() => this.push(outcome.col), this.timing.coolMs);
+    this.cancelPhase = this.later(() => this.push(col), this.timing.coolMs);
+  }
+
+  /** Whether an agent's answer still applies: same turn, same number of pushes, match running. */
+  private stillDeciding(side: Side, pushes: number): boolean {
+    return !this.disposed && !this.game.over && this.game.turn === side && this.game.pushes === pushes;
   }
 
   private endTurn(): void {
@@ -126,4 +148,8 @@ export class LocalMatch extends MatchBase {
     this.holding = false;
     this.showResult(result);
   }
+}
+
+function agentFailed(error: unknown): void {
+  console.error("Computer player failed", error);
 }

@@ -9,5 +9,7 @@ export default defineConfig({
   // Relative asset paths so the build can be hosted under any sub-path.
   base: "./",
   define: { __APP_VERSION__: JSON.stringify(version) },
+  // The AI worker imports ES modules.
+  worker: { format: "es" },
   server: { port: 5173 },
 });

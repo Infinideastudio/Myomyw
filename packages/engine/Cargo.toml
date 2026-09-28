@@ -1,0 +1,11 @@
+[package]
+name = "myomyw-engine"
+version = "0.9.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Fast Myomyw rules engine and AI players, for native use and WebAssembly"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
