@@ -1,0 +1,4 @@
+# WebAssembly SIMD (all current browsers and Node): speeds up the Impossible
+# AI's neural network in the web client.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

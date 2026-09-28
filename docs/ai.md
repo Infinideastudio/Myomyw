@@ -137,12 +137,15 @@ decision, so unlike `StrongAi` it never sees future balls it could not know.
   value (expectimax).
 - **Selection.** UCT on values in [−1, 1] from the chooser's point of view,
   exploration constant `c = 0.3`.
-- **Prior.** When a node is created, each of its actions starts with 10
-  virtual visits worth the network's value of the position it leads to
-  (assuming a common ball follows; pushing a Key off is an exact loss). This
-  one-ply look-ahead focuses the search on plausible moves at once.
+- **Prior.** The first time the search passes through a node, each of its
+  actions gets 10 virtual visits worth the network's value of the position it
+  leads to (assuming a common ball follows; pushing a Key off is an exact
+  loss). This one-ply look-ahead focuses the search on plausible moves at
+  once. It is computed lazily because most nodes are leaves that are never
+  visited again, and its values are reused when the same positions are
+  expanded (after a Stop, or a push followed by a common ball).
 - **Leaves** are evaluated by the value network; there are no rollouts.
-- **Budget.** 3000 iterations per decision (`IMPOSSIBLE_ITERS`), so games are
+- **Budget.** 20 000 iterations per decision (`IMPOSSIBLE_ITERS`), so games are
   reproducible for a seed. The subtree of the position actually reached is
   kept for the next decision of the same turn.
 
@@ -167,18 +170,21 @@ always from the mover's point of view (`features.rs`):
   falls (and how many have no Key), and the classic `Board::evaluate`.
 
 Only special balls are active inputs, so the first layer is a sum of a few
-dozen rows; an evaluation takes about 1 µs natively.
+dozen rows; an evaluation takes about 0.7 µs natively (0.25 µs for the
+features, 0.45 µs for the network). The WebAssembly build enables SIMD
+(`.cargo/config.toml`), which makes the web AI about 1.8 times faster.
 
 ### Training
 
 `packages/engine/scripts/train.sh FIRST LAST` runs self-play generations
 (`bin/selfplay.rs` writes every decision position with the final result;
 `bin/train.rs` trains with Adam on the logistic loss). Generation *g* plays
-20 000 games with the search above at 800 iterations using network *g − 1*,
+20 000 games with the search above at 1600 iterations using network *g − 1*,
 then trains network *g* from scratch on the positions of generations
-*g − 2 … g* (about 15 million) for 5 epochs, holding out 5% for
-validation. The shipped network is generation 6; the whole run takes a few
-hours on 24 threads (see [Research notes](#research-notes)).
+*g − 2 … g* (about 15 million) for 5 epochs, holding out 5% for validation;
+a generation takes about 45 minutes on 24 threads. The shipped network was
+trained the same way (6 epochs) on all the positions of generations 2–7,
+about 32 million (see [Research notes](#research-notes)).
 
 ## Baseline strength
 
@@ -194,8 +200,8 @@ enough for identical agents to land anywhere between 47% and 53%).
 | Normal vs Easy | 91.6% | 51 |
 | Hard vs Easy | 97.1% | 47 |
 | Hard vs Hard | 49.9% | 72 |
-| Impossible vs Hard\* | 93.8% | 71 |
-| Impossible vs Normal\* | 97.6% | 57 |
+| Impossible vs Hard\* | 97.3% | 59 |
+| Impossible vs Normal\* | 98.4% | 50 |
 
 \* 1000 games.
 
@@ -203,8 +209,8 @@ Over 30 000 Hard-vs-Hard games (seeds 1–3), the first mover won 50.5%: moving
 first is no meaningful advantage. Hard takes about 75 µs per turn; the
 10 000-game Hard-vs-Hard tournament takes about 9 s on 24 threads, so a
 stronger agent has a large time budget to work with. Impossible takes about
-35 ms per turn natively (about 14 ms per decision) and 45 ms per decision in
-WebAssembly under Node (110 ms at worst).
+30 ms per decision natively (80 ms per turn) and 40 ms per decision in
+WebAssembly under Node (100 ms at worst).
 
 These numbers use the current ball odds (6/10 common, 1/10 per special ball);
 see [rules.md §3](rules.md#3-the-next-ball).
@@ -298,9 +304,35 @@ iterations.
 
 **Better games, better networks.** Generations 5 and 6 were trained on games
 of this stronger search (800 iterations): gen 5 beat gen 4 56.4% and gen 6
-beat gen 5 52.2% (head to head, 2000 iterations each). Gen 6 is shipped;
-further generations would probably still gain a little.
+beat gen 5 52.2% (head to head, 2000 iterations each). Gen 6 was the first
+network shipped (with 3000 iterations per decision).
+
+**Second round: speed, then more search.** Head to head against that first
+version, strength kept rising with the budget (1000 iterations: 34.8%,
+10 000: 63.9%), so speed became the goal:
+
+- Computing the prior lazily and reusing its values for the positions it
+  evaluated made the search 4.8 times faster (35 → 7.4 ms per turn) with
+  exactly the same decisions.
+- WebAssembly SIMD made the web build about 1.8 times faster.
+- Keeping the tree across turns did not help (50.1%): little of it
+  survives the opponent's turn.
+
+**More data beats more generations.** Generation 7 (self-play at 1600
+iterations) beat gen 6 only 51.0%. Training on more positions helped more:
+a network trained on generations 4–7 beat gen 7 55.0% (128 or 256
+first-layer units: 54.3% and 55.9%, no better), and one trained on
+generations 2–7 beat that 53.4%. Adding generations 0–1, played by the weak
+static-evaluation search, did not help (51.3%). The generation 2–7 network
+is shipped.
+
+**The budget.** At 20 000 iterations the search beats 10 000 by 59.8%;
+`c` is still best around 0.3 (0.2: 48.4%, 0.5: 51.4% against 0.3 at
+10 000). Impossible now searches 20 000 iterations, about as long per
+decision in the browser as the first version's 3000, and beats that version
+73.0%.
 
 Ideas not tried yet: a policy head to replace the one-ply prior (PUCT, as in
-AlphaZero), keeping the tree across turns, and more generations or more games
-per generation.
+AlphaZero; with the lazy prior it would save at most about 40% of the network
+evaluations), and features or targets that make the value network learn
+faster than more data does.

@@ -45,7 +45,7 @@ impl Default for MctsParams {
 }
 
 /// Iterations per decision of the Impossible AI.
-pub const IMPOSSIBLE_ITERS: u32 = 3000;
+pub const IMPOSSIBLE_ITERS: u32 = 20000;
 
 impl MctsParams {
     /// Parses comma-separated `key=value` overrides of the defaults: `iters`,
@@ -81,6 +81,9 @@ struct Edge {
     w: f32,
     /// Child per next ball (a Stop uses slot 0).
     child: [u32; 5],
+    /// Value for Left of the position the prior evaluated (NaN before the prior is
+    /// set); reused when the same position is expanded.
+    prior_value: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -89,6 +92,9 @@ struct Node {
     first: u32,
     len: u32,
     n: u32,
+    /// Whether the prior has been given to the actions (done on the first
+    /// visit through the node, since most leaves are never visited again).
+    primed: bool,
 }
 
 /// The search tree. Nodes are positions (after the next ball is drawn);
@@ -181,27 +187,34 @@ impl Mcts {
 
     fn add_node(&mut self, game: Game) -> u32 {
         let first = self.edges.len() as u32;
-        let k = self.params.prior;
         for &action in game.actions().iter() {
-            let (n, w) = if k > 0.0 {
-                // Value of the action for the mover, assuming a common ball follows.
-                let mut g = game;
-                match action {
-                    Action::Push(col) => {
-                        g.push_then(col as usize, Ball::Common);
-                    }
-                    Action::Stop => g.end_turn(),
-                }
-                let v = self.evaluate(&g);
-                (k, k * if game.turn == Side::Left { v } else { -v })
-            } else {
-                (0.0, 0.0)
-            };
-            self.edges.push(Edge { action, n, w, child: [NONE; 5] });
+            self.edges.push(Edge { action, n: 0.0, w: 0.0, child: [NONE; 5], prior_value: f32::NAN });
         }
         let len = self.edges.len() as u32 - first;
-        self.nodes.push(Node { game, first, len, n: 0 });
+        self.nodes.push(Node { game, first, len, n: 0, primed: self.params.prior <= 0.0 });
         self.nodes.len() as u32 - 1
+    }
+
+    /// Gives each action of `node` its prior: virtual visits valued by the
+    /// evaluation of its result, assuming a common ball follows.
+    fn prime(&mut self, node: u32) {
+        let n = self.nodes[node as usize];
+        let k = self.params.prior;
+        for e in n.first..n.first + n.len {
+            let mut g = n.game;
+            match self.edges[e as usize].action {
+                Action::Push(col) => {
+                    g.push_then(col as usize, Ball::Common);
+                }
+                Action::Stop => g.end_turn(),
+            }
+            let v = self.evaluate(&g);
+            let edge = &mut self.edges[e as usize];
+            edge.n = k;
+            edge.w = k * if n.game.turn == Side::Left { v } else { -v };
+            edge.prior_value = v;
+        }
+        self.nodes[node as usize].primed = true;
     }
 
     fn iterate(&mut self, root: u32) {
@@ -209,11 +222,14 @@ impl Mcts {
         let mut node = root;
         let value;
         loop {
-            let n = self.nodes[node as usize];
-            if n.game.is_over() {
-                value = terminal_value(&n.game);
+            if self.nodes[node as usize].game.is_over() {
+                value = terminal_value(&self.nodes[node as usize].game);
                 break;
             }
+            if !self.nodes[node as usize].primed {
+                self.prime(node);
+            }
+            let n = self.nodes[node as usize];
             let e = self.select(&n);
             self.nodes[node as usize].n += 1;
             self.path.push((e, n.game.turn));
@@ -236,7 +252,9 @@ impl Mcts {
                 }
                 let c = self.add_node(g);
                 self.edges[e as usize].child[slot] = c;
-                value = self.evaluate(&g);
+                // The prior evaluated exactly this position after a Stop, or after a push followed by a common ball.
+                let known = edge.prior_value;
+                value = if !known.is_nan() && (edge.action == Action::Stop || ball == Ball::Common) { known } else { self.evaluate(&g) };
                 break;
             }
             node = child;

@@ -3,7 +3,8 @@
 #
 #   packages/engine/scripts/train.sh FIRST LAST [DIR]
 #
-# Generation g plays GAMES self-play games with network g−1 (DIR/net<g−1>.bin;
+# Generation g plays GAMES (default 20 000) self-play games searching ITERS
+# (default 1600) iterations per decision with network g−1 (DIR/net<g−1>.bin;
 # for g = 1 the built-in network, or the static evaluation with BOOTSTRAP=1),
 # trains DIR/net<g>.bin on the positions of generations g−2…g, then plays it
 # against network g−1. Copy the best network to src/ai/value/weights.bin.
@@ -12,6 +13,7 @@ cd "$(dirname "$0")/../../.."
 cargo build --release -q --bin selfplay --bin train --bin arena
 first=$1 last=$2 dir=${3:-target/nn}
 games=${GAMES:-20000}
+iters=${ITERS:-1600}
 bin=target/release
 search="mcts:c=0.3,prior=10"
 mkdir -p "$dir"
@@ -22,7 +24,7 @@ net_of() {
 }
 for g in $(seq "$first" "$last"); do
   p=$((g - 1))
-  "$bin/selfplay" --a "$search,iters=800$(net_of $p)" --games "$games" --out "$dir/gen$g.bin" --seed $((g * 100))
+  "$bin/selfplay" --a "$search,iters=$iters$(net_of $p)" --games "$games" --out "$dir/gen$g.bin" --seed $((g * 100))
   data="$dir/gen$g.bin"
   for k in 1 2; do
     if [ -f "$dir/gen$((g - k)).bin" ]; then data="$data,$dir/gen$((g - k)).bin"; fi
