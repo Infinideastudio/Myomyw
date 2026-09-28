@@ -1,11 +1,10 @@
 //! Fast Myomyw engine: rules, AI players and tournaments.
 //!
-//! This crate is the performance-oriented counterpart of `@myomyw/core`. It
-//! implements the same rules (checked against the TypeScript engine by
-//! `packages/engine/test/`) with a bitboard representation, and the same AI
-//! players, making the same decisions for the same seeds. It builds natively
-//! (tournaments, benchmarks, future training) and to WebAssembly for the
-//! browser (see `ffi` and `js/index.ts`).
+//! The single implementation of the game: rules (with a bitboard
+//! representation; checked against the original game's code by
+//! `packages/engine/test/`) and AI players. It builds natively (tournaments,
+//! benchmarks, training) and to WebAssembly, used by the web client and the
+//! server (see `ffi` and `js/index.ts`).
 //!
 //! The main types map onto the Markov game of docs/rules.md §9:
 //! [`Game`] is a state, [`Action`] an action, and [`Game::apply`] with an

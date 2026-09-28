@@ -1,9 +1,9 @@
-//! Seedable random numbers, bit-identical to `seededRng` / `randomBall` in `@myomyw/core`.
+//! Seedable random numbers.
 
 use crate::ball::Ball;
 
-/// The mulberry32 generator. The same seed produces the same sequence as the
-/// TypeScript implementation, which lets tests compare both engines move for move.
+/// The mulberry32 generator: small, fast, and easy to reproduce in other
+/// languages (the reference values in the tests come from a JavaScript version).
 #[derive(Clone, Debug)]
 pub struct Rng {
     state: u32,
@@ -38,7 +38,7 @@ impl Rng {
     /// A ball from the official distribution: 1/11 for each special kind, 7/11 common.
     #[inline]
     pub fn ball(&mut self) -> Ball {
-        // Equals floor(next_f64() * 11) exactly, as in the TypeScript version.
+        // Equals floor(next_f64() * 11) exactly.
         match self.below(11) {
             0 => Ball::Key,
             1 => Ball::AddCol,
@@ -54,7 +54,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn matches_the_typescript_generator() {
+    fn matches_the_reference_mulberry32() {
         let mut rng = Rng::new(1);
         let values: Vec<u32> = (0..5).map(|_| rng.next_u32()).collect();
         assert_eq!(values, [2693262067, 11749833, 2265367787, 4213581821, 4159151403]);

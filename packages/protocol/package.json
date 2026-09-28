@@ -1,0 +1,13 @@
+{
+  "name": "@myomyw/protocol",
+  "private": true,
+  "version": "0.9.0",
+  "description": "Myomyw client/server message types",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@myomyw/engine": "*"
+  }
+}

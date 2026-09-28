@@ -1,5 +1,4 @@
-//! Native AI-vs-AI tournament, the fast counterpart of `npm run arena`
-//! (same agent specs and seeding, hence the same results).
+//! AI-vs-AI tournament on all cores (`npm run arena`).
 //!
 //!   cargo run --release --bin arena -- --a hard --b normal --games 1000 --seed 1
 

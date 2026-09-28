@@ -1,7 +1,8 @@
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
-import { Ball, PROTOCOL_VERSION, Side, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/core";
+import { Ball, Side } from "@myomyw/engine";
+import { PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
 import { createGameServer } from "../src/server.ts";
 
 const server = createGameServer("");

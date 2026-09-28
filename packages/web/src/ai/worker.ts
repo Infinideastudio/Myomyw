@@ -1,44 +1,30 @@
 /// <reference lib="webworker" />
 /**
- * Runs computer players off the main thread, using the WebAssembly engine
- * (falling back to the TypeScript agents if WebAssembly is unavailable).
+ * Runs computer players off the main thread, in the WebAssembly engine.
  * Requests are handled strictly in order.
  */
-import { Board, agentFromSpec, seededRng, type Agent } from "@myomyw/core";
-import { Engine } from "@myomyw/engine";
+import { Engine, type WasmAgent } from "@myomyw/engine";
 import wasmUrl from "@myomyw/engine/wasm?url";
 import type { WorkerRequest, WorkerResponse } from "./protocol.ts";
 
 declare const self: DedicatedWorkerGlobalScope;
 
-const engine = Engine.load(fetch(wasmUrl)).then(
-  (loaded) => {
-    console.info("Myomyw AI: using the WebAssembly engine");
-    return loaded;
-  },
-  (error: unknown) => {
-    console.warn("Myomyw AI: WebAssembly engine unavailable, using the TypeScript agents", error);
-    return null;
-  },
-);
-
-const agents = new Map<number, Agent & { free?: () => void }>();
+const engine = Engine.load(fetch(wasmUrl));
+const agents = new Map<number, WasmAgent>();
 let queue: Promise<void> = Promise.resolve();
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const request = event.data;
-  queue = queue.then(() => handle(request));
+  queue = queue.then(() => handle(request)).catch((error: unknown) => console.error("AI worker:", error));
 };
 
 async function handle(request: WorkerRequest): Promise<void> {
   switch (request.op) {
-    case "create": {
-      const wasm = await engine;
-      agents.set(request.agent, wasm ? wasm.createAgent(request.spec, request.seed) : agentFromSpec(request.spec, seededRng(request.seed)));
+    case "create":
+      agents.set(request.agent, (await engine).createAgent(request.spec, request.seed));
       break;
-    }
     case "begin":
-      agents.get(request.agent)?.beginTurn(new Board(request.board.cells, request.board.lCol, request.board.rCol));
+      agents.get(request.agent)?.beginTurn(request.board);
       break;
     case "first":
     case "again": {
@@ -55,7 +41,7 @@ async function handle(request: WorkerRequest): Promise<void> {
       break;
     }
     case "free":
-      agents.get(request.agent)?.free?.();
+      agents.get(request.agent)?.free();
       agents.delete(request.agent);
       break;
   }

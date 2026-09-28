@@ -6,15 +6,18 @@ use crate::ball::{Ball, MAX_COLS, MAX_PUSHES, Side};
 use crate::board::{Board, mix64};
 use crate::rng::Rng;
 
-/// Why a game ended.
+/// Why a game ended. The numeric values are used by the WebAssembly interface.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(u8)]
 pub enum EndReason {
     /// The loser pushed the Key ball off the board.
-    Key,
+    Key = 0,
     /// The loser did not push in time.
-    Timeout,
-    /// The loser gave up (or left an online game).
-    Resign,
+    Timeout = 1,
+    /// The loser gave up.
+    Resign = 2,
+    /// The loser left an online game.
+    Disconnect = 3,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -164,9 +167,14 @@ impl Game {
         self.finish(GameResult { winner: self.turn.opponent(), reason: EndReason::Timeout })
     }
 
-    /// `loser` gave up.
-    pub fn resign(&mut self, loser: Side) -> GameResult {
-        self.finish(GameResult { winner: loser.opponent(), reason: EndReason::Resign })
+    /// `loser` gave up (`EndReason::Resign`) or left (`EndReason::Disconnect`).
+    pub fn forfeit(&mut self, loser: Side, reason: EndReason) -> GameResult {
+        self.finish(GameResult { winner: loser.opponent(), reason })
+    }
+
+    /// Replaces a ball in place (used by the tutorial to stage positions).
+    pub fn set_ball(&mut self, l: usize, r: usize, ball: Ball) {
+        self.board.set(l, r, ball);
     }
 
     /// The board from the mover's point of view (see [`Board::view_for`]).
@@ -268,5 +276,80 @@ mod tests {
         game.apply(Action::Push(1), &mut Rng::new(1));
         game.apply(Action::Stop, &mut Rng::new(1));
         assert_eq!(game.turn, Side::Right);
+    }
+
+    #[test]
+    fn a_game_starts_with_six_by_six_common_balls_and_left_to_move() {
+        let game = Game::new(&mut Rng::new(1));
+        assert_eq!(game.turn, Side::Left);
+        assert_eq!((game.board.l_col(), game.board.r_col()), (6, 6));
+        assert_eq!(game.board.count(Ball::Common), 36);
+    }
+
+    #[test]
+    fn the_next_ball_enters_at_the_ejector_and_the_last_ball_falls_off() {
+        let mut board = Board::initial();
+        board.set(2, 5, Ball::DelCol);
+        board.set(5, 1, Ball::AddCol);
+        let mut game = Game::from_position(board, Side::Left, Ball::Flip);
+        let left = game.push_then(2, Ball::Key);
+        assert_eq!((left.inserted, left.ejected), (Ball::Flip, Ball::DelCol));
+        assert_eq!(game.board.get(2, 0), Ball::Flip);
+        game.end_turn();
+        let right = game.push_then(1, Ball::Common);
+        assert_eq!((right.inserted, right.ejected), (Ball::Key, Ball::AddCol));
+        assert_eq!(game.board.get(0, 1), Ball::Key);
+    }
+
+    #[test]
+    fn lines_are_added_up_to_ten_and_removed_down_to_three() {
+        let mut board = Board::initial();
+        board.set(1, 5, Ball::AddCol);
+        let mut game = scripted(board);
+        game.push_then(1, Ball::Common);
+        assert_eq!((game.board.l_col(), game.board.r_col()), (6, 7));
+
+        let mut full = Board::filled_common(6, 10);
+        full.set(0, 9, Ball::AddCol);
+        let mut game = scripted(full);
+        game.push_then(0, Ball::Common);
+        assert_eq!(game.board.r_col(), 10);
+
+        let mut board = Board::initial();
+        board.set(5, 4, Ball::DelCol);
+        let mut game = Game::from_position(board, Side::Right, Ball::Common);
+        game.push_then(4, Ball::Common);
+        assert_eq!((game.board.l_col(), game.board.r_col()), (5, 6));
+
+        let mut small = Board::filled_common(3, 6);
+        small.set(2, 0, Ball::DelCol);
+        let mut game = Game::from_position(small, Side::Right, Ball::Common);
+        game.push_then(0, Ball::Common);
+        assert_eq!(game.board.l_col(), 3);
+    }
+
+    #[test]
+    fn timeouts_and_forfeits_decide_the_game() {
+        let mut game = scripted(Board::initial());
+        assert_eq!(game.timeout(), GameResult { winner: Side::Right, reason: EndReason::Timeout });
+        // The first result stands.
+        assert_eq!(game.forfeit(Side::Right, EndReason::Resign).reason, EndReason::Timeout);
+        let mut game = scripted(Board::initial());
+        assert_eq!(game.forfeit(Side::Right, EndReason::Disconnect), GameResult { winner: Side::Left, reason: EndReason::Disconnect });
+    }
+
+    #[test]
+    fn balls_are_drawn_with_the_official_probabilities() {
+        let mut rng = Rng::new(7);
+        let mut counts = [0u32; 5];
+        let n = 110_000;
+        for _ in 0..n {
+            counts[rng.ball() as usize] += 1;
+        }
+        let p = |count: u32| f64::from(count) / f64::from(n);
+        assert!((p(counts[0]) - 7.0 / 11.0).abs() < 0.005);
+        for &count in &counts[1..] {
+            assert!((p(count) - 1.0 / 11.0).abs() < 0.005);
+        }
     }
 }

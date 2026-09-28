@@ -1,16 +1,6 @@
-import {
-  Ball,
-  Board,
-  MAX_CHAT_LENGTH,
-  PROTOCOL_VERSION,
-  RULES,
-  Side,
-  decode,
-  encode,
-  opponent,
-  type ClientMessage,
-  type ServerMessage,
-} from "@myomyw/core";
+import { Ball, RULES, Side, opponent, type WasmBoard } from "@myomyw/engine";
+import { MAX_CHAT_LENGTH, PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
+import { engine } from "../engine.ts";
 import { MatchBase } from "./MatchBase.ts";
 import { NORMAL_TIMING } from "./timing.ts";
 import type { ChatLine, OnlineError, OnlineInfo } from "./types.ts";
@@ -22,6 +12,9 @@ const CATCH_UP_MS = 60;
  * A match against a remote player. The server is authoritative; this class
  * sends the local player's intents, and replays the server's events in order,
  * one animation at a time, on the display board.
+ *
+ * A copy of the board is kept in the engine and every push is replayed on it,
+ * which gives the resulting position for the display.
  *
  * The local player's hold-to-repeat works like offline: after our own push has
  * been shown (and a cool-down), we push again if the ejector is still held,
@@ -38,6 +31,8 @@ export class OnlineMatch extends MatchBase {
   private busy = false;
   /** Set as soon as the result arrives (it is shown later, after queued animations). */
   private finished = false;
+  /** The server's board, replayed push by push. */
+  private mirror: WasmBoard | null = null;
 
   constructor(url: string, name: string) {
     super({ names: [name, "…"], controllable: [false, false], timing: NORMAL_TIMING });
@@ -61,6 +56,7 @@ export class OnlineMatch extends MatchBase {
     super.dispose();
     this.ws.onclose = null;
     this.ws.close();
+    this.mirror?.free();
   }
 
   press(col: number): void {
@@ -138,7 +134,8 @@ export class OnlineMatch extends MatchBase {
         const controllable: [boolean, boolean] = [false, false];
         controllable[message.side] = true;
         this.update({ names, controllable, next: message.next });
-        this.resetBoard(new Board(message.board.cells, message.board.lCol, message.board.rCol));
+        this.mirror = engine().createBoard(message.board);
+        this.resetBoard(message.board);
         this.setInfo({ status: "playing", side: message.side, room: message.room });
         break;
       }
@@ -171,14 +168,14 @@ export class OnlineMatch extends MatchBase {
   }
 
   private showPush(message: Extract<ServerMessage, { t: "pushed" }>): number {
-    const ejected = this.showShift(message.side, message.col, message.inserted, message.next, this.state.pushes + 1);
-    if (ejected !== message.ejected) console.warn("Display board out of sync with the server");
+    this.showShift(message.side, message.col, message.inserted, message.next, this.state.pushes + 1);
+    if (this.mirror!.push(message.side, message.col, message.inserted) !== message.ejected) console.warn("Board out of sync with the server");
     const mine = message.side === this.mySide;
     if (mine) this.awaitingEcho = false;
     this.update({ phase: "moving" });
     // The effect is shown once the push animation is over.
     this.queue.unshift(() => {
-      this.showEffect(message.side, message.ejected);
+      this.showEffect(message.ejected, this.mirror!.read());
       const turnGoesOn = message.ejected !== Ball.Key && message.ejected !== Ball.Flip && this.state.pushes < RULES.maxPushesPerTurn;
       if (mine && turnGoesOn) this.continueOwnTurn(message.col);
       return 0;

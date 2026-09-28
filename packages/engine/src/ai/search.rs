@@ -9,7 +9,6 @@ pub const INF: i32 = 1 << 30;
 /// Negamax search with alpha-beta pruning for one fixed sequence of upcoming
 /// balls (`pool`). A move is a whole turn: choose a line, push it 1–5 times.
 /// Every push, by either side, consumes the next ball of the pool.
-/// Port of `PoolSearch` in `@myomyw/core`.
 #[derive(Clone, Debug, Default)]
 pub struct PoolSearch {
     /// Upcoming balls: `pool[0]` is inserted by the next push, and so on.
@@ -78,6 +77,17 @@ mod tests {
             }
         }
         best
+    }
+
+    #[test]
+    fn right_considers_all_of_its_own_lines() {
+        // Right has 6 lines, Left 3. Right's lines 0–2 would push a Key off; lines 3–5 are safe.
+        let mut board = Board::filled_common(3, 6);
+        for r in 0..3 {
+            board.set(2, r, Ball::Key);
+        }
+        let search = PoolSearch { pool: vec![Ball::Common; 5] };
+        assert!(search.search(&board, 1, -INF, INF, Side::Right, 0) > LOSS);
     }
 
     #[test]

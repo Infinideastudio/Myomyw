@@ -1,4 +1,4 @@
-import { Side } from "@myomyw/core";
+import { Side } from "@myomyw/engine";
 import { motion, type Transition } from "motion/react";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { format, useMessages } from "../i18n/index.tsx";

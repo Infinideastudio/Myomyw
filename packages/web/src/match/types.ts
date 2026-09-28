@@ -1,4 +1,4 @@
-import type { Ball, GameResult, Side } from "@myomyw/core";
+import type { Ball, GameResult, Side } from "@myomyw/engine";
 import type { BallSprite, Cell, Ghost } from "./display.ts";
 
 export type Phase =

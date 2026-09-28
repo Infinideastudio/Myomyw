@@ -1,4 +1,4 @@
-import { MAX_NAME_LENGTH, PROTOCOL_VERSION, type ClientMessage } from "@myomyw/core";
+import { MAX_NAME_LENGTH, PROTOCOL_VERSION, type ClientMessage } from "@myomyw/protocol";
 import type { Client } from "./client.ts";
 import { config } from "./config.ts";
 import { Room } from "./room.ts";

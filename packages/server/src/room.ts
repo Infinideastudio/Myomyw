@@ -1,18 +1,11 @@
-import {
-  Game,
-  MAX_CHAT_LENGTH,
-  PUSH_INTERVAL_LIMIT_MS,
-  RULES,
-  Side,
-  opponent,
-  type ClientMessage,
-  type GameResult,
-  type ServerMessage,
-} from "@myomyw/core";
+import { RULES, Side, opponent, type GameResult } from "@myomyw/engine";
+import { MAX_CHAT_LENGTH, PUSH_INTERVAL_LIMIT_MS, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
 import type { Client } from "./client.ts";
+import { engine } from "./engine.ts";
 
 /**
- * One online game. The server is authoritative: it owns the {@link Game},
+ * One online game. The server is authoritative: it owns the game (a
+ * `WasmGame` of the engine),
  * draws the balls, enforces the timers and broadcasts every change. Clients
  * only send intents (push / end turn / resign / chat).
  *
@@ -25,7 +18,7 @@ import type { Client } from "./client.ts";
  */
 export class Room {
   readonly id: number;
-  private readonly game = new Game();
+  private readonly game = engine.newGame();
   private readonly players: readonly [Client, Client];
   private timer: ReturnType<typeof setTimeout> | null = null;
   private closed = false;
@@ -38,7 +31,10 @@ export class Room {
     for (const side of [Side.Left, Side.Right]) {
       const client = this.players[side];
       client.onMessage((message) => this.handle(side, message));
-      client.onClose(() => this.finish(this.game.forfeit(side, "disconnect")));
+      client.onClose(() => {
+        // Sockets are closed by `finish` too; only a disconnect during the game counts.
+        if (!this.closed) this.finish(this.game.forfeit(side, "disconnect"));
+      });
       client.send({
         t: "matched",
         room: id,
@@ -107,6 +103,7 @@ export class Room {
     this.broadcast({ t: "over", winner: result.winner, reason: result.reason });
     for (const client of this.players) client.close();
     console.log(`room ${this.id}: ${this.players[result.winner]} beat ${this.players[opponent(result.winner)]} (${result.reason})`);
+    this.game.free();
     this.onClose();
   }
 

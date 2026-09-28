@@ -1,0 +1,81 @@
+# Checks, builds and deploys the web client to GitHub Pages (static page only;
+# no game server). Online play in this build needs a server: set the
+# repository variable MYOMYW_SERVER_URL (e.g. wss://example.com) to make one
+# the default, otherwise players can enter one in Settings.
+#
+# One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: Build and deploy
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint Rust
+        run: |
+          cargo fmt --check
+          cargo clippy --release --all-targets -- -D warnings
+
+      - name: Type-check TypeScript
+        run: npm run typecheck
+
+      - name: Test (builds the WebAssembly engine first)
+        run: npm test
+
+      - name: Build the web client
+        run: npm run build
+        env:
+          VITE_STANDALONE: "true"
+          VITE_SERVER_URL: ${{ vars.MYOMYW_SERVER_URL }}
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/web/dist
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

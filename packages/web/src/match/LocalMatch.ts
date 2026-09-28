@@ -1,5 +1,6 @@
-import { Game, RULES, type Ball, type GameResult, type PushOutcome, type Side } from "@myomyw/core";
+import { RULES, type Ball, type GameResult, type PushOutcome, type Side, type WasmGame } from "@myomyw/engine";
 import type { AsyncAgent } from "../ai/agents.ts";
+import { engine } from "../engine.ts";
 import { MatchBase } from "./MatchBase.ts";
 import { NORMAL_TIMING, type Timing } from "./timing.ts";
 
@@ -16,6 +17,9 @@ export interface LocalMatchOptions {
   /** Enforce the 20-second limit for the first push of each turn. */
   timer: boolean;
   timing?: Timing;
+  /** Seed of the ball generator (random if omitted). */
+  seed?: number;
+  /** Supplies the balls instead of the generator (tutorial). */
   ballSource?: () => Ball;
   /** Start immediately (default true). Otherwise call {@link start}. */
   autoStart?: boolean;
@@ -23,7 +27,8 @@ export interface LocalMatchOptions {
 
 /**
  * A match played entirely on this device: two humans, human vs computer,
- * computer vs computer, or the tutorial. Owns the authoritative {@link Game}
+ * computer vs computer, or the tutorial. Owns the authoritative game (a
+ * `WasmGame` of the engine)
  * and paces it like the original game:
  *
  *   press → push (animated) → [hold? cool down → push again] → release → next turn
@@ -33,7 +38,7 @@ export interface LocalMatchOptions {
  * Web Worker); answers that arrive after the situation changed are ignored.
  */
 export class LocalMatch extends MatchBase {
-  protected readonly game: Game;
+  protected readonly game: WasmGame;
   private readonly seats: readonly [Seat, Seat];
   private readonly timerEnabled: boolean;
   private holding = false;
@@ -46,7 +51,7 @@ export class LocalMatch extends MatchBase {
     super({ names: options.names, controllable: [human(options.seats[0]), human(options.seats[1])], timing });
     this.seats = options.seats;
     this.timerEnabled = options.timer;
-    this.game = new Game({ ballSource: options.ballSource });
+    this.game = engine().newGame({ seed: options.seed, ballSource: options.ballSource });
     this.update({ next: this.game.next });
     if (options.autoStart ?? true) this.start();
   }
@@ -54,6 +59,7 @@ export class LocalMatch extends MatchBase {
   override dispose(): void {
     super.dispose();
     for (const seat of this.seats) if (seat.kind === "ai") seat.agent.dispose();
+    this.game.free();
   }
 
   start(): void {
@@ -94,7 +100,7 @@ export class LocalMatch extends MatchBase {
     const seat = this.seats[side];
     if (seat.kind === "ai") {
       this.cancelPhase = this.later(() => {
-        seat.agent.beginTurn(this.game.board.viewFor(side));
+        seat.agent.beginTurn(this.game.view());
         seat.agent.firstPush(this.game.next).then((col) => {
           if (this.stillDeciding(side, 0)) this.push(col);
         }, agentFailed);
@@ -113,7 +119,7 @@ export class LocalMatch extends MatchBase {
   }
 
   private afterPush(outcome: PushOutcome): void {
-    this.showEffect(outcome.side, outcome.ejected);
+    this.showEffect(outcome.ejected, this.game.board);
     if (outcome.result) return this.finish(outcome.result);
     if (outcome.turnEnded) return this.startTurn();
 

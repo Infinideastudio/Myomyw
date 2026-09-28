@@ -1,4 +1,4 @@
-import { Ball } from "@myomyw/core";
+import { Ball } from "@myomyw/engine";
 import { BallIcon } from "../components/BallGlyph.tsx";
 import { Page } from "../components/ui.tsx";
 import { useMessages } from "../i18n/index.tsx";

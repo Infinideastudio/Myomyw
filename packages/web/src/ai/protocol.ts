@@ -1,4 +1,4 @@
-import type { Ball, BoardSnapshot } from "@myomyw/core";
+import type { Ball, BoardSnapshot } from "@myomyw/engine";
 
 /** Messages from the page to the AI worker. Agents are identified by page-assigned ids. */
 export type WorkerRequest =

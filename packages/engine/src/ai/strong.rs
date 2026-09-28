@@ -6,8 +6,8 @@ use super::Agent;
 use super::search::{INF, LOSS, PoolSearch};
 
 /// "Normal" (`max_depth = 1`) and "Hard" (`max_depth = 2`): alpha-beta search
-/// averaged over `fillout` random sequences of upcoming balls. Port of
-/// `StrongAI` in `@myomyw/core`; with the same seed it makes the same moves.
+/// averaged over `fillout` random sequences of upcoming balls. With the same
+/// seed it makes the same moves.
 pub struct StrongAi {
     max_depth: u32,
     fillout: u32,
@@ -106,4 +106,39 @@ fn argmax(values: &[i32]) -> usize {
         }
     }
     best
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::arena::play_match;
+
+    #[test]
+    fn stops_instead_of_pushing_a_key_off_the_board() {
+        // Every line has a Key second from the exit: one push is safe, two lose.
+        for depth in [1, 2] {
+            let mut board = Board::initial();
+            for l in 0..6 {
+                board.set(l, 4, Ball::Key);
+            }
+            let mut ai = StrongAi::new(depth, 10, depth);
+            ai.begin_turn(&board);
+            ai.first_push(Ball::Common);
+            assert!(!ai.push_again(Ball::Common), "depth {depth}");
+        }
+    }
+
+    #[test]
+    fn plays_complete_reproducible_games() {
+        let play = |seed: u32| {
+            let mut a = StrongAi::new(2, 10, seed);
+            let mut b = StrongAi::new(1, 10, seed + 100);
+            play_match(&mut a, &mut b, &mut Rng::new(seed + 200), 10_000)
+        };
+        for seed in 1..=10 {
+            let result = play(seed);
+            assert!(result.winner.is_some());
+            assert_eq!(result, play(seed));
+        }
+    }
 }

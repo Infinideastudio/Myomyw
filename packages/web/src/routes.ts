@@ -1,4 +1,4 @@
-import type { Difficulty } from "@myomyw/core";
+import type { Difficulty } from "@myomyw/engine";
 
 /** Every screen of the app. Navigation is plain state; there are no URLs to deep-link. */
 export type Route =

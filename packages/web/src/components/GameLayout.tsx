@@ -1,4 +1,4 @@
-import { RULES, Side, opponent } from "@myomyw/core";
+import { RULES, Side, opponent } from "@myomyw/engine";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { format, useMessages } from "../i18n/index.tsx";
 import type { MatchController, MatchSnapshot } from "../match/types.ts";

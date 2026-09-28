@@ -69,7 +69,7 @@ impl Board {
     }
 
     /// Builds a board from a row-major `10 × 10` cell array (`cells[l * 10 + r]`,
-    /// the layout used by `@myomyw/core`). Cells outside `l_col × r_col` are ignored.
+    /// the layout of `BoardSnapshot` in TypeScript). Cells outside `l_col × r_col` are ignored.
     /// Returns `None` for an invalid size or ball value.
     pub fn from_cells(l_col: usize, r_col: usize, cells: &[u8]) -> Option<Board> {
         if !(MIN_COLS..=MAX_COLS).contains(&l_col) || !(MIN_COLS..=MAX_COLS).contains(&r_col) || cells.len() < MAX_COLS * MAX_COLS {
@@ -317,8 +317,8 @@ mod tests {
     use super::*;
     use crate::rng::Rng;
 
-    /// A straightforward array implementation of the rules (same as `Board` in
-    /// `@myomyw/core`), used as the reference model.
+    /// A straightforward array implementation of the rules (like the original
+    /// game's `GameNode.js`), used as the reference model.
     #[derive(Clone)]
     struct Naive {
         cells: [[Ball; MAX_COLS]; MAX_COLS],

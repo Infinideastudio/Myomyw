@@ -1,24 +1,24 @@
-import type { Agent, Ball, Board } from "@myomyw/core";
+import { randomSeed, type Ball, type BoardSnapshot, type WasmAgent } from "@myomyw/engine";
 import type { WorkerRequest, WorkerResponse } from "./protocol.ts";
 
 /**
  * A computer player whose decisions may take time (e.g. computed in a Web
- * Worker). Same protocol as `Agent` in `@myomyw/core`, with asynchronous answers.
+ * Worker). Same protocol as `WasmAgent` (docs/ai.md), with asynchronous answers.
  */
 export interface AsyncAgent {
-  beginTurn(view: Board): void;
+  beginTurn(view: BoardSnapshot): void;
   firstPush(next: Ball): Promise<number>;
   pushAgain(next: Ball): Promise<boolean>;
   dispose(): void;
 }
 
-/** Wraps a synchronous agent (runs on the calling thread). */
-export function syncAgent(agent: Agent): AsyncAgent {
+/** Wraps an agent running on the calling thread (tests, tools). Disposing frees it. */
+export function syncAgent(agent: WasmAgent): AsyncAgent {
   return {
     beginTurn: (view) => agent.beginTurn(view),
     firstPush: async (next) => agent.firstPush(next),
     pushAgain: async (next) => agent.pushAgain(next),
-    dispose: () => {},
+    dispose: () => agent.free(),
   };
 }
 
@@ -44,10 +44,10 @@ function aiWorker(): Worker {
 }
 
 /**
- * A computer player running in the shared AI worker (WebAssembly engine).
- * `spec` is an agent spec such as "hard" (see `agentFromSpec`).
+ * A computer player running in the shared AI worker. `spec` is an agent
+ * spec such as "hard" (see `Engine.createAgent`).
  */
-export function workerAgent(spec: string, seed: number = (Math.random() * 2 ** 32) >>> 0): AsyncAgent {
+export function workerAgent(spec: string, seed: number = randomSeed()): AsyncAgent {
   const agent = nextId++;
   const send = (request: WorkerRequest) => aiWorker().postMessage(request);
   const ask = (op: "first" | "again", next: Ball) =>

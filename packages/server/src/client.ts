@@ -1,5 +1,5 @@
 import type { WebSocket } from "ws";
-import { decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/core";
+import { decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
 
 let nextId = 1;
 

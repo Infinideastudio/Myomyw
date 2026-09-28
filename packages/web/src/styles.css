@@ -702,3 +702,24 @@ select {
     animation: none;
   }
 }
+
+/* ---------- Startup failure ---------- */
+.fatal {
+  max-width: 32rem;
+  margin: 20vh auto 0;
+  padding: 0 1rem;
+  text-align: center;
+}
+.fatal p {
+  color: var(--text-muted);
+}
+
+.link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}

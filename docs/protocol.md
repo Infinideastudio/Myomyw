@@ -3,7 +3,7 @@
 Clients connect to the game server over a WebSocket (by default the same host
 and port that serves the web client). Every frame is a JSON object with a type
 field `t`. Types are defined in
-[`packages/core/src/protocol.ts`](../packages/core/src/protocol.ts).
+[`packages/protocol/index.ts`](../packages/protocol/index.ts).
 
 The server is **authoritative**: it owns the game, draws the balls and runs
 the timers. Clients send intents and render the events they receive; their
@@ -11,7 +11,7 @@ own pushes are only shown once echoed back by the server.
 
 Ball ids: `0` Common, `1` Key, `2` Add line, `3` Remove line, `4` Flip.
 Sides: `0` Green (Left, moves first), `1` Blue (Right).
-Boards use the same `cells[l][r]` layout as `Board` (see [rules.md](rules.md#appendix-correspondence-with-the-code)).
+Boards are `BoardSnapshot`s: `{ cells, lCol, rCol }` with `cells[l][r]` (see [rules.md](rules.md#appendix-correspondence-with-the-code)).
 
 ## Session
 
@@ -46,7 +46,7 @@ One connection plays one game; to play again, reconnect.
 | `rejected` | `reason: "version" \| "full" \| "badName" \| "badMessage"` | Connection refused. |
 | `matched` | `room`, `side` (yours), `opponent` (name), `board: {cells, lCol, rCol}`, `next`, `turn` | Game starts. |
 | `turn` | `side`, `timeLimitMs` | A turn starts; `side` must make its first push within `timeLimitMs`. |
-| `pushed` | `side`, `col`, `inserted`, `ejected`, `next` | A push happened (sent to both players, including the pusher). Apply it with `board.push(side, col, inserted)`; `ejected` is what fell off. |
+| `pushed` | `side`, `col`, `inserted`, `ejected`, `next` | A push happened (sent to both players, including the pusher). Replaying it on a copy of the board (`WasmBoard.push(side, col, inserted)`) gives the new position; `ejected` is what fell off. |
 | `over` | `winner`, `reason: "key" \| "timeout" \| "resign" \| "disconnect"` | Game over. |
 | `chat` | `text` | Message from the opponent. |
 

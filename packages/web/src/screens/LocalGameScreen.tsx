@@ -1,4 +1,4 @@
-import { Side } from "@myomyw/core";
+import { Side } from "@myomyw/engine";
 import { useState } from "react";
 import { workerAgent } from "../ai/agents.ts";
 import { GameLayout } from "../components/GameLayout.tsx";

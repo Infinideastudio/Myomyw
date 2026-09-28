@@ -6,7 +6,19 @@
  * created here own memory inside the module: call `free()` when done (a
  * FinalizationRegistry frees forgotten objects eventually).
  */
-import { Board, RULES, type Agent, type Ball, type Side } from "@myomyw/core";
+import {
+  END_REASONS,
+  IllegalMoveError,
+  RULES,
+  type Ball,
+  type BoardSnapshot,
+  type EndReason,
+  type GameResult,
+  type PushOutcome,
+  type Side,
+} from "./types.ts";
+
+export * from "./types.ts";
 
 interface Exports {
   memory: WebAssembly.Memory;
@@ -16,6 +28,17 @@ interface Exports {
   board_free(board: number): void;
   board_push(board: number, side: number, col: number, ball: number): number;
   board_evaluate(board: number): number;
+  game_new(seed: number, first: number): number;
+  game_free(game: number): void;
+  game_to_io(game: number): void;
+  game_view_to_io(game: number): void;
+  game_can_push(game: number, col: number): number;
+  game_can_end_turn(game: number): number;
+  game_push(game: number, col: number, following: number): number;
+  game_end_turn(game: number): number;
+  game_timeout(game: number): void;
+  game_forfeit(game: number, loser: number, reason: number): number;
+  game_set_ball(game: number, l: number, r: number, ball: number): number;
   agent_new(kind: number, depth: number, fillout: number, seed: number): number;
   agent_free(agent: number): void;
   agent_begin_turn(agent: number): number;
@@ -23,11 +46,15 @@ interface Exports {
   agent_push_again(agent: number, next: number): number;
 }
 
-/** `u32::MAX` error result. Results are read with `>>> 0` because WebAssembly i32 values arrive signed. */
+/** `u32::MAX` error result. WebAssembly i32 results arrive signed, so they are read with `>>> 0`. */
 const INVALID = 0xffffffff;
-const CELLS = RULES.maxCols * RULES.maxCols;
+/** "Use the engine's own random ball" (any value that is not a ball id). */
+const DRAW = 0xff;
+const N = RULES.maxCols;
+const BOARD_LEN = 2 + N * N;
+const NONE = 255;
 
-/** `easy` | `normal` | `hard` | `strong:<maxDepth>,<fillout>` — the same specs as `agentFromSpec`. */
+/** An agent spec: `easy` | `normal` | `hard` | `strong:<maxDepth>,<fillout>`. */
 export type AgentSpec = string;
 
 function parseSpec(spec: AgentSpec): { kind: number; depth: number; fillout: number } {
@@ -44,7 +71,19 @@ function parseSpec(spec: AgentSpec): { kind: number; depth: number; fillout: num
   throw new Error(`Unknown agent "${spec}"`);
 }
 
+/** A random 32-bit seed. */
+export function randomSeed(): number {
+  return (Math.random() * 2 ** 32) >>> 0;
+}
+
 export type WasmSource = BufferSource | Response | PromiseLike<Response>;
+
+export interface GameOptions {
+  /** Seed of the generator that draws the balls (random if omitted). */
+  seed?: number;
+  /** Supplies the balls instead of the engine's generator (e.g. a scripted tutorial). */
+  ballSource?: () => Ball;
+}
 
 /** A loaded instance of the engine. */
 export class Engine {
@@ -75,8 +114,22 @@ export class Engine {
     return new Engine(instance.exports as unknown as Exports);
   }
 
-  /** Creates an AI player; with the same `seed` it plays exactly like the TypeScript agent seeded with `seededRng(seed)`. */
-  createAgent(spec: AgentSpec, seed: number): WasmAgent {
+  /** Instantiates the module synchronously (Node, workers). */
+  static fromBytes(bytes: BufferSource): Engine {
+    return new Engine(new WebAssembly.Instance(new WebAssembly.Module(bytes), {}).exports as unknown as Exports);
+  }
+
+  /** A new game: initial position, Left to move. */
+  newGame(options: GameOptions = {}): WasmGame {
+    const source = options.ballSource;
+    const ptr = this.exports.game_new(options.seed ?? randomSeed(), source ? source() : DRAW);
+    const game = new WasmGame(this, ptr, source);
+    this.track(game, () => this.exports.game_free(ptr));
+    return game;
+  }
+
+  /** Creates an AI player; the same spec and seed always play the same way. */
+  createAgent(spec: AgentSpec, seed: number = randomSeed()): WasmAgent {
     const { kind, depth, fillout } = parseSpec(spec);
     const ptr = this.exports.agent_new(kind, depth, fillout, seed >>> 0);
     if (ptr === 0) throw new Error(`Invalid agent "${spec}"`);
@@ -85,8 +138,8 @@ export class Engine {
     return agent;
   }
 
-  /** Copies a board into the engine (mainly for tests and analysis). */
-  createBoard(board: Board): WasmBoard {
+  /** Copies a board into the engine (for analysis, tests, and mirroring remote games). */
+  createBoard(board: BoardSnapshot): WasmBoard {
     this.writeBoard(board);
     const ptr = this.exports.board_from_io();
     if (ptr === 0) throw new Error("Invalid board");
@@ -100,26 +153,27 @@ export class Engine {
     return this.exports;
   }
 
-  /** @internal Writes a board into the I/O buffer. */
-  writeBoard(board: Board): void {
-    const io = new Uint8Array(this.exports.memory.buffer, this.ioPtr, 2 + CELLS);
+  /** @internal The I/O buffer; recreated per call because memory growth detaches old views. */
+  io(): Uint8Array {
+    return new Uint8Array(this.exports.memory.buffer, this.ioPtr, BOARD_LEN + 6);
+  }
+
+  /** @internal */
+  writeBoard(board: BoardSnapshot): void {
+    const io = this.io();
     io[0] = board.lCol;
     io[1] = board.rCol;
-    for (let l = 0; l < RULES.maxCols; l++) {
-      for (let r = 0; r < RULES.maxCols; r++) io[2 + l * RULES.maxCols + r] = l < board.lCol && r < board.rCol ? board.cells[l]![r]! : 0;
+    for (let l = 0; l < N; l++) {
+      for (let r = 0; r < N; r++) io[2 + l * N + r] = l < board.lCol && r < board.rCol ? board.cells[l]![r]! : 0;
     }
   }
 
-  /** @internal Reads a board from the I/O buffer. */
-  readBoard(): Board {
-    const io = new Uint8Array(this.exports.memory.buffer, this.ioPtr, 2 + CELLS);
-    const board = Board.initial();
-    for (let l = 0; l < RULES.maxCols; l++) {
-      for (let r = 0; r < RULES.maxCols; r++) board.cells[l]![r] = io[2 + l * RULES.maxCols + r] as Ball;
-    }
-    board.lCol = io[0]!;
-    board.rCol = io[1]!;
-    return board;
+  /** @internal */
+  readBoard(): BoardSnapshot {
+    const io = this.io();
+    const cells: Ball[][] = [];
+    for (let l = 0; l < N; l++) cells.push(Array.from(io.subarray(2 + l * N, 2 + (l + 1) * N)) as Ball[]);
+    return { cells, lCol: io[0]!, rCol: io[1]! };
   }
 
   /** @internal */
@@ -137,89 +191,184 @@ interface Freeable {
   free(): void;
 }
 
-/** A board living inside the engine. */
-export class WasmBoard implements Freeable {
+abstract class Handle implements Freeable {
+  protected readonly engine: Engine;
   private ptr: number;
-  private readonly engine: Engine;
+  private readonly release: (ptr: number) => void;
 
-  /** @internal */
-  constructor(engine: Engine, ptr: number) {
+  constructor(engine: Engine, ptr: number, release: (ptr: number) => void) {
     this.engine = engine;
     this.ptr = ptr;
+    this.release = release;
   }
 
-  /** One push (see `Board.push`); returns the ball that fell off. */
+  free(): void {
+    if (this.ptr === 0) return;
+    this.engine.untrack(this);
+    this.release(this.ptr);
+    this.ptr = 0;
+  }
+
+  protected get live(): number {
+    if (this.ptr === 0) throw new Error("Object already freed");
+    return this.ptr;
+  }
+}
+
+/**
+ * A complete game (the rules of docs/rules.md) living in the engine. The
+ * state getters are plain data refreshed after every change.
+ */
+export class WasmGame extends Handle {
+  private readonly ballSource: (() => Ball) | undefined;
+  board!: BoardSnapshot;
+  /** Player to move. */
+  turn!: Side;
+  /** The ball the next push (by either player) will insert. */
+  next!: Ball;
+  /** Pushes made in the current turn. */
+  pushes!: number;
+  /** The line chosen this turn, or null before the first push. */
+  column!: number | null;
+  result!: GameResult | null;
+
+  /** @internal */
+  constructor(engine: Engine, ptr: number, ballSource?: () => Ball) {
+    super(engine, ptr, (p) => engine.raw.game_free(p));
+    this.ballSource = ballSource;
+    this.refresh();
+  }
+
+  get over(): boolean {
+    return this.result !== null;
+  }
+
+  /** Whether the player to move may push line `col` now. */
+  canPush(col: number): boolean {
+    return Number.isInteger(col) && col >= 0 && this.engine.raw.game_can_push(this.live, col) === 1;
+  }
+
+  /** Whether the player to move may end the turn now (after at least one push). */
+  canEndTurn(): boolean {
+    return this.engine.raw.game_can_end_turn(this.live) === 1;
+  }
+
+  push(col: number): PushOutcome {
+    if (!this.canPush(col)) throw new IllegalMoveError(`Illegal push on line ${col}`);
+    const side = this.turn;
+    const packed = this.engine.raw.game_push(this.live, col, this.ballSource ? this.ballSource() : DRAW) >>> 0;
+    if (packed === INVALID) throw new IllegalMoveError(`Illegal push on line ${col}`);
+    const pushes = this.pushes + 1;
+    this.refresh();
+    return {
+      side,
+      col,
+      ejected: (packed & 0xff) as Ball,
+      inserted: ((packed >> 8) & 0xff) as Ball,
+      pushes,
+      turnEnded: (packed >> 16) === 1,
+      result: this.result,
+    };
+  }
+
+  endTurn(): void {
+    if (this.engine.raw.game_end_turn(this.live) >>> 0 === INVALID) throw new IllegalMoveError("Cannot end the turn before pushing");
+    this.refresh();
+  }
+
+  /** The player to move ran out of time. */
+  timeout(): GameResult {
+    this.engine.raw.game_timeout(this.live);
+    this.refresh();
+    return this.result!;
+  }
+
+  /** `loser` gave up or left. */
+  forfeit(loser: Side, reason: "resign" | "disconnect" = "resign"): GameResult {
+    this.engine.raw.game_forfeit(this.live, loser, END_REASONS.indexOf(reason));
+    this.refresh();
+    return this.result!;
+  }
+
+  /** The board as seen by the player to move (flipped for Right): what an agent receives. */
+  view(): BoardSnapshot {
+    this.engine.raw.game_view_to_io(this.live);
+    return this.engine.readBoard();
+  }
+
+  /** Replaces a ball in place (used by the tutorial). */
+  setBall(l: number, r: number, ball: Ball): void {
+    if (this.engine.raw.game_set_ball(this.live, l, r, ball) >>> 0 === INVALID) throw new Error(`Invalid cell (${l}, ${r})`);
+    this.refresh();
+  }
+
+  private refresh(): void {
+    this.engine.raw.game_to_io(this.live);
+    this.board = this.engine.readBoard();
+    const io = this.engine.io();
+    const [turn, next, pushes, column, winner, reason] = io.subarray(BOARD_LEN, BOARD_LEN + 6);
+    this.turn = turn as Side;
+    this.next = next as Ball;
+    this.pushes = pushes!;
+    this.column = column === NONE ? null : column!;
+    this.result = winner === NONE ? null : { winner: winner as Side, reason: END_REASONS[reason!] as EndReason };
+  }
+}
+
+/** A board living inside the engine. */
+export class WasmBoard extends Handle {
+  /** @internal */
+  constructor(engine: Engine, ptr: number) {
+    super(engine, ptr, (p) => engine.raw.board_free(p));
+  }
+
+  /** One push; returns the ball that fell off (its effect is applied). */
   push(side: Side, col: number, ball: Ball): Ball {
-    const ejected = this.engine.raw.board_push(this.live(), side, col, ball) >>> 0;
-    if (ejected === INVALID) throw new Error(`Invalid push (side ${side}, line ${col}, ball ${ball})`);
+    const ejected = this.engine.raw.board_push(this.live, side, col, ball) >>> 0;
+    if (ejected === INVALID) throw new IllegalMoveError(`Invalid push (side ${side}, line ${col}, ball ${ball})`);
     return ejected as Ball;
   }
 
   /** The classic static evaluation, from Left's point of view. */
   evaluate(): number {
-    return this.engine.raw.board_evaluate(this.live());
+    return this.engine.raw.board_evaluate(this.live);
   }
 
-  /** A copy of the board as a `@myomyw/core` Board (cells outside the board are common). */
-  read(): Board {
-    this.engine.raw.board_to_io(this.live());
+  read(): BoardSnapshot {
+    this.engine.raw.board_to_io(this.live);
     return this.engine.readBoard();
-  }
-
-  free(): void {
-    if (this.ptr === 0) return;
-    this.engine.untrack(this);
-    this.engine.raw.board_free(this.ptr);
-    this.ptr = 0;
-  }
-
-  private live(): number {
-    if (this.ptr === 0) throw new Error("Board already freed");
-    return this.ptr;
   }
 }
 
-/** An AI player running inside the engine. Implements the `Agent` protocol of `@myomyw/core`. */
-export class WasmAgent implements Agent, Freeable {
+/**
+ * An AI player running inside the engine (docs/ai.md). Agents play as Left:
+ * pass them `game.view()`. Per turn: `beginTurn`, `firstPush(next)`, then
+ * `pushAgain(next)` with each new next ball while the turn continues.
+ */
+export class WasmAgent extends Handle {
   readonly name: string;
-  private ptr: number;
-  private readonly engine: Engine;
 
   /** @internal */
   constructor(engine: Engine, ptr: number, spec: AgentSpec) {
-    this.engine = engine;
-    this.ptr = ptr;
-    this.name = `wasm:${spec}`;
+    super(engine, ptr, (p) => engine.raw.agent_free(p));
+    this.name = spec;
   }
 
-  beginTurn(view: Board): void {
+  beginTurn(view: BoardSnapshot): void {
     this.engine.writeBoard(view);
-    if (this.engine.raw.agent_begin_turn(this.live()) >>> 0 === INVALID) throw new Error("Invalid board");
+    if (this.engine.raw.agent_begin_turn(this.live) >>> 0 === INVALID) throw new Error("Invalid board");
   }
 
   firstPush(next: Ball): number {
-    return this.check(this.engine.raw.agent_first_push(this.live(), next));
+    return this.check(this.engine.raw.agent_first_push(this.live, next));
   }
 
   pushAgain(next: Ball): boolean {
-    return this.check(this.engine.raw.agent_push_again(this.live(), next)) === 1;
-  }
-
-  free(): void {
-    if (this.ptr === 0) return;
-    this.engine.untrack(this);
-    this.engine.raw.agent_free(this.ptr);
-    this.ptr = 0;
+    return this.check(this.engine.raw.agent_push_again(this.live, next)) === 1;
   }
 
   private check(result: number): number {
-    result >>>= 0;
-    if (result === INVALID) throw new Error("Invalid ball");
-    return result;
-  }
-
-  private live(): number {
-    if (this.ptr === 0) throw new Error("Agent already freed");
-    return this.ptr;
+    if (result >>> 0 === INVALID) throw new Error("Invalid ball");
+    return result >>> 0;
   }
 }

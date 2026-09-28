@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@myomyw/core": "*",
     "@myomyw/engine": "*",
+    "@myomyw/protocol": "*",
     "motion": "^13.4.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

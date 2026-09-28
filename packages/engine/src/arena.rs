@@ -16,7 +16,6 @@ pub struct MatchResult {
 }
 
 /// Plays one game between two agents; the balls are drawn from `rng`.
-/// Same protocol and random stream as `playMatch` in `@myomyw/core`.
 pub fn play_match(left: &mut dyn Agent, right: &mut dyn Agent, rng: &mut Rng, max_turns: u32) -> MatchResult {
     let mut game = Game::new(rng);
     let (mut turns, mut pushes) = (0, 0);
@@ -63,8 +62,7 @@ impl TournamentResult {
     }
 }
 
-/// Seeds of game `i`: (balls, agent A, agent B). The same scheme as the
-/// TypeScript arena, so both report identical results.
+/// Seeds of game `i`: (balls, agent A, agent B).
 fn seeds(seed: u32, i: u32) -> (u32, u32, u32) {
     let base = u64::from(seed) * 1_000_003 + u64::from(i) * 3;
     (base as u32, (base + 1) as u32, (base + 2) as u32)

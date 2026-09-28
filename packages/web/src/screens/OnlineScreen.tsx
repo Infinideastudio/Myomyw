@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { MAX_CHAT_LENGTH } from "@myomyw/core";
+import { MAX_CHAT_LENGTH } from "@myomyw/protocol";
 import { GameLayout, useMatchSnapshot } from "../components/GameLayout.tsx";
 import { Button } from "../components/ui.tsx";
 import { format, useMessages } from "../i18n/index.tsx";
@@ -8,11 +8,12 @@ import { useController } from "../match/useController.ts";
 import type { Navigate } from "../routes.ts";
 import { serverUrl, useSettings } from "../settings.ts";
 
+/** Only reachable when a server is configured (see HomeScreen). */
 export function OnlineScreen({ navigate }: { navigate: Navigate }) {
   const t = useMessages();
   const settings = useSettings();
   const [round, setRound] = useState(0);
-  const match = useController(() => new OnlineMatch(serverUrl(settings), settings.name), [round]);
+  const match = useController(() => new OnlineMatch(serverUrl(settings) ?? "", settings.name), [round]);
   if (!match) return null;
 
   const home = () => navigate({ name: "home" });

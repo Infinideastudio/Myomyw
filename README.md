@@ -30,8 +30,8 @@ game, are in **[docs/rules.md](docs/rules.md)**.
 
 ## Getting started
 
-Requires Node.js 22.18 or newer and a Rust toolchain (1.85+, for the AI engine)
-with the WebAssembly target:
+Requires Node.js 22.18 or newer and a Rust toolchain (1.85+) with the
+WebAssembly target — the game engine is written in Rust:
 
 ```sh
 rustup target add wasm32-unknown-unknown
@@ -48,24 +48,35 @@ npm start            # serves the client and the game server on http://localhost
 ```
 
 Server settings are environment variables: `PORT` (8650), `HOST`,
-`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`. To host the client separately from the
-server, build it with `VITE_SERVER_URL=wss://your-server` (players can also
-set a custom server in Settings).
+`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`.
+
+### GitHub Pages
+
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) lints, tests and
+builds on every push and pull request, and deploys the web client to GitHub
+Pages from `master` (enable it once under *Settings → Pages → Source: GitHub
+Actions*). The Pages site is static — offline modes only by default. To offer
+online play there, run the server elsewhere and set the repository variable
+`MYOMYW_SERVER_URL` (e.g. `wss://example.com`); players can also enter a
+server in Settings.
+
+To build such a standalone site yourself:
+`VITE_STANDALONE=true [VITE_SERVER_URL=wss://…] npm run build`, then serve
+`packages/web/dist` from any static host (relative paths, any sub-path).
 
 ## Development
 
 ```sh
 npm test             # all TypeScript and Rust tests (builds the WebAssembly module first)
 npm run typecheck    # type-check all TypeScript packages
-npm run arena -- --a hard --b normal --games 1000   # native AI-vs-AI tournament (all cores)
-npm run arena:ts -- --a hard --b normal             # the same in TypeScript (identical results)
+npm run arena -- --a hard --b normal --games 1000   # AI-vs-AI tournament (native, all cores)
 npm run bench        # engine throughput
 ```
 
 | Package | Contents |
 | --- | --- |
-| [`packages/core`](packages/core) | Rules engine, AI players, protocol types (TypeScript reference). No dependencies. |
-| [`packages/engine`](packages/engine) | Fast engine and AI players in Rust, native and WebAssembly, with TypeScript bindings. |
+| [`packages/engine`](packages/engine) | Rules and AI players in Rust (bitboards), native and WebAssembly, with TypeScript bindings. |
+| [`packages/protocol`](packages/protocol) | Client/server message types. |
 | [`packages/server`](packages/server) | Authoritative WebSocket game server (Node + `ws`). |
 | [`packages/web`](packages/web) | Web client (React, Vite, SVG + Motion). |
 

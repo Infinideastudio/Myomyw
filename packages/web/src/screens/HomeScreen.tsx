@@ -1,20 +1,23 @@
-import { Ball, DIFFICULTIES, MAX_NAME_LENGTH, type Difficulty } from "@myomyw/core";
+import { Ball, DIFFICULTIES, type Difficulty } from "@myomyw/engine";
+import { MAX_NAME_LENGTH } from "@myomyw/protocol";
 import { useState } from "react";
 import { BallIcon } from "../components/BallGlyph.tsx";
 import { Button, Dialog } from "../components/ui.tsx";
 import { useMessages } from "../i18n/index.tsx";
 import type { Navigate } from "../routes.ts";
-import { updateSettings, useSettings } from "../settings.ts";
+import { serverUrl, updateSettings, useSettings } from "../settings.ts";
 
 export function HomeScreen({ navigate }: { navigate: Navigate }) {
   const t = useMessages();
   const settings = useSettings();
   const [dialog, setDialog] = useState<"difficulty" | "aiVsAi" | null>(null);
   const [nameError, setNameError] = useState(false);
+  const [noServer, setNoServer] = useState(false);
   const name = settings.name.trim();
 
   const playOnline = () => {
     if (name.length === 0 || name.length > MAX_NAME_LENGTH) return setNameError(true);
+    if (serverUrl(settings) === null) return setNoServer(true);
     navigate({ name: "online" });
   };
 
@@ -71,6 +74,14 @@ export function HomeScreen({ navigate }: { navigate: Navigate }) {
           <Button variant="primary" onClick={playOnline}>
             {t.home.online}
           </Button>
+          {noServer && (
+            <p className="field-error" role="alert">
+              {t.home.noServer}{" "}
+              <button type="button" className="link" onClick={() => navigate({ name: "settings" })}>
+                {t.home.settings}
+              </button>
+            </p>
+          )}
           <Button onClick={() => setDialog("aiVsAi")}>{t.home.aiVsAi}</Button>
         </nav>
 

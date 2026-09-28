@@ -11,7 +11,7 @@ pub use weak::WeakAi;
 use crate::ball::Ball;
 use crate::board::Board;
 
-/// A computer player; the same protocol as `Agent` in `@myomyw/core`.
+/// A computer player (see docs/ai.md). `WasmAgent` exposes the same protocol to TypeScript.
 ///
 /// Agents always play as Left: the host passes `game.view()` (the board
 /// flipped when the agent plays Right). Per turn the host calls `begin_turn`,
@@ -33,7 +33,7 @@ pub enum Difficulty {
     Hard,
 }
 
-/// Creates a built-in opponent, identical to `createAgent(difficulty, seededRng(seed))`.
+/// Creates a built-in opponent; the same seed always gives the same play.
 pub fn create_agent(difficulty: Difficulty, seed: u32) -> Box<dyn Agent> {
     match difficulty {
         Difficulty::Easy => Box::new(WeakAi::new()),
@@ -43,7 +43,7 @@ pub fn create_agent(difficulty: Difficulty, seed: u32) -> Box<dyn Agent> {
 }
 
 /// Parses an agent spec: `easy`, `normal`, `hard` or `strong:<maxDepth>,<fillout>`
-/// (the same specs as `agentFromSpec` in `@myomyw/core`).
+/// (also accepted by `Engine.createAgent` in TypeScript).
 pub fn agent_from_spec(spec: &str, seed: u32) -> Result<Box<dyn Agent>, String> {
     match spec {
         "easy" => Ok(create_agent(Difficulty::Easy, seed)),

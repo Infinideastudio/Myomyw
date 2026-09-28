@@ -1,4 +1,4 @@
-import { Ball, Board, Side, type GameResult } from "@myomyw/core";
+import { Ball, initialBoard, type BoardSnapshot, type GameResult, type Side } from "@myomyw/engine";
 import { DisplayBoard, type Ghost } from "./display.ts";
 import type { Timing } from "./timing.ts";
 import type { MatchController, MatchSnapshot } from "./types.ts";
@@ -16,9 +16,9 @@ export abstract class MatchBase implements MatchController {
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
   protected disposed = false;
 
-  constructor(options: { names: readonly [string, string]; controllable: readonly [boolean, boolean]; timing: Timing; board?: Board }) {
+  constructor(options: { names: readonly [string, string]; controllable: readonly [boolean, boolean]; timing: Timing; board?: BoardSnapshot }) {
     this.timing = options.timing;
-    this.display = new DisplayBoard(options.board ?? Board.initial());
+    this.display = new DisplayBoard(options.board ?? initialBoard());
     this.snapshot = {
       names: options.names,
       controllable: options.controllable,
@@ -80,7 +80,7 @@ export abstract class MatchBase implements MatchController {
   }
 
   /** Replaces the whole board (e.g. when an online game starts). */
-  protected resetBoard(board: Board): void {
+  protected resetBoard(board: BoardSnapshot): void {
     this.display = new DisplayBoard(board);
     this.update({ lCol: board.lCol, rCol: board.rCol, balls: this.display.sprites(), ghosts: [], entering: null, animMs: 0 });
   }
@@ -101,10 +101,13 @@ export abstract class MatchBase implements MatchController {
     return ejected;
   }
 
-  /** Shows the effect of the ball that fell off (grow, shrink or mirror). */
-  protected showEffect(side: Side, ejected: Ball): void {
+  /**
+   * Shows the effect of the ball that fell off (grow, shrink or mirror) and
+   * adopts `board`, the engine's position after the push.
+   */
+  protected showEffect(ejected: Ball, board: BoardSnapshot): void {
+    const removed = this.display.applyEffect(ejected, board);
     if (ejected !== Ball.AddCol && ejected !== Ball.DelCol && ejected !== Ball.Flip) return;
-    const removed = this.display.applyEffect(side, ejected);
     const flip = ejected === Ball.Flip;
     const animMs = flip ? this.timing.flipMs : this.timing.resizeMs;
     this.update({

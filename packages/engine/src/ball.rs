@@ -35,7 +35,7 @@ impl Side {
     }
 }
 
-/// Ball kinds. The numeric values match `Ball` in `@myomyw/core` and the wire protocol.
+/// Ball kinds. The numeric values are also used by the TypeScript bindings and the wire protocol.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(u8)]
 pub enum Ball {

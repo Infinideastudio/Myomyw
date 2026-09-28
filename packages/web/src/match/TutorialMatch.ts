@@ -1,4 +1,4 @@
-import { Ball, Side } from "@myomyw/core";
+import { Ball, Side } from "@myomyw/engine";
 import { LocalMatch } from "./LocalMatch.ts";
 
 /** Number of tutorial steps; texts live in i18n under `tutorial.steps`. */
@@ -72,7 +72,7 @@ export class TutorialMatch extends LocalMatch {
   }
 
   private place(l: number, r: number, ball: Ball): void {
-    this.game.board.cells[l]![r] = ball;
+    this.game.setBall(l, r, ball);
     this.display.setBall(l, r, ball);
     this.update({ balls: this.display.sprites(), entering: null, animMs: this.timing.pushMs });
   }

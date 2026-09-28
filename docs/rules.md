@@ -3,9 +3,9 @@
 > **Myomyw** = **M**ake **y**our **o**pponent **m**ake **y**ou **w**in.
 
 This document is the authoritative description of the rules. The reference
-implementation is [`packages/core/src/game.ts`](../packages/core/src/game.ts)
-and [`board.ts`](../packages/core/src/board.ts); the test suite checks that they
-behave exactly like the original game (Beta 0.8).
+implementation is the engine: [`game.rs`](../packages/engine/src/game.rs) and
+[`board.rs`](../packages/engine/src/board.rs); the test suite checks that it
+behaves exactly like the original game (Beta 0.8).
 
 ## 1. Overview
 
@@ -264,13 +264,14 @@ about 50–100 turns).
 
 ## Appendix: correspondence with the code
 
-| Rules term | Code (`@myomyw/core`) |
-| --- | --- |
-| Green / Blue | `Side.Left` / `Side.Right` |
-| Number of Green / Blue ejectors | `board.lCol` / `board.rCol` |
-| Ball in Green line *l*, Blue line *r* (0-based) | `board.cells[l][r]` |
-| Green pushes line *l* | inserts at `cells[l][0]`, pushes off `cells[l][rCol-1]` |
-| Blue pushes line *r* | inserts at `cells[0][r]`, pushes off `cells[lCol-1][r]` |
-| Common / Key / Add line / Remove line / Flip | `Ball.Common` / `Key` / `AddCol` / `DelCol` / `Flip` |
-| Next ball | `game.next` |
-| 20 s / 5 s limits | `RULES.turnTimeLimitMs` / `PUSH_INTERVAL_LIMIT_MS` |
+| Rules term | Rust (`packages/engine/src`) | TypeScript (`@myomyw/engine`) |
+| --- | --- | --- |
+| Green / Blue | `Side::Left` / `Side::Right` | `Side.Left` / `Side.Right` |
+| Number of Green / Blue ejectors | `board.l_col()` / `board.r_col()` | `board.lCol` / `board.rCol` |
+| Ball in Green line *l*, Blue line *r* (0-based) | `board.get(l, r)` | `board.cells[l][r]` |
+| Green pushes line *l* | inserts at (l, 0), pushes off (l, r_col − 1) | same |
+| Blue pushes line *r* | inserts at (0, r), pushes off (l_col − 1, r) | same |
+| Common / Key / Add line / Remove line / Flip | `Ball::Common` / `Key` / `AddCol` / `DelCol` / `Flip` | `Ball.Common` / … |
+| State, action, transition (§9) | `Game`, `Action`, `Game::apply` | `WasmGame` |
+| Next ball | `game.next` | `game.next` |
+| 20 s / 5 s limits | — (real-time rules live in the hosts) | `RULES.turnTimeLimitMs` / `PUSH_INTERVAL_LIMIT_MS` (`@myomyw/protocol`) |

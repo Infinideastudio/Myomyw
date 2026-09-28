@@ -6,4 +6,6 @@ declare const __APP_VERSION__: string;
 interface ImportMetaEnv {
   /** Default WebSocket URL of the game server, e.g. wss://example.com/myomyw */
   readonly VITE_SERVER_URL?: string;
+  /** "true" for builds hosted without a game server (online play then needs a server set in Settings). */
+  readonly VITE_STANDALONE?: string;
 }

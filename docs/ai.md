@@ -1,61 +1,52 @@
 # Computer players
 
 The game ships three computer opponents, derived from the original (Beta 0.8)
-AIs with their bugs fixed (see [History](#history)).
+AIs with their bugs fixed (see [History](#history)). They are implemented in
+the Rust engine (`packages/engine/src/ai/`) and run natively or as WebAssembly;
+the web client runs them in a Web Worker (see
+[architecture.md](architecture.md#computer-players)).
 
-| Difficulty | Class | Source |
+| Difficulty | Spec | Implementation |
 | --- | --- | --- |
-| Easy | `WeakAI` | [`packages/core/src/ai/weak.ts`](../packages/core/src/ai/weak.ts) |
-| Normal | `StrongAI(maxDepth = 1, fillout = 10)` | [`packages/core/src/ai/strong.ts`](../packages/core/src/ai/strong.ts) |
-| Hard | `StrongAI(maxDepth = 2, fillout = 10)` | same, search in [`search.ts`](../packages/core/src/ai/search.ts) |
+| Easy | `easy` | `WeakAi` — [`weak.rs`](../packages/engine/src/ai/weak.rs) |
+| Normal | `normal` | `StrongAi::new(1, 10, seed)` — [`strong.rs`](../packages/engine/src/ai/strong.rs) |
+| Hard | `hard` | `StrongAi::new(2, 10, seed)` — search in [`search.rs`](../packages/engine/src/ai/search.rs) |
 
-Presets are created with `createAgent(difficulty, rng?)`, or from a string
-spec with `agentFromSpec` (`easy`, `normal`, `hard`, `strong:<depth>,<fillout>`).
-
-## Implementations
-
-Each agent exists twice, with identical behaviour:
-
-| | TypeScript (`@myomyw/core`) | Rust (`@myomyw/engine`) |
-| --- | --- | --- |
-| Agents | `WeakAI`, `StrongAI`, `PoolSearch` | `WeakAi`, `StrongAi`, `PoolSearch` |
-| Create | `agentFromSpec(spec, seededRng(seed))` | `agent_from_spec(spec, seed)`; in JS `engine.createAgent(spec, seed)` |
-| Runs in | Node, the browser main thread | natively (fast, multi-threaded) and as WebAssembly |
-
-Both use the same random generator (mulberry32), so an agent created with the
-same seed makes the same decisions in either language; the test suite checks
-this over full games. The web client runs the WebAssembly agents in a Web
-Worker (see [architecture.md](architecture.md#computer-players)).
+Agents are created from a spec (`easy`, `normal`, `hard` or
+`strong:<maxDepth>,<fillout>`) and a 32-bit seed: `agent_from_spec(spec, seed)`
+in Rust, `engine.createAgent(spec, seed)` in TypeScript. The same spec and seed
+always make the same decisions.
 
 ## The agent interface
 
-```ts
-interface Agent {
-  readonly name: string;
-  beginTurn(view: Board): void;   // start of each of the agent's turns
-  firstPush(next: Ball): number;  // which of its lines to push
-  pushAgain(next: Ball): boolean; // push the same line again, or end the turn?
+```rust
+pub trait Agent: Send {
+    fn name(&self) -> String;
+    fn begin_turn(&mut self, view: &Board);   // start of each of the agent's turns
+    fn first_push(&mut self, next: Ball) -> usize; // which of its lines to push
+    fn push_again(&mut self, next: Ball) -> bool;  // push the same line again, or end the turn?
 }
 ```
 
-- An agent always plays **as Left**. The host passes
-  `game.board.viewFor(side)`, which is a copy of the board flipped if the agent
-  is Right (the colour symmetry of [rules.md §9.6](rules.md#96-properties)).
-  Line numbers are the same in both views, so the returned column is used on
-  the real board unchanged.
-- `next` is the ball the push will insert. After `firstPush`, the host keeps
-  calling `pushAgain(game.next)` while the turn can continue (no Flip fell
+(`WasmAgent` in TypeScript has the same methods: `beginTurn`, `firstPush`, `pushAgain`.)
+
+- An agent always plays **as Left**. The host passes `game.view()`, the board
+  flipped if the agent is Right (the colour symmetry of
+  [rules.md §9.6](rules.md#96-properties)). Line numbers are the same in both
+  views, so the returned line is used on the real board unchanged.
+- `next` is the ball the push will insert. After `first_push`, the host keeps
+  calling `push_again(game.next)` while the turn can continue (no Flip fell
   off, fewer than 5 pushes, game not over). `true` means the host pushes again
   with that same `next`.
 - Agents may keep a private copy of the board and apply their own pushes to it,
   so the host must play exactly what they return, inserting exactly the
   `next` it passed.
 
-[`playMatch(left, right, options)`](../packages/core/src/ai/match.ts) is the
-reference host (headless, no timers). The web client's `LocalMatch` follows the
-same protocol; a test checks that both produce identical games.
+[`play_match`](../packages/engine/src/arena.rs) is the reference host
+(headless, no timers). The web client's `LocalMatch` follows the same protocol;
+a test checks that both produce identical games.
 
-## Easy — `WeakAI`
+## Easy — `WeakAi`
 
 A one-shot heuristic with no search.
 
@@ -76,7 +67,7 @@ A one-shot heuristic with no search.
    falls off. It does not look at the next ball at all, and may push a Key off
    while executing its plan — it is meant to be easy.
 
-## Normal / Hard — `StrongAI`
+## Normal / Hard — `StrongAi`
 
 A negamax search with alpha-beta pruning over **sampled futures**: the
 unknown upcoming balls are replaced by random sequences, and values are
@@ -86,17 +77,17 @@ drawn from the true ball distribution, so each counts equally).
 ### The search (`PoolSearch`)
 
 For one fixed sequence of upcoming balls (the **pool**; `pool[0]` is the
-real next ball, the rest random), `PoolSearch.search(node, depth, α, β, side)`
+real next ball, the rest random), `PoolSearch::search(node, depth, α, β, side)`
 is a textbook negamax with alpha-beta pruning:
 
 - A **move** is a whole turn: choose one of `side`'s lines, then push it
-  1–5 times. `searchCol` pushes a line repeatedly; after each push it scores
+  1–5 times. `search_col` pushes a line repeatedly; after each push it scores
   "stop here" as `−search(child, depth − 1, opponent)` and keeps the best.
   It stops pushing at a Key (value `LOSS = −10000` for the side that pushed it
   off), at a Flip (the turn is over) or at a beta cut-off.
 - Every push, by either side, consumes the next pool entry. The pool is sized
-  so that the search never runs out (reading past it throws).
-- **Evaluation** at depth 0 (`evaluate`, from Left's point of view): for every
+  so that the search never runs out.
+- **Evaluation** at depth 0 (`Board::evaluate`, from Left's point of view): for every
   line, count the balls that can be pushed off before a Key would fall off
   (walking back from the exit end); if the line contains no Key at all, the
   count is doubled. Left's lines add to the score, Right's subtract.
@@ -104,14 +95,14 @@ is a textbook negamax with alpha-beta pruning:
 A test checks that the pruned search returns exactly the value of a plain
 negamax without pruning.
 
-### Choosing the line (`firstPush`)
+### Choosing the line (`first_push`)
 
 For each of `fillout` samples, draw `maxDepth · 5 − 1` random balls after the
-real next ball and add `searchCol(root, maxDepth, Left, line)` to each line's
+real next ball and add `search_col(root, maxDepth, Left, line)` to each line's
 total. The same sample is used for all lines (common random numbers). Push the
 line with the highest total (first on ties).
 
-### Deciding to continue (`pushAgain`)
+### Deciding to continue (`push_again`)
 
 Let `d = max(1, maxDepth − 1)` and `M = 5 − pushes so far`. For each of
 `fillout` samples, score the plans
@@ -130,8 +121,7 @@ whether to stop.
 ## Baseline strength
 
 `npm run arena -- --a <agent> --b <agent> --games 1000 --seed 1`
-(native, all cores; `npm run arena:ts` is the TypeScript version and prints
-the same results). Agents alternate sides; Green moves first. With 1000 games
+(native, all cores; results do not depend on the number of threads). Agents alternate sides; Green moves first. With 1000 games
 the 95% confidence interval of a win rate is about ±3 percentage points.
 
 | A vs B | A wins | Avg. turns |
@@ -142,13 +132,11 @@ the 95% confidence interval of a win rate is about ±3 percentage points.
 | Hard vs Hard | 49.3% | 77 |
 
 In Hard vs Hard, the first mover won 49.1% of games: moving first is no
-measurable advantage. Natively, Hard takes about 80 µs per turn and the
-1000-game Hard-vs-Hard tournament about 1 s on 24 threads (6.6 s on one), so a
-stronger agent has a large time budget to work with.
+measurable advantage. Hard takes about 80 µs per turn, and the 1000-game
+Hard-vs-Hard tournament about 1 s on 24 threads (6.6 s on one), so a stronger
+agent has a large time budget to work with.
 
 ## Writing a new agent
-
-Simulation-heavy agents belong in Rust:
 
 1. Implement the `Agent` trait in `packages/engine/src/ai/`, seeded with a
    `u32` for reproducible tournaments. `Game` is a cheap `Copy` state with
@@ -162,15 +150,13 @@ Simulation-heavy agents belong in Rust:
    screens and i18n dictionaries. It runs in the AI worker, so thinking time
    does not block the page; keep it within the 20 s turn limit.
 
-The TypeScript agents remain the reference used by tests and the worker's
-fallback when WebAssembly is unavailable. Porting a new agent to TypeScript is
-optional; without a port, it simply is not available in that fallback.
-
 ## History
 
 Beta 0.8 shipped `WeakAI` and `StrongAI` in JavaScript. The rewrite first
-ported them exactly (verified move for move against the original code), then
-fixed these bugs:
+ported them exactly to TypeScript (verified move for move against the original
+code), then fixed the bugs below, and finally ported the fixed agents to Rust
+(verified decision for decision against the TypeScript versions, which were
+then retired). Names in the table are those of the original code.
 
 | # | Bug in the original | Fix |
 | --- | --- | --- |
@@ -178,10 +164,10 @@ fixed these bugs:
 | 2 | The search generated Right's moves from *Left's* line count, skipping some of Right's lines or pushing nonexistent ones (reading hidden off-board cells). | Each side iterates its own lines. |
 | 3 | `search` passed `maxMovements` (5) as `searchCol`'s "best value so far", which cut the search off after one push whenever β ≤ 5. | Standard cut-off on the column's own best value. |
 | 4 | Samples drawn from the true distribution (7/11, 1/11) were additionally weighted by a mismatched probability (0.6 / 0.1 per ball). | Plain averaging. |
-| 5 | `pushAgain` used `maxDepth` samples instead of `fillout`. | `fillout` samples. |
+| 5 | `continue` (push again?) used `maxDepth` samples instead of `fillout`. | `fillout` samples. |
 | 6 | "Stop now" was searched at depth 1 but "push more" at depth `maxDepth − 1`. | Same depth `max(1, maxDepth − 1)` for every plan. |
 | 7 | When one sample hit a Key or Flip, the number of plans considered shrank for *all later samples*. | Handled per sample (see above). |
-| 8 | Some `pushAgain` searches read past the filled part of the ball pool. | Pool sized correctly; overruns throw. |
+| 8 | Some `continue` searches read past the filled part of the ball pool. | Pool sized correctly. |
 
 Each fixed AI beats its original version (1000 games, alternating sides):
 Easy 54.6%, Normal 66.0%, Hard 70.5%. For fix 6, making both plans use depth

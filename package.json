@@ -6,8 +6,8 @@
   "license": "MIT",
   "type": "module",
   "workspaces": [
-    "packages/core",
     "packages/engine",
+    "packages/protocol",
     "packages/server",
     "packages/web"
   ],
@@ -23,9 +23,8 @@
     "start": "npm run start -w @myomyw/server",
     "pretest": "npm run build:wasm",
     "test": "vitest run && cargo test --release -q",
-    "typecheck": "tsc -p packages/core && tsc -p packages/engine && tsc -p packages/server && tsc -p packages/web",
+    "typecheck": "tsc -p packages/engine && tsc -p packages/protocol && tsc -p packages/server && tsc -p packages/web",
     "arena": "cargo run --release -q --bin arena --",
-    "arena:ts": "node packages/core/scripts/arena.ts",
     "bench": "cargo run --release -q --bin bench"
   },
   "devDependencies": {

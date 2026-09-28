@@ -2,21 +2,15 @@
  * WebSocket protocol between the web client and the game server.
  * Every message is one JSON object with a `t` (type) field. See docs/protocol.md.
  */
-import type { Ball, Side } from "./constants.ts";
-import type { EndReason } from "./game.ts";
-import type { Grid } from "./grid.ts";
+import type { Ball, BoardSnapshot, EndReason, Side } from "@myomyw/engine";
+
+export type { BoardSnapshot };
 
 export const PROTOCOL_VERSION = 2;
 export const MAX_NAME_LENGTH = 15;
 export const MAX_CHAT_LENGTH = 200;
 /** Online only: after a push, the player must push again or end the turn within this time. */
 export const PUSH_INTERVAL_LIMIT_MS = 5_000;
-
-export interface BoardSnapshot {
-  cells: Grid<Ball>;
-  lCol: number;
-  rCol: number;
-}
 
 export type ClientMessage =
   | { t: "hello"; version: number; name: string }

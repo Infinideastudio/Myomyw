@@ -1,4 +1,4 @@
-import { MAX_NAME_LENGTH } from "@myomyw/core";
+import { MAX_NAME_LENGTH } from "@myomyw/protocol";
 import { Page } from "../components/ui.tsx";
 import { LANGUAGES, format, useMessages, type LanguageSetting } from "../i18n/index.tsx";
 import type { Navigate } from "../routes.ts";
@@ -7,6 +7,7 @@ import { defaultServerUrl, updateSettings, useSettings } from "../settings.ts";
 export function SettingsScreen({ navigate }: { navigate: Navigate }) {
   const t = useMessages();
   const settings = useSettings();
+  const defaultServer = defaultServerUrl();
   return (
     <Page title={t.settings.title} onBack={() => navigate({ name: "home" })}>
       <div className="settings">
@@ -37,8 +38,8 @@ export function SettingsScreen({ navigate }: { navigate: Navigate }) {
 
         <label className="field">
           <span>{t.settings.server}</span>
-          <input value={settings.serverUrl} placeholder={defaultServerUrl()} spellCheck={false} onChange={(e) => updateSettings({ serverUrl: e.target.value })} />
-          <small>{format(t.settings.serverHint, { url: defaultServerUrl() })}</small>
+          <input value={settings.serverUrl} placeholder={defaultServer ?? "wss://…"} spellCheck={false} onChange={(e) => updateSettings({ serverUrl: e.target.value })} />
+          <small>{defaultServer ? format(t.settings.serverHint, { url: defaultServer }) : t.settings.serverNone}</small>
         </label>
 
         <section className="about">

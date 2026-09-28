@@ -3,8 +3,7 @@ use crate::board::Board;
 
 use super::Agent;
 
-/// "Easy": a one-shot heuristic with no search. Port of `WeakAI` in
-/// `@myomyw/core` (same floating-point arithmetic, so the same moves).
+/// "Easy": a one-shot heuristic with no search (see docs/ai.md).
 pub struct WeakAi {
     board: Board,
     best_col: usize,
@@ -78,5 +77,28 @@ impl Agent for WeakAi {
         }
         self.push_once(next);
         true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scores_flip_balls() {
+        // The agent has more lines than the opponent, so a Flip would cost it lines (−1 each).
+        // Scored 0 (the original's bug), line 0 would look best; scored −1 each, it is the worst.
+        let mut board = Board::filled_common(6, 4);
+        for r in 0..4 {
+            board.set(0, r, Ball::Flip);
+        }
+        for l in 1..6 {
+            for r in 0..3 {
+                board.set(l, r, Ball::AddCol);
+            }
+        }
+        let mut ai = WeakAi::new();
+        ai.begin_turn(&board);
+        assert_eq!(ai.first_push(Ball::Common), 1);
     }
 }

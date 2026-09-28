@@ -1,4 +1,4 @@
-import { Ball } from "@myomyw/core";
+import { Ball } from "@myomyw/engine";
 
 const FILL: Record<Ball, string> = {
   [Ball.Common]: "var(--ball-common)",
