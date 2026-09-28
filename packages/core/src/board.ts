@@ -6,10 +6,9 @@ import { copyGrid, createGrid, shiftLine, transposeGrid, type Grid } from "./gri
  *
  * The balls live in a fixed `maxCols × maxCols` backing matrix; only the
  * `[0, lCol) × [0, rCol)` corner is on the board. Cells outside it keep
- * whatever they last held ("stale" cells) and are reset to common balls
- * when the board grows back over them. This is invisible to players, but the
- * Strong AI can look at stale cells (a quirk of its original implementation),
- * so the exact behaviour is part of the specification.
+ * whatever they last held and are reset to common balls when the board grows
+ * back over them, so they never affect the game. (This mirrors the original
+ * implementation exactly, which the tests check cell for cell.)
  */
 export class Board {
   readonly cells: Grid<Ball>;

@@ -53,7 +53,7 @@ set a custom server in Settings).
 ## Development
 
 ```sh
-npm test             # all tests (rules, AI equivalence, server, match controller)
+npm test             # all tests (rules, equivalence with the original, AI, server, match controller)
 npm run typecheck    # type-check all packages
 npm run arena -- --a hard --b normal --games 1000   # AI-vs-AI tournament
 ```
@@ -75,8 +75,10 @@ Documentation:
 
 Versions up to Beta 0.8 were built with Cocos2d-x (JavaScript) and a Node.js
 server; that code remains in the Git history (last commit `a38f32e`). This version is a
-complete rewrite that keeps the game rules and the computer players' algorithms
-exactly the same — the test suite checks this against the original source.
+complete rewrite that keeps the game rules exactly the same — the test suite
+checks this against the original source. The computer players use the original
+algorithms with several bugs fixed, which made each of them stronger (see
+[docs/ai.md](docs/ai.md#history)).
 Native Android/Windows builds of the old client are not carried over; the new
 client is a responsive web app that works on desktop and mobile browsers.
 

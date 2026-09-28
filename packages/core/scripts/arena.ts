@@ -4,10 +4,10 @@
  *   npm run arena -- --a hard --b normal --games 200 --seed 1
  *
  * Agents alternate sides every game (Left moves first, which matters).
- * Agent specs: easy | normal | hard | strong:<maxDepth>,<fillout>
+ * Agent specs: easy | normal | hard | strong:<maxDepth>,<fillout> (see agentFromSpec).
  */
 import { parseArgs } from "node:util";
-import { Side, StrongAI, createAgent, playMatch, seededRng, type Agent, type Difficulty, type Rng } from "../src/index.ts";
+import { Side, agentFromSpec, playMatch, seededRng } from "../src/index.ts";
 
 const { values } = parseArgs({
   options: {
@@ -18,13 +18,6 @@ const { values } = parseArgs({
   },
 });
 
-function makeAgent(spec: string, rng: Rng): Agent {
-  const strong = /^strong:(\d+),(\d+)$/.exec(spec);
-  if (strong) return new StrongAI(Number(strong[1]), Number(strong[2]), rng);
-  if (spec === "easy" || spec === "normal" || spec === "hard") return createAgent(spec as Difficulty, rng);
-  throw new Error(`Unknown agent "${spec}"`);
-}
-
 const games = Number(values.games);
 const seed = Number(values.seed);
 const wins = { a: 0, b: 0, draws: 0 };
@@ -33,8 +26,8 @@ let turns = 0;
 const started = performance.now();
 
 for (let i = 0; i < games; i++) {
-  const a = makeAgent(values.a, seededRng(seed * 1_000_003 + i * 3 + 1));
-  const b = makeAgent(values.b, seededRng(seed * 1_000_003 + i * 3 + 2));
+  const a = agentFromSpec(values.a, seededRng(seed * 1_000_003 + i * 3 + 1));
+  const b = agentFromSpec(values.b, seededRng(seed * 1_000_003 + i * 3 + 2));
   const aIsLeft = i % 2 === 0;
   const result = aIsLeft
     ? playMatch(a, b, { rng: seededRng(seed * 1_000_003 + i * 3) })

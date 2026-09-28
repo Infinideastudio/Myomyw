@@ -25,7 +25,7 @@ files with their `.ts` extension.
 | `grid.ts` | Generic helpers on the 10 × 10 backing matrix (`shiftLine`, `transposeGrid`), shared by the engine and the client's animation layer |
 | `board.ts` | `Board`: pure board state. `push = shift + applyEffect`; `viewFor(side)` gives an agent's perspective |
 | `game.ts` | `Game`: the complete rules as a synchronous state machine (turns, push limit, flips, win/lose, timeout/forfeit) |
-| `ai/` | `Agent` interface, `WeakAI`, `StrongAI`, `createAgent(difficulty)`, `playMatch` (headless host) |
+| `ai/` | `Agent` interface, `WeakAI`, `StrongAI` (search in `search.ts`), `createAgent` / `agentFromSpec`, `playMatch` (headless host) |
 | `protocol.ts` | Client/server message types and helpers |
 | `scripts/arena.ts` | AI-vs-AI tournaments (`npm run arena`) |
 
@@ -33,9 +33,9 @@ files with their `.ts` extension.
 own the clock and call `push`, `endTurn`, `timeout` or `forfeit`.
 
 `Board` stores balls in a fixed 10 × 10 matrix of which only `lCol × rCol` is
-in play; cells outside keep stale balls. This mirrors the original
-implementation exactly, because the original AI can observe those cells (see
-[ai.md](ai.md)).
+in play; cells outside keep stale balls, which never affect the game. This
+mirrors the original implementation, so the equivalence test can compare the
+two matrices cell for cell.
 
 ## `@myomyw/server`
 
@@ -114,8 +114,10 @@ Enter).
 `npm test` runs Vitest over all packages:
 
 - `core/test/rules.test.ts` — the rules.
-- `core/test/equivalence.test.ts` — move-for-move equivalence of the rules
-  engine and AIs with the original JavaScript (`core/test/legacy/`).
+- `core/test/equivalence.test.ts` — the rules engine matches the original
+  JavaScript (`core/test/legacy/GameNode.js`) cell for cell.
+- `core/test/ai.test.ts` — alpha-beta soundness against plain negamax, and
+  behaviour checks for the AIs.
 - `server/test/server.test.ts` — a real server with two WebSocket clients.
 - `web/test/localMatch.test.ts` — the offline match controller on fake
   timers (hold-to-repeat, 5-push limit, timeout, identical games to `playMatch`).

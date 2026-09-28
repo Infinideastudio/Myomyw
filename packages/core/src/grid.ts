@@ -30,8 +30,7 @@ export function copyGrid<T>(grid: Grid<T>): Grid<T> {
  * Inserts `item` at the ejector end of a line and shifts the line by one.
  * Returns the item that falls off the far end.
  *
- * `col` is not bounds-checked against lCol/rCol on purpose: the legacy AI
- * search relies on pushing lines beyond the active area (see ai/strong.ts).
+ * `col` is not bounds-checked; callers pass one of the side's lines.
  */
 export function shiftLine<T>(grid: Grid<T>, lCol: number, rCol: number, side: Side, col: number, item: T): T {
   let last: T;

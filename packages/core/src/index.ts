@@ -7,5 +7,6 @@ export * from "./protocol.ts";
 export type { Agent } from "./ai/agent.ts";
 export { WeakAI } from "./ai/weak.ts";
 export { StrongAI } from "./ai/strong.ts";
+export { LOSS, PoolSearch, evaluate } from "./ai/search.ts";
 export * from "./ai/presets.ts";
 export * from "./ai/match.ts";

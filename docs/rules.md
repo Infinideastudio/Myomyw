@@ -259,8 +259,8 @@ about 50–100 turns).
 - **Outside the model.** Timers, giving up and disconnecting are real-time
   rules layered on top. The implementation also keeps balls outside the
   visible $m \times n$ area in a hidden 10 × 10 matrix; they never influence the
-  rules (rows/columns that come back are reset to $\mathtt{C}$), only the
-  legacy AI's search (see [ai.md](ai.md), quirk 2).
+  game (rows/columns that come back are reset to $\mathtt{C}$), so they are not
+  part of the state.
 
 ## Appendix: correspondence with the code
 
