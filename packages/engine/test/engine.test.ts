@@ -144,6 +144,12 @@ describe("WasmAgent", () => {
     }
   });
 
+  it("plays the Impossible AI reproducibly", { timeout: 120_000 }, () => {
+    const first = play("impossible", "easy", 4);
+    expect(first.decisions.length).toBeGreaterThan(5);
+    expect(play("impossible", "easy", 4)).toEqual(first);
+  });
+
   it("rejects invalid input instead of crashing", () => {
     const board = engine.createBoard(initialBoard());
     expect(() => board.push(Side.Left, 6, Ball.Common)).toThrow();

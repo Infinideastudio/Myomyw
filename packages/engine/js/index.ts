@@ -65,6 +65,8 @@ function parseSpec(spec: AgentSpec): { kind: number; depth: number; fillout: num
       return { kind: 1, depth: 1, fillout: 10 };
     case "hard":
       return { kind: 1, depth: 2, fillout: 10 };
+    case "impossible":
+      return { kind: 2, depth: 0, fillout: 0 };
   }
   const custom = /^strong:(\d+),(\d+)$/.exec(spec);
   if (custom) return { kind: 1, depth: Number(custom[1]), fillout: Number(custom[2]) };

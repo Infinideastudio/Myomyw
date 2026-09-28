@@ -29,6 +29,7 @@ export const zhCN: Messages = {
     easy: "简单",
     normal: "一般",
     hard: "困难",
+    impossible: "不可能",
   },
   names: {
     green: "绿方",

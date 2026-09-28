@@ -28,6 +28,7 @@ export const en = {
     easy: "Easy",
     normal: "Normal",
     hard: "Hard",
+    impossible: "Impossible",
   },
   names: {
     green: "Green",

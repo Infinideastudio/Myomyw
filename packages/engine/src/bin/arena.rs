@@ -34,7 +34,7 @@ fn main() -> ExitCode {
         };
         if !ok {
             eprintln!("usage: arena [--a SPEC] [--b SPEC] [--games N] [--seed N] [--threads N]");
-            eprintln!("SPEC: easy | normal | hard | strong:<maxDepth>,<fillout>");
+            eprintln!("SPEC: easy | normal | hard | impossible | strong:<maxDepth>,<fillout> | mcts[:key=value,...]");
             return ExitCode::FAILURE;
         }
     }

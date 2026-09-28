@@ -14,7 +14,7 @@
 
 use std::cell::RefCell;
 
-use crate::ai::{Agent, StrongAi, WeakAi};
+use crate::ai::{Agent, Difficulty, StrongAi, WeakAi, create_agent};
 use crate::ball::{Ball, MAX_COLS, Side};
 use crate::board::Board;
 use crate::game::{EndReason, Game};
@@ -253,12 +253,14 @@ pub unsafe extern "C" fn game_set_ball(game: *mut GameHandle, l: u32, r: u32, ba
 /// An agent handle (a fat `Box<dyn Agent>` behind a thin pointer).
 pub struct AgentHandle(Box<dyn Agent>);
 
-/// Creates an agent: `kind` 0 = WeakAI, 1 = StrongAI(`depth`, `fillout`), seeded with `seed`.
+/// Creates an agent: `kind` 0 = WeakAI, 1 = StrongAI(`depth`, `fillout`),
+/// 2 = the Impossible AI (`depth` and `fillout` ignored), seeded with `seed`.
 #[unsafe(no_mangle)]
 pub extern "C" fn agent_new(kind: u32, depth: u32, fillout: u32, seed: u32) -> *mut AgentHandle {
     let agent: Box<dyn Agent> = match kind {
         0 => Box::new(WeakAi::new()),
         1 if depth >= 1 && fillout >= 1 => Box::new(StrongAi::new(depth, fillout, seed)),
+        2 => create_agent(Difficulty::Impossible, seed),
         _ => return std::ptr::null_mut(),
     };
     Box::into_raw(Box::new(AgentHandle(agent)))

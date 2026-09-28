@@ -39,14 +39,16 @@ fn main() {
     );
 
     // Built-in AIs: average time per turn in self-play.
-    for (name, difficulty) in [("normal", Difficulty::Normal), ("hard", Difficulty::Hard)] {
+    for (name, difficulty, games) in
+        [("normal", Difficulty::Normal, 50), ("hard", Difficulty::Hard, 50), ("impossible", Difficulty::Impossible, 2)]
+    {
         let started = Instant::now();
         let mut turns = 0;
-        for i in 0..50 {
+        for i in 0..games {
             let mut left = create_agent(difficulty, i * 2 + 1);
             let mut right = create_agent(difficulty, i * 2 + 2);
             turns += play_match(left.as_mut(), right.as_mut(), &mut Rng::new(i), 10_000).turns;
         }
-        println!("{name} vs {name}: {:.1} µs per turn", started.elapsed().as_secs_f64() * 1e6 / f64::from(turns));
+        println!("{name} vs {name}: {:.3} ms per turn", started.elapsed().as_secs_f64() * 1e3 / f64::from(turns));
     }
 }

@@ -29,6 +29,7 @@ export const zhTW: Messages = {
     easy: "簡單",
     normal: "一般",
     hard: "困難",
+    impossible: "不可能",
   },
   names: {
     green: "綠方",

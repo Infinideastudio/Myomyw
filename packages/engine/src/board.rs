@@ -260,6 +260,19 @@ impl Board {
         left - right
     }
 
+    /// Calls `f(l, r, ball)` for every non-common ball on the board.
+    #[inline]
+    pub fn for_each_special(&self, mut f: impl FnMut(usize, usize, Ball)) {
+        for (plane, &bits) in self.planes.iter().enumerate() {
+            let mut rest = bits;
+            while rest != 0 {
+                let index = rest.trailing_zeros() as usize;
+                rest &= rest - 1;
+                f(index / STRIDE, index % STRIDE, Ball::from_plane(plane));
+            }
+        }
+    }
+
     /// A 64-bit hash of the position (for transposition tables).
     pub fn hash64(&self) -> u64 {
         let mut h = (u64::from(self.l_col) << 8) | u64::from(self.r_col);

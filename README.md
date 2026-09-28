@@ -7,7 +7,7 @@ diamond-shaped board; whoever pushes the red Key ball off the board loses. Every
 push also changes what your opponent can do next — so the way to win is to
 leave them nothing but losing moves.
 
-Play against the computer (three difficulty levels), with a friend on the same
+Play against the computer (four difficulty levels), with a friend on the same
 screen, or online. Available in English, 简体中文 and 正體中文.
 
 ## Rules in brief
@@ -56,8 +56,9 @@ Server settings are environment variables: `PORT` (8650), `HOST`,
 
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml) lints, tests and
 builds on every push and pull request, and deploys the web client to GitHub
-Pages from `master` (enable it once under *Settings → Pages → Source: GitHub
-Actions*). The Pages site is static — offline modes only by default. To offer
+Pages from every run, whatever the branch (enable it once under *Settings →
+Pages → Source: GitHub Actions*, and allow the branches in the `github-pages`
+environment's deployment rules). The Pages site is static — offline modes only by default. To offer
 online play there, run the server elsewhere and set the repository variable
 `MYOMYW_SERVER_URL` (e.g. `wss://example.com`); players can also enter a
 server in Settings.

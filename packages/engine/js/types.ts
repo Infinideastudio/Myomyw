@@ -86,8 +86,8 @@ export interface PushOutcome {
 export class IllegalMoveError extends Error {}
 
 /** The built-in computer opponents. */
-export type Difficulty = "easy" | "normal" | "hard";
-export const DIFFICULTIES: readonly Difficulty[] = ["easy", "normal", "hard"];
+export type Difficulty = "easy" | "normal" | "hard" | "impossible";
+export const DIFFICULTIES: readonly Difficulty[] = ["easy", "normal", "hard", "impossible"];
 
 /** Number of ejectors owned by `side`. */
 export function ejectors(board: BoardSnapshot, side: Side): number {

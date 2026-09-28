@@ -1,9 +1,12 @@
 //! Computer players. See docs/ai.md.
 
+mod mcts;
 mod search;
 mod strong;
+pub mod value;
 mod weak;
 
+pub use mcts::{IMPOSSIBLE_ITERS, Leaf, Mcts, MctsAi, MctsParams};
 pub use search::{INF, LOSS, PoolSearch};
 pub use strong::StrongAi;
 pub use weak::WeakAi;
@@ -23,6 +26,10 @@ pub trait Agent: Send {
     fn begin_turn(&mut self, view: &Board);
     fn first_push(&mut self, next: Ball) -> usize;
     fn push_again(&mut self, next: Ball) -> bool;
+    /// Estimated value of the last decision for the agent, in [−1, 1], if the agent computes one.
+    fn last_value(&self) -> Option<f32> {
+        None
+    }
 }
 
 /// The built-in opponents.
@@ -31,6 +38,7 @@ pub enum Difficulty {
     Easy,
     Normal,
     Hard,
+    Impossible,
 }
 
 /// Creates a built-in opponent; the same seed always gives the same play.
@@ -39,16 +47,21 @@ pub fn create_agent(difficulty: Difficulty, seed: u32) -> Box<dyn Agent> {
         Difficulty::Easy => Box::new(WeakAi::new()),
         Difficulty::Normal => Box::new(StrongAi::new(1, 10, seed)),
         Difficulty::Hard => Box::new(StrongAi::new(2, 10, seed)),
+        Difficulty::Impossible => Box::new(MctsAi::new(MctsParams::default(), seed)),
     }
 }
 
-/// Parses an agent spec: `easy`, `normal`, `hard` or `strong:<maxDepth>,<fillout>`
-/// (also accepted by `Engine.createAgent` in TypeScript).
+/// Parses an agent spec: `easy`, `normal`, `hard`, `impossible`,
+/// `strong:<maxDepth>,<fillout>` or `mcts[:<key>=<value>,…]` (see [`MctsParams::parse`]).
+/// `Engine.createAgent` in TypeScript accepts all but `mcts` options.
 pub fn agent_from_spec(spec: &str, seed: u32) -> Result<Box<dyn Agent>, String> {
     match spec {
         "easy" => Ok(create_agent(Difficulty::Easy, seed)),
         "normal" => Ok(create_agent(Difficulty::Normal, seed)),
         "hard" => Ok(create_agent(Difficulty::Hard, seed)),
+        "impossible" => Ok(create_agent(Difficulty::Impossible, seed)),
+        "mcts" => Ok(Box::new(MctsAi::new(MctsParams::default(), seed))),
+        _ if spec.starts_with("mcts:") => Ok(Box::new(MctsAi::new(MctsParams::parse(&spec[5..])?, seed))),
         _ => {
             let parse = || -> Option<Box<dyn Agent>> {
                 let (depth, fillout) = spec.strip_prefix("strong:")?.split_once(',')?;

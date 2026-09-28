@@ -63,7 +63,6 @@ jobs:
           path: packages/web/dist
 
   deploy:
-    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:
