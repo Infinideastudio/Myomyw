@@ -1,34 +1,33 @@
 #!/usr/bin/env bash
-# Trains the Impossible AI's value network by self-play (see docs/ai.md).
+# Trains the Impossible AI's network by AlphaZero-style self-play (see docs/ai.md).
 #
 #   packages/engine/scripts/train.sh FIRST LAST [DIR]
 #
-# Generation g plays GAMES (default 20 000) self-play games searching ITERS
-# (default 1600) iterations per decision with network g−1 (DIR/net<g−1>.bin;
-# for g = 1 the built-in network, or the static evaluation with BOOTSTRAP=1),
-# trains DIR/net<g>.bin on the positions of generations g−2…g, then plays it
-# against network g−1. Copy the best network to src/ai/value/weights.bin.
+# Iteration g plays GAMES (default 15 000) self-play games of the PUCT search
+# with ITERS (default 3200) iterations per decision using DIR/az<g−1>.bin
+# (the built-in network if that file is missing), recording each decision's
+# visit distribution; trains DIR/az<g>.bin from az<g−1> on the value and
+# policy targets of all iterations so far plus VALUE (comma-separated
+# value-only data files, optional); then plays it against az<g−1>.
+# Copy the best network to src/ai/value/weights.bin.
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 cargo build --release -q --bin selfplay --bin train --bin arena
 first=$1 last=$2 dir=${3:-target/nn}
-games=${GAMES:-20000}
-iters=${ITERS:-1600}
+games=${GAMES:-15000}
+iters=${ITERS:-3200}
 bin=target/release
-search="mcts:c=0.3,prior=10"
+search="mcts:puct=0.5,prior=0"
 mkdir -p "$dir"
-net_of() {
-  if [ -f "$dir/net$1.bin" ]; then echo ",net=$dir/net$1.bin"
-  elif [ "${BOOTSTRAP:-0}" = 1 ]; then echo ",eval=static,prior=0,c=1"
-  else echo ""; fi
-}
+if [ ! -f "$dir/az$((first - 1)).bin" ]; then cp packages/engine/src/ai/value/weights.bin "$dir/az$((first - 1)).bin"; fi
 for g in $(seq "$first" "$last"); do
   p=$((g - 1))
-  "$bin/selfplay" --a "$search,iters=$iters$(net_of $p)" --games "$games" --out "$dir/gen$g.bin" --seed $((g * 100))
-  data="$dir/gen$g.bin"
-  for k in 1 2; do
-    if [ -f "$dir/gen$((g - k)).bin" ]; then data="$data,$dir/gen$((g - k)).bin"; fi
+  "$bin/selfplay" --a "$search,iters=$iters,net=$dir/az$p.bin" --games "$games" --out "$dir/azpol$g.bin" --seed $((1000 + g))
+  data=""
+  for k in $(seq 1 "$g"); do
+    if [ -f "$dir/azpol$k.bin" ]; then data="$dir/azpol$k.bin,$data"; fi
   done
-  "$bin/train" --data "$data" --out "$dir/net$g.bin" --epochs 5 --batch 2048
-  "$bin/arena" --a "$search,iters=2000,net=$dir/net$g.bin" --b "$search,iters=2000$(net_of $p)" --games 1000
+  data="$data${VALUE:-}"
+  "$bin/train" --data "${data%,}" --init "$dir/az$p.bin" --policy 1 --out "$dir/az$g.bin" --epochs 4 --batch 2048
+  "$bin/arena" --a "$search,iters=$iters,net=$dir/az$g.bin" --b "$search,iters=$iters,net=$dir/az$p.bin" --games 1000
 done

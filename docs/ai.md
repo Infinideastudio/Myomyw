@@ -1,9 +1,10 @@
 # Computer players
 
 The game ships four computer opponents. Easy, Normal and Hard are the original
-(Beta 0.8) AIs with their bugs fixed (see [History](#history)); Impossible is a
-Monte Carlo tree search guided by a neural network trained by self-play (see
-[Impossible](#impossible--mctsai) and [Research notes](#research-notes)). They
+(Beta 0.8) AIs with their bugs fixed (see [History](#history)); Impossible is an
+AlphaZero-style Monte Carlo tree search guided by a neural network trained by
+self-play (see [Impossible](#impossible--mctsai) and
+[Research notes](#research-notes)). They
 are implemented in the Rust engine (`packages/engine/src/ai/`) and run natively
 or as WebAssembly; the web client runs them in a Web Worker (see
 [architecture.md](architecture.md#computer-players)).
@@ -13,7 +14,7 @@ or as WebAssembly; the web client runs them in a Web Worker (see
 | Easy | `easy` | `WeakAi` — [`weak.rs`](../packages/engine/src/ai/weak.rs) |
 | Normal | `normal` | `StrongAi::new(1, 10, seed)` — [`strong.rs`](../packages/engine/src/ai/strong.rs) |
 | Hard | `hard` | `StrongAi::new(2, 10, seed)` — search in [`search.rs`](../packages/engine/src/ai/search.rs) |
-| Impossible | `impossible` | `MctsAi` — [`mcts.rs`](../packages/engine/src/ai/mcts.rs), value network in [`value/`](../packages/engine/src/ai/value/) |
+| Impossible | `impossible` | `MctsAi` — [`mcts.rs`](../packages/engine/src/ai/mcts.rs), network in [`value/`](../packages/engine/src/ai/value/) |
 
 Agents are created from a spec (`easy`, `normal`, `hard`, `impossible` or
 `strong:<maxDepth>,<fillout>`; natively also `mcts:<key>=<value>,…`, see
@@ -29,6 +30,7 @@ pub trait Agent: Send {
     fn begin_turn(&mut self, view: &Board);   // start of each of the agent's turns
     fn first_push(&mut self, next: Ball) -> usize; // which of its lines to push
     fn push_again(&mut self, next: Ball) -> bool;  // push the same line again, or end the turn?
+    fn win_estimate(&self) -> Option<f32> { None } // optional: its estimated chance of winning
 }
 ```
 
@@ -134,33 +136,39 @@ decision, so unlike `StrongAi` it never sees future balls it could not know.
   child per possible next ball (a Stop has one child). Descending, the ball is
   drawn from the true distribution, so averages converge to the expected
   value (expectimax).
-- **Selection.** UCT on values in [−1, 1] from the chooser's point of view,
-  exploration constant `c = 0.3`.
-- **Prior.** The first time the search passes through a node, each of its
-  actions gets 10 virtual visits worth the network's value of the position it
-  leads to (assuming a common ball follows; pushing a Key off is an exact
-  loss). This one-ply look-ahead focuses the search on plausible moves at
-  once. It is computed lazily because most nodes are leaves that are never
-  visited again, and its values are reused when the same positions are
-  expanded (after a Stop, or a push followed by a common ball).
-- **Leaves** are evaluated by the value network; there are no rollouts.
-- **Budget.** 20 000 iterations per decision (`IMPOSSIBLE_ITERS`), so games are
-  reproducible for a seed. The subtree of the position actually reached is
-  kept for the next decision of the same turn.
+- **Selection.** AlphaZero's PUCT rule on values in [−1, 1] from the
+  chooser's point of view: Q + 0.5 · P · √N / (1 + n), where P is the
+  network's policy for the action; an action not yet tried is valued at the
+  network's value of the position.
+- **Leaves.** Each new node is evaluated once by the network, which gives both
+  its value (backed up the tree) and the policy priors of its actions; there
+  are no rollouts.
+- **Budget.** 50 000 iterations per decision (`IMPOSSIBLE_ITERS`), so games
+  are reproducible for a seed. The subtree of the position actually reached
+  is kept for the next decision of the same turn (and the rest discarded, to
+  bound memory). In the browser this takes a few hundred milliseconds per
+  decision, hidden by the pause and animations around each push (see
+  `LocalMatch`).
+- **Estimate.** The mean value of the chosen action is reported as the AI's
+  chance of winning (`Agent::win_estimate`), shown in the web client as a bar
+  across the top of the game screen.
 
 The native spec `mcts:<key>=<value>,…` overrides these settings: `iters`,
-`ms` (time budget per decision, not reproducible), `c`, `prior`, `net=<file>`
+`ms` (time budget per decision, not reproducible), `puct`, `net=<file>`
 (another weight file), `eval=static` (`tanh(Board::evaluate / 10)` instead
-of the network) and `puct=<constant>` (AlphaZero-style selection with the
-network's policy head; see [Research notes](#research-notes)). `mcts` alone
+of the network), and `puct=0` for the earlier UCT search with constant `c`
+and a one-ply `prior` (see [Research notes](#research-notes)). `mcts` alone
 equals `impossible`.
 
-### The value network (`src/ai/value/`)
+### The network (`src/ai/value/`)
 
-A multilayer perceptron estimating the probability that the player to move
-wins: 509 sparse inputs → 64 ReLU → 32 ReLU → 1 logistic output, about 34 000
-weights (136 KB, embedded in the engine from `value/weights.bin`). The inputs,
-always from the mover's point of view (`features.rs`):
+A multilayer perceptron with two heads: 509 sparse inputs → 128 ReLU → 64
+ReLU, then a **value** output (the probability that the player to move wins)
+and a **policy** of 11 outputs (logits of the first push of a turn, one per
+line counted from the bottom corner like the features, and the logit of
+pushing again). About 74 000 weights (290 KB, embedded in the engine from
+`value/weights.bin`). The inputs, always from the mover's point of view
+(`features.rs`):
 
 - every special ball, by kind and position counted from the **bottom corner**
   (how many pushes from falling off each side's lines), so features keep
@@ -171,23 +179,26 @@ always from the mover's point of view (`features.rs`):
   falls (and how many have no Key), and the classic `Board::evaluate`.
 
 Only special balls are active inputs, so the first layer is a sum of a few
-dozen rows; an evaluation takes about 0.7 µs natively (0.25 µs for the
-features, 0.45 µs for the network). The WebAssembly build enables SIMD
-(`.cargo/config.toml`), which makes the web AI about 1.8 times faster.
+dozen rows; a search iteration takes under 2 µs natively. The WebAssembly
+build enables SIMD (`.cargo/config.toml`).
 
 ### Training
 
-`packages/engine/scripts/train.sh FIRST LAST` runs self-play generations
-(`bin/selfplay.rs` writes every decision position with the final result,
-and the search's visit distribution to a `.pol` file beside it;
-`bin/train.rs` trains with Adam on the logistic loss, plus with `--policy
-<weight>` an optional policy head on the visit distributions). Generation *g* plays
-20 000 games with the search above at 1600 iterations using network *g − 1*,
-then trains network *g* from scratch on the positions of generations
-*g − 2 … g* (about 15 million) for 5 epochs, holding out 5% for validation;
-a generation takes about 45 minutes on 24 threads. The shipped network was
-trained the same way (6 epochs) on all the positions of generations 2–7,
-about 32 million (see [Research notes](#research-notes)).
+`bin/selfplay.rs` plays games and writes every decision position with the
+final result, and the search's visit distribution to a `.pol` file beside
+it; `bin/train.rs` trains with Adam on the logistic value loss plus (with
+`--policy <weight>`) the policy's cross-entropy with the visit
+distributions. `packages/engine/scripts/train.sh FIRST LAST` runs
+AlphaZero iterations: iteration *g* plays 15 000 games of the search above
+(3200 iterations per decision) with network *g − 1*, then trains network *g*
+from network *g − 1* on all the self-play data so far; one iteration takes
+about 80 minutes on 24 threads.
+
+The shipped network came about in stages (see
+[Research notes](#research-notes)): value-only generations of self-play
+(about 32 million positions), two sets of visit distributions from the
+earlier search, a network trained from scratch on all of them, and three
+AlphaZero iterations.
 
 ## Baseline strength
 
@@ -203,17 +214,16 @@ enough for identical agents to land anywhere between 47% and 53%).
 | Normal vs Easy | 91.6% | 51 |
 | Hard vs Easy | 97.1% | 47 |
 | Hard vs Hard | 49.9% | 72 |
-| Impossible vs Hard\* | 97.3% | 59 |
-| Impossible vs Normal\* | 98.4% | 50 |
+| Impossible (20 000-iteration version) vs Hard\* | 97.3% | 59 |
+| Impossible (20 000-iteration version) vs Normal\* | 98.4% | 50 |
+| Impossible vs its 20 000-iteration version† | 73.5% | 83 |
 
-\* 1000 games.
+\* 1000 games. † 200 games.
 
 Over 30 000 Hard-vs-Hard games (seeds 1–3), the first mover won 50.5%: moving
 first is no meaningful advantage. Hard takes about 75 µs per turn; the
 10 000-game Hard-vs-Hard tournament takes about 9 s on 24 threads, so a
-stronger agent has a large time budget to work with. Impossible takes about
-30 ms per decision natively (80 ms per turn) and 40 ms per decision in
-WebAssembly under Node (100 ms at worst).
+stronger agent has a large time budget to work with.
 
 These numbers use the current ball odds (6/10 common, 1/10 per special ball);
 see [rules.md §3](rules.md#3-the-next-ball).
@@ -335,7 +345,7 @@ is shipped.
 decision in the browser as the first version's 3000, and beats that version
 73.0%.
 
-**Third round: an AlphaZero policy head does not pay off.** The network can
+**Third round: at small budgets, a policy head does not pay off.** The network can
 carry a policy head on its second hidden layer: 10 logits for the first push
 (one per line, counted from the bottom corner like the features) and one for
 pushing again. It is trained with a cross-entropy loss on the search's root
@@ -360,10 +370,30 @@ too). All comparisons below use the same network on both sides, 1000 games:
   over 3000 games) — but the larger network is slower, and the combination
   only ties the shipped AI (50.2% over 2000 games at 5 ms).
 
-The one-ply prior is already a good policy: pushing the Key off is an exact
-loss, and the value network judges the rest. The policy code is kept (off by
-default) for future experiments.
+The one-ply prior is already a good policy at small budgets: pushing the
+Key off is an exact loss, and the value network judges the rest.
 
-Ideas not tried yet: features or targets that make the value network learn
-faster than more data does — the value network, not the search, now limits
-the AI.
+**Fourth round: with more time, AlphaZero wins.** The larger network's
+advantage grows with the time per decision, because each extra iteration
+matters less once there are many while a good policy keeps paying off:
+against the shipped AI at equal time it scored 50.2% at 5 ms, 53.5% at 25 ms
+and 57.7% at 100 ms per decision (and PUCT beat the one-ply prior with the
+same network 55.1% at 25 ms). Since the web client can hide a few hundred
+milliseconds of thinking under its animations, the policy became worth
+pursuing:
+
+- Three AlphaZero iterations with the larger network (15 000 self-play
+  games of the PUCT search at 3200 iterations each, then retraining from
+  the previous network on all the policy data so far and the value data)
+  improved it step by step: 57.9%, 54.5% and 51.7% against the previous
+  iteration, with the policy agreeing with the search 52.4%, 55.0% and 56.4%
+  of the time.
+- At equal time, about 115 ms per decision natively (66 000 PUCT iterations
+  against 100 000 of the one-ply-prior search), the result beat the shipped
+  AI 68.7% over 1000 games.
+
+Impossible now uses this network and search with 50 000 iterations.
+
+Ideas not tried yet: more AlphaZero iterations (the gains were shrinking:
++7.9, +4.5, +1.7 points), a per-line policy head (one small scorer applied
+to each line's own contents), and exploration noise in self-play.

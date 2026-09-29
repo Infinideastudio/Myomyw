@@ -44,12 +44,12 @@ pub struct MctsParams {
 impl Default for MctsParams {
     /// The tuned settings of the Impossible AI.
     fn default() -> MctsParams {
-        MctsParams { iters: IMPOSSIBLE_ITERS, ms: 0, c: 0.3, prior: 10.0, puct: 0.0, leaf: Leaf::Net(builtin_net()) }
+        MctsParams { iters: IMPOSSIBLE_ITERS, ms: 0, c: 0.3, prior: 0.0, puct: 0.5, leaf: Leaf::Net(builtin_net()) }
     }
 }
 
 /// Iterations per decision of the Impossible AI.
-pub const IMPOSSIBLE_ITERS: u32 = 20000;
+pub const IMPOSSIBLE_ITERS: u32 = 50000;
 
 impl MctsParams {
     /// Parses comma-separated `key=value` overrides of the defaults: `iters`,
@@ -138,9 +138,12 @@ impl Mcts {
     /// grandchildren (the position after the chosen action and the drawn ball).
     pub fn search(&mut self, game: &Game) -> Action {
         let root = match self.find_reusable(game) {
-            Some(node) => node,
+            Some(node) => self.compact(node),
             None => {
                 self.reset();
+                // About one node per iteration: allocate once instead of growing.
+                self.nodes.reserve(self.params.iters as usize + 1);
+                self.edges.reserve(3 * self.params.iters as usize + 16);
                 self.add_node(*game)
             }
         };
@@ -182,6 +185,39 @@ impl Mcts {
     pub fn reset(&mut self) {
         self.nodes.clear();
         self.edges.clear();
+    }
+
+    /// Keeps only the subtree of `root`, which becomes node 0 (bounds the
+    /// memory used over the several decisions of a turn).
+    fn compact(&mut self, root: u32) -> u32 {
+        let mut nodes = Vec::with_capacity(self.nodes.capacity());
+        let mut edges = Vec::with_capacity(self.edges.capacity());
+        let copy = |old: u32, nodes: &mut Vec<Node>, edges: &mut Vec<Edge>| {
+            let mut node = self.nodes[old as usize];
+            let range = node.first as usize..(node.first + node.len) as usize;
+            node.first = edges.len() as u32;
+            edges.extend_from_slice(&self.edges[range]);
+            nodes.push(node);
+        };
+        copy(root, &mut nodes, &mut edges);
+        // Breadth first: the children of copied node `i` hold old indices until `i` is processed.
+        let mut i = 0;
+        while i < nodes.len() {
+            let node = nodes[i];
+            for e in node.first..node.first + node.len {
+                for slot in 0..5 {
+                    let old = edges[e as usize].child[slot];
+                    if old != NONE {
+                        edges[e as usize].child[slot] = nodes.len() as u32;
+                        copy(old, &mut nodes, &mut edges);
+                    }
+                }
+            }
+            i += 1;
+        }
+        self.nodes = nodes;
+        self.edges = edges;
+        0
     }
 
     fn find_reusable(&self, game: &Game) -> Option<u32> {

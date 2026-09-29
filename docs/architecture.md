@@ -34,7 +34,7 @@ The crate `myomyw-engine` (no dependencies) and its TypeScript bindings:
 | `src/board.rs` | `Board` as bitboards (below) |
 | `src/game.rs` | `Game`, `Action` (`Push(line)` / `Stop`), `Game::actions()` / `apply()` — the Markov game of [rules.md §9](rules.md#9-formal-model-a-two-player-zero-sum-markov-game) |
 | `src/rng.rs` | `Rng` (mulberry32); `Rng::ball()` draws from the official distribution |
-| `src/ai/` | `Agent` trait, `WeakAi`, `StrongAi`, `PoolSearch`, `MctsAi`; `src/ai/value/`: the Impossible AI's value network and its embedded weights ([ai.md](ai.md)) |
+| `src/ai/` | `Agent` trait, `WeakAi`, `StrongAi`, `PoolSearch`, `MctsAi`; `src/ai/value/`: the Impossible AI's network (value and policy heads) and its embedded weights ([ai.md](ai.md)) |
 | `src/arena.rs` | `play_match`, multi-threaded `tournament` |
 | `src/ffi.rs` | C ABI exported by the WebAssembly module |
 | `src/bin/arena.rs`, `src/bin/bench.rs` | `npm run arena`, `npm run bench` |
