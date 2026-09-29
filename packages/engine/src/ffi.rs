@@ -266,16 +266,13 @@ pub extern "C" fn agent_new(kind: u32, depth: u32, fillout: u32, seed: u32) -> *
     Box::into_raw(Box::new(AgentHandle(agent)))
 }
 
-/// Largest number of MCTS iterations per decision accepted by `agent_new_mcts`
-/// (the search keeps about one node per iteration in memory).
-pub const MAX_MCTS_ITERS: u32 = 200_000;
-
 /// Creates an MCTS agent with the Impossible AI's network and custom settings:
-/// `iters` iterations per decision (1 to [`MAX_MCTS_ITERS`]) and PUCT
-/// exploration constant `puct` (> 0). Returns null for invalid settings.
+/// `iters` iterations per decision (at least 1; the search keeps about one
+/// node per iteration in memory) and PUCT exploration constant `puct` (> 0).
+/// Returns null for invalid settings.
 #[unsafe(no_mangle)]
 pub extern "C" fn agent_new_mcts(iters: u32, puct: f32, seed: u32) -> *mut AgentHandle {
-    if !(1..=MAX_MCTS_ITERS).contains(&iters) || !(puct > 0.0 && puct.is_finite()) {
+    if iters == 0 || !(puct > 0.0 && puct.is_finite()) {
         return std::ptr::null_mut();
     }
     let params = MctsParams { iters, puct, ..MctsParams::default() };

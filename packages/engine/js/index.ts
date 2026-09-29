@@ -64,7 +64,10 @@ export type AgentSpec = string;
 
 /** Settings of a custom MCTS agent (the Impossible AI's search and network). */
 export interface MctsSettings {
-  /** Search iterations (tree expansions) per decision, 1 to {@link MAX_MCTS_ITERS}. */
+  /**
+   * Search iterations (tree expansions) per decision: a positive integer (the
+   * engine counts them in 32 bits). 1 plays the policy network directly.
+   */
   iters: number;
   /** PUCT exploration constant (> 0); the Impossible AI uses 0.5. */
   puct: number;
@@ -72,7 +75,11 @@ export interface MctsSettings {
 
 /** The Impossible AI's settings. */
 export const IMPOSSIBLE_MCTS: MctsSettings = { iters: 50_000, puct: 0.5 };
-export const MAX_MCTS_ITERS = 200_000;
+
+/** Whether settings make a valid MCTS agent. */
+export function validMcts({ iters, puct }: MctsSettings): boolean {
+  return Number.isInteger(iters) && iters >= 1 && iters <= 0xffff_ffff && Number.isFinite(puct) && puct > 0;
+}
 
 /** The spec of a custom MCTS agent, e.g. `mcts:iters=5000,puct=0.5`. */
 export function mctsSpec({ iters, puct }: MctsSettings): AgentSpec {
@@ -103,6 +110,7 @@ function parseSpec(spec: AgentSpec): ParsedSpec {
       if (!field || value === undefined || value.trim() === "" || !Number.isFinite(Number(value))) throw new Error(`Bad MCTS option "${item}"`);
       settings[field] = Number(value);
     }
+    if (!validMcts(settings)) throw new Error(`Invalid MCTS settings in "${spec}"`);
     return { kind: "mcts", ...settings };
   }
   throw new Error(`Unknown agent "${spec}"`);

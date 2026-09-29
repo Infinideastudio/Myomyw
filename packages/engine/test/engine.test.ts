@@ -184,6 +184,8 @@ describe("WasmAgent", () => {
     expect(() => engine.createAgent("genius")).toThrow();
     expect(() => engine.createAgent("mcts:iters=0")).toThrow();
     expect(() => engine.createAgent("mcts:puct=0")).toThrow();
+    expect(() => engine.createAgent("mcts:iters=1.5")).toThrow();
+    expect(() => engine.createAgent(`mcts:iters=${2 ** 32}`)).toThrow();
     expect(() => engine.createAgent("mcts:depth=3")).toThrow();
   });
 });

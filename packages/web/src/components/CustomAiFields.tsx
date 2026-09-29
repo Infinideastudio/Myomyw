@@ -1,16 +1,25 @@
-import { IMPOSSIBLE_MCTS, MAX_MCTS_ITERS, type MctsSettings } from "@myomyw/engine";
+import { IMPOSSIBLE_MCTS, validMcts, type MctsSettings } from "@myomyw/engine";
 import { useState } from "react";
 import { format, useMessages } from "../i18n/index.tsx";
 import { getSettings, updateSettings, useSettings } from "../settings.ts";
 
-function save(patch: Partial<MctsSettings>): void {
-  updateSettings({ customAi: { ...getSettings().customAi, ...patch } });
+/** Saves a change if the result is valid; returns whether it was. */
+function save(patch: Partial<MctsSettings>): boolean {
+  const customAi = { ...getSettings().customAi, ...patch };
+  if (!validMcts(customAi)) return false;
+  updateSettings({ customAi });
+  return true;
+}
+
+/** Parses a typed number, or NaN for anything else (including an empty field). */
+function parse(text: string): number {
+  return /^\s*\d*\.?\d+\s*$/.test(text) ? Number(text) : NaN;
 }
 
 /**
  * Settings of the "Custom (MCTS)" computer player, saved as they change.
- * Number fields keep what is typed; only valid values are saved, and leaving
- * a field shows the saved value again.
+ * Fields keep what is typed; only valid values are saved, an invalid field is
+ * marked, and leaving it shows the saved value again.
  */
 export function CustomAiFields() {
   const t = useMessages();
@@ -18,23 +27,24 @@ export function CustomAiFields() {
   const { customAi } = useSettings();
   const [iters, setIters] = useState(String(customAi.iters));
   const [puct, setPuct] = useState(String(customAi.puct));
+  const [invalid, setInvalid] = useState({ iters: false, puct: false });
   return (
     <div className="custom-ai">
       <label className="field">
         <span>{c.iters}</span>
         <input
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={1}
-          max={MAX_MCTS_ITERS}
-          step={1}
           value={iters}
+          aria-invalid={invalid.iters}
           onChange={(e) => {
             setIters(e.target.value);
-            const n = Number(e.target.value);
-            if (Number.isInteger(n) && n >= 1 && n <= MAX_MCTS_ITERS) save({ iters: n });
+            setInvalid({ ...invalid, iters: !save({ iters: parse(e.target.value) }) });
           }}
-          onBlur={() => setIters(String(getSettings().customAi.iters))}
+          onBlur={() => {
+            setIters(String(getSettings().customAi.iters));
+            setInvalid({ ...invalid, iters: false });
+          }}
         />
         <small>{format(c.itersHint, { iters: IMPOSSIBLE_MCTS.iters.toLocaleString() })}</small>
       </label>
@@ -42,18 +52,18 @@ export function CustomAiFields() {
       <label className="field">
         <span>{c.exploration}</span>
         <input
-          type="number"
+          type="text"
           inputMode="decimal"
-          min={0.05}
-          max={20}
-          step={0.1}
           value={puct}
+          aria-invalid={invalid.puct}
           onChange={(e) => {
             setPuct(e.target.value);
-            const x = Number(e.target.value);
-            if (e.target.value.trim() !== "" && x > 0 && x <= 20) save({ puct: x });
+            setInvalid({ ...invalid, puct: !save({ puct: parse(e.target.value) }) });
           }}
-          onBlur={() => setPuct(String(getSettings().customAi.puct))}
+          onBlur={() => {
+            setPuct(String(getSettings().customAi.puct));
+            setInvalid({ ...invalid, puct: false });
+          }}
         />
         <small>{format(c.explorationHint, { puct: IMPOSSIBLE_MCTS.puct })}</small>
       </label>

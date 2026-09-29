@@ -89,7 +89,7 @@ export const zhCN: Messages = {
   },
   customAi: {
     iters: "每步搜索次数",
-    itersHint: "次数越多越强，但也越慢。“不可能”使用 {iters} 次。",
+    itersHint: "次数越多越强，但也越慢。“不可能”使用 {iters} 次；1 次即不搜索，直接按神经网络的直觉走。",
     exploration: "探索",
     explorationHint: "搜索时尝试非首选着法的程度（“不可能”使用 {puct}）。提高探索并减少搜索次数可以降低难度。",
   },

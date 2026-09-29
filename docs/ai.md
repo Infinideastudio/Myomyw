@@ -163,7 +163,11 @@ budget per decision, not reproducible), `net=<file>` (another weight file),
 
 **Weakening it.** The Custom (MCTS) opponent is made easier with fewer
 iterations and a larger exploration constant `puct`, which spreads the search
-over actions its policy prior likes less.
+over actions its policy prior likes less. With `iters=1` there is no search
+at all: the single PUCT selection picks the policy head's favourite action
+(every unvisited action scores `fpu + puct · P`), so the agent plays the
+network's policy directly (tested in `mcts.rs`). Zero iterations would not:
+with no visits the first legal action would be played.
 
 ### The network (`src/ai/value/`)
 

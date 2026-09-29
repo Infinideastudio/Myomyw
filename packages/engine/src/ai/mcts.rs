@@ -51,6 +51,9 @@ impl Default for MctsParams {
 /// Iterations per decision of the Impossible AI.
 pub const IMPOSSIBLE_ITERS: u32 = 50000;
 
+/// Most iterations whose nodes are allocated up front.
+const RESERVE_LIMIT: u32 = 1 << 20;
+
 impl MctsParams {
     /// Parses comma-separated `key=value` overrides of the defaults: `iters`,
     /// `ms`, `c`, `prior`, `puct`, `net` (path of a weight file) and `eval=static`.
@@ -141,9 +144,11 @@ impl Mcts {
             Some(node) => self.compact(node),
             None => {
                 self.reset();
-                // About one node per iteration: allocate once instead of growing.
-                self.nodes.reserve(self.params.iters as usize + 1);
-                self.edges.reserve(3 * self.params.iters as usize + 16);
+                // About one node per iteration: allocate once instead of growing
+                // (up to a point; very long searches grow as they go).
+                let expected = self.params.iters.min(RESERVE_LIMIT) as usize;
+                self.nodes.reserve(expected + 1);
+                self.edges.reserve(3 * expected + 16);
                 self.add_node(*game)
             }
         };
@@ -531,6 +536,34 @@ mod tests {
         assert_eq!(ai.first_push(Ball::Common), 3);
         let visits = ai.root_visits();
         assert_eq!(visits.iter().map(|v| v.1).sum::<f32>(), 200.0);
+    }
+
+    #[test]
+    fn one_iteration_plays_the_policy_head() {
+        let net = builtin_net();
+        assert!(net.has_policy());
+        for seed in 1..=20 {
+            let mut rng = Rng::new(seed);
+            let mut board = Board::initial();
+            for l in 0..6 {
+                for r in 0..6 {
+                    board.set(l, r, rng.ball());
+                }
+            }
+            let game = Game::from_position(board, Side::Left, Ball::Common);
+            let (_, logits) = net.evaluate(&extract(&game));
+            let mut priors = [0.0; POLICY];
+            policy_priors(&game, &logits, &mut priors);
+            let mut best = 0;
+            for line in 1..game.board.ejectors(Side::Left) {
+                if priors[line] > priors[best] {
+                    best = line;
+                }
+            }
+            let mut ai = MctsAi::new(MctsParams { iters: 1, ..MctsParams::default() }, seed);
+            ai.begin_turn(&board);
+            assert_eq!(ai.first_push(Ball::Common), best, "seed {seed}");
+        }
     }
 
     #[test]

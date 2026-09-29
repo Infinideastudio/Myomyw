@@ -88,7 +88,7 @@ export const en = {
   },
   customAi: {
     iters: "Search iterations per decision",
-    itersHint: "More is stronger but slower. Impossible uses {iters}.",
+    itersHint: "More is stronger but slower. Impossible uses {iters}; 1 plays the neural network's instinct without searching.",
     exploration: "Exploration",
     explorationHint: "How much the search tries moves other than the ones it likes best (Impossible uses {puct}). Higher exploration with fewer iterations makes it easier.",
   },

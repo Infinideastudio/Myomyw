@@ -807,3 +807,6 @@ select {
   text-decoration: underline;
   cursor: pointer;
 }
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
