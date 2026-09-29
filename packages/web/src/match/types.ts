@@ -1,18 +1,21 @@
-import type { Ball, GameResult, Side } from "@myomyw/engine";
-import type { TimeLimits } from "@myomyw/protocol";
+import { RULES, Side, type Ball, type GameResult } from "@myomyw/engine";
 import type { BallSprite, Cell, Ghost } from "./display.ts";
 
 export type Phase =
   /** Not started yet (tutorial intro, waiting for an online opponent...). */
   | "waiting"
-  /** A turn has started and its first push has not been made. */
+  /**
+   * The player to move may act: make the first push of the turn, or (after
+   * pushing) push the same line again or end the turn.
+   */
   | "idle"
   /** A push is being animated / awaited. */
   | "moving"
-  /** Between two pushes of the same turn. */
+  /** A computer player pauses between two pushes of the same turn. */
   | "cooling"
   | "over";
 
+/** The clock of the player to move, restarted for each action. */
 export interface TurnTimer {
   /** `performance.now()`-based time at which the current player runs out of time. */
   endsAt: number;
@@ -66,8 +69,8 @@ export interface OnlineInfo {
   side: Side | null;
   room: number | null;
   motd: string;
-  /** The server's time limits, once connected. */
-  timeLimits: TimeLimits | null;
+  /** The server's time for each action (null: no limit); undefined until connected. */
+  timeLimitMs?: number | null;
   chat: readonly ChatLine[];
 }
 
@@ -75,15 +78,27 @@ export interface OnlineInfo {
 export interface MatchController {
   subscribe(listener: () => void): () => void;
   getSnapshot(): MatchSnapshot;
-  /** A human pressed (and is holding) an ejector of the side to move. */
-  press(col: number): void;
-  /** The human released the ejector. */
-  release(): void;
+  /** A human on this device pushes a line of the side to move (see {@link canPush}). */
+  push(col: number): void;
+  /** A human on this device ends the turn (see {@link canEndTurn}). */
+  endTurn(): void;
   /** Stops all timers and connections. */
   dispose(): void;
 }
 
-/** Whether a human on this device may press an ejector right now. */
-export function canPress(s: MatchSnapshot): boolean {
+/** Whether a human on this device may act right now. */
+function humanToAct(s: MatchSnapshot): boolean {
   return s.phase === "idle" && s.turn !== null && s.controllable[s.turn];
+}
+
+/** Whether a human on this device may push line `col` now: any line first, then only the same one. */
+export function canPush(s: MatchSnapshot, col: number): boolean {
+  if (!humanToAct(s)) return false;
+  if (s.pushes > 0) return col === s.activeLine && s.pushes < RULES.maxPushesPerTurn;
+  return col >= 0 && col < (s.turn === Side.Left ? s.lCol : s.rCol);
+}
+
+/** Whether a human on this device may end the turn now (after pushing at least once). */
+export function canEndTurn(s: MatchSnapshot): boolean {
+  return humanToAct(s) && s.pushes > 0;
 }

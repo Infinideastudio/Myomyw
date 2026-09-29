@@ -8,7 +8,7 @@ import { LocalMatch, type LocalMatchOptions } from "../match/LocalMatch.ts";
 import { NORMAL_TIMING, QUICK_TIMING } from "../match/timing.ts";
 import { useController } from "../match/useController.ts";
 import type { Navigate, Route } from "../routes.ts";
-import { useSettings, type Settings } from "../settings.ts";
+import { opponentSpec, useSettings, type Settings } from "../settings.ts";
 
 type LocalRoute = Extract<Route, { name: "vsComputer" | "twoPlayers" | "aiVsAi" }>;
 
@@ -17,7 +17,7 @@ function matchOptions(route: LocalRoute, t: Messages, settings: Settings): Local
   switch (route.name) {
     case "vsComputer":
       return {
-        seats: [{ kind: "human" }, { kind: "ai", agent: workerAgent(route.difficulty) }],
+        seats: [{ kind: "human" }, { kind: "ai", agent: workerAgent(opponentSpec(route.difficulty, settings)) }],
         names: [settings.name || t.names.you, `${t.names.computer} · ${t.difficulty[route.difficulty]}`],
         timeLimitMs,
       };
@@ -26,8 +26,8 @@ function matchOptions(route: LocalRoute, t: Messages, settings: Settings): Local
     case "aiVsAi":
       return {
         seats: [
-          { kind: "ai", agent: workerAgent(route.left) },
-          { kind: "ai", agent: workerAgent(route.right) },
+          { kind: "ai", agent: workerAgent(opponentSpec(route.left, settings)) },
+          { kind: "ai", agent: workerAgent(opponentSpec(route.right, settings)) },
         ],
         names: [`${t.names.green} · ${t.difficulty[route.left]}`, `${t.names.blue} · ${t.difficulty[route.right]}`],
         timeLimitMs: null,
@@ -52,9 +52,9 @@ export function LocalGameScreen({ route, navigate }: { route: LocalRoute; naviga
 
   const home = () => navigate({ name: "home" });
   const computerSides = route.name === "vsComputer" ? [Side.Right] : route.name === "aiVsAi" ? [Side.Left, Side.Right] : [];
-  // Only the Impossible AI estimates its chances.
-  const difficulties = route.name === "vsComputer" ? [route.difficulty] : route.name === "aiVsAi" ? [route.left, route.right] : [];
-  const showWinChance = difficulties.includes("impossible");
+  // Only the MCTS players (Impossible and Custom) estimate their chances.
+  const opponents = route.name === "vsComputer" ? [route.difficulty] : route.name === "aiVsAi" ? [route.left, route.right] : [];
+  const showWinChance = opponents.some((o) => o === "impossible" || o === "custom");
 
   return (
     <GameLayout

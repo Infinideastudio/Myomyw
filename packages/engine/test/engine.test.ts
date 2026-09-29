@@ -3,7 +3,7 @@
  * Requires `npm run build:wasm` (run automatically by `npm test`).
  */
 import { describe, expect, it } from "vitest";
-import { Ball, IllegalMoveError, RULES, Side, type BoardSnapshot } from "../js/index.ts";
+import { Ball, IllegalMoveError, RULES, Side, mctsSpec, type BoardSnapshot } from "../js/index.ts";
 import { loadEngineSync } from "../js/node.ts";
 import { loadLegacy } from "./legacy.ts";
 
@@ -167,6 +167,13 @@ describe("WasmAgent", () => {
     expect(play("impossible", "easy", 4)).toEqual(first);
   });
 
+  it("plays a custom MCTS agent reproducibly", () => {
+    const spec = mctsSpec({ iters: 200, puct: 2 });
+    const first = play(spec, "easy", 4);
+    expect(first.decisions.length).toBeGreaterThan(5);
+    expect(play(spec, "easy", 4)).toEqual(first);
+  });
+
   it("rejects invalid input instead of crashing", () => {
     const board = engine.createBoard(initialBoard());
     expect(() => board.push(Side.Left, 6, Ball.Common)).toThrow();
@@ -175,5 +182,8 @@ describe("WasmAgent", () => {
     expect(() => board.evaluate()).toThrow();
     expect(() => engine.createAgent("strong:0,1")).toThrow();
     expect(() => engine.createAgent("genius")).toThrow();
+    expect(() => engine.createAgent("mcts:iters=0")).toThrow();
+    expect(() => engine.createAgent("mcts:puct=0")).toThrow();
+    expect(() => engine.createAgent("mcts:depth=3")).toThrow();
   });
 });

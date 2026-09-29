@@ -19,7 +19,7 @@ export class TutorialMatch extends LocalMatch {
       seats: [{ kind: "human" }, { kind: "idle" }],
       names: [playerName, opponentName],
       // The tutorial teaches the standard limit, whatever the settings say.
-      timeLimitMs: RULES.turnTimeLimitMs,
+      timeLimitMs: RULES.timeLimitMs,
       autoStart: false,
       ballSource: () => {
         if (!first) return Ball.Common;

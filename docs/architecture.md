@@ -78,12 +78,12 @@ Message types and `encode`/`decode` for the WebSocket protocol
   pairs players first-come-first-served. The first player of a pair is Green.
 - `room.ts` — one game. The room owns a `WasmGame`; clients only send intents
   and the room broadcasts every resulting event, so clients cannot desync or
-  cheat. It enforces the server's time limits (by default 20 s for a turn's
-  first push and 5 s between pushes), which clients learn from `welcome`.
+  cheat. It times every action (by default 20 s per push or end of turn);
+  clients learn the limit from `welcome`.
 - `client.ts` — typed wrapper around a socket.
 
 Configuration is via environment variables (`PORT`, `HOST`, `MAX_ROOMS`,
-`MOTD`, `STATIC_DIR`, `TURN_TIME_LIMIT`, `PUSH_INTERVAL_LIMIT`); see `config.ts`.
+`MOTD`, `STATIC_DIR`, `TIME_LIMIT`); see `config.ts`.
 
 ## `@myomyw/web`
 
@@ -116,13 +116,16 @@ src/
 
 ### Match controllers
 
-A `MatchController` exposes `press(col)` / `release()` for human input and
-publishes immutable `MatchSnapshot`s. The UI never touches game logic.
+A `MatchController` exposes `push(col)` / `endTurn()` for human input and
+publishes immutable `MatchSnapshot`s; `canPush` / `canEndTurn` say what a
+human may do right now. The UI never touches game logic.
 
-- **`LocalMatch`** owns a `WasmGame` and paces it like the original:
-  `press → push (300 ms animation) → if still held: cool down 400 ms → push again`,
-  release ends the turn; an AI seat is asked `pushAgain` after every push
-  instead. A test asserts that it produces exactly the same games as driving
+- **`LocalMatch`** owns a `WasmGame` and paces it: every human push is one
+  click (300 ms animation, then a fresh clock for the next action), and the
+  turn ends on `endTurn()`, after the 5th push or a Flip. An AI seat is asked
+  `pushAgain` after every push and pauses 400 ms between pushes. A computer
+  player is asked for its first push as soon as the previous turn ends, even
+  before that turn's last push has been animated. A test asserts that it produces exactly the same games as driving
   the engine directly with the same seeds.
 - **`OnlineMatch`** sends intents to the server and replays the server's
   `pushed` / `turn` / `over` events one animation at a time, applying each push
@@ -155,9 +158,15 @@ board are rendered as short-lived "ghosts".
 animation), then `applyEffect` animates the effect and adopts the engine's
 resulting board, so the display can never drift from the real game state.
 
-Input: pointer events on ejectors (press-and-hold, released anywhere), hover /
-drag highlighting of the line, and keyboard (Tab to an ejector, hold Space or
-Enter).
+Ejectors are drawn like the timer: each is filled with its side's colour to
+the share of the turn's pushes still available on it, the "water" surface
+running parallel to the board edge. Before the first push every ejector of
+the side to move is full; afterwards only the line being pushed keeps its
+water (4/5, 3/5, …) and the others dim.
+
+Input: a click (or Enter / Space) on an ejector pushes; once the player has
+pushed, the timer cell becomes the "end turn" button (chess-clock style). The
+line under the pointer is highlighted while it can be pushed.
 
 ### Hosting
 
@@ -183,8 +192,9 @@ TypeScript packages and `cargo test`:
   thread-count-independent tournaments.
 - `server/test/server.test.ts` — a real server with two WebSocket clients.
 - `web/test/localMatch.test.ts` — the offline match controller on fake
-  timers (hold-to-repeat, 5-push limit, timeout, identical games to a direct
-  engine game).
+  timers (one push per click, same line only, 5-push limit, per-action
+  timeouts, the computer's head start, identical games to a direct engine
+  game).
 
 `npm run typecheck` type-checks the TypeScript packages; `cargo fmt --check`
 and `cargo clippy -- -D warnings` lint the Rust crate. CI runs all of these

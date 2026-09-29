@@ -1,9 +1,9 @@
-import { Ball, RULES, Side, opponent, type WasmBoard } from "@myomyw/engine";
+import { Ball, RULES, opponent, type WasmBoard } from "@myomyw/engine";
 import { MAX_CHAT_LENGTH, PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
 import { engine } from "../engine.ts";
 import { MatchBase } from "./MatchBase.ts";
 import { NORMAL_TIMING } from "./timing.ts";
-import type { ChatLine, OnlineError, OnlineInfo } from "./types.ts";
+import { canEndTurn, canPush, type ChatLine, type OnlineError, type OnlineInfo } from "./types.ts";
 
 /** How fast queued events are replayed when the client falls behind the server. */
 const CATCH_UP_MS = 60;
@@ -16,17 +16,13 @@ const CATCH_UP_MS = 60;
  * A copy of the board is kept in the engine and every push is replayed on it,
  * which gives the resulting position for the display.
  *
- * The local player's hold-to-repeat works like offline: after our own push has
- * been shown (and a cool-down), we push again if the ejector is still held,
- * otherwise we end the turn.
+ * The clock shown for each action counts from when the server's event
+ * arrived, which is when the server started it.
  */
 export class OnlineMatch extends MatchBase {
   private readonly ws: WebSocket;
   private readonly myName: string;
-  private mySide: Side | null = null;
-  private holding = false;
-  private awaitingEcho = false;
-  private cancelCool: (() => void) | null = null;
+  private timeLimitMs: number | null = null;
   private readonly queue: (() => number)[] = [];
   private busy = false;
   /** Set as soon as the result arrives (it is shown later, after queued animations). */
@@ -37,7 +33,7 @@ export class OnlineMatch extends MatchBase {
   constructor(url: string, name: string) {
     super({ names: [name, "…"], controllable: [false, false], timing: NORMAL_TIMING });
     this.myName = name;
-    this.update({ online: { status: "connecting", error: null, side: null, room: null, motd: "", timeLimits: null, chat: [] } });
+    this.update({ online: { status: "connecting", error: null, side: null, room: null, motd: "", chat: [] } });
     this.ws = new WebSocket(url);
     this.ws.onopen = () => this.send({ t: "hello", version: PROTOCOL_VERSION, name });
     this.ws.onmessage = (event) => {
@@ -59,21 +55,16 @@ export class OnlineMatch extends MatchBase {
     this.mirror?.free();
   }
 
-  press(col: number): void {
-    const s = this.state;
-    if (s.phase !== "idle" || s.turn === null || s.turn !== this.mySide || col < 0 || col >= this.lines(s.turn)) return;
-    this.holding = true;
-    this.sendPush(col);
+  push(col: number): void {
+    if (!canPush(this.state, col)) return;
+    this.send({ t: "push", col });
+    this.update({ phase: "moving", timer: null });
   }
 
-  release(): void {
-    if (!this.holding) return;
-    this.holding = false;
-    if (this.state.phase === "cooling") {
-      this.cancelCool?.();
-      this.send({ t: "endTurn" });
-      this.update({ phase: "moving" });
-    }
+  endTurn(): void {
+    if (!canEndTurn(this.state)) return;
+    this.send({ t: "endTurn" });
+    this.update({ phase: "moving", timer: null });
   }
 
   resign(): void {
@@ -99,22 +90,16 @@ export class OnlineMatch extends MatchBase {
     this.setInfo({ chat: [...this.info.chat, line] });
   }
 
-  private lines(side: Side): number {
-    return side === Side.Left ? this.state.lCol : this.state.rCol;
-  }
-
   private send(message: ClientMessage): void {
     if (this.ws.readyState === WebSocket.OPEN) this.ws.send(encode(message));
   }
 
-  private sendPush(col: number): void {
-    this.awaitingEcho = true;
-    this.send({ t: "push", col });
-    this.update({ phase: "moving", timer: null });
+  /** Time left for an action whose clock the server started when its event arrived at `receivedAt`. */
+  private timeLeft(receivedAt: number): number | null {
+    return this.timeLimitMs === null ? null : Math.max(0, this.timeLimitMs - (performance.now() - receivedAt));
   }
 
   private fail(error: OnlineError): void {
-    this.holding = false;
     this.setInfo({ status: "error", error });
     this.update({ phase: this.state.phase === "over" ? "over" : "waiting", timer: null });
   }
@@ -122,13 +107,13 @@ export class OnlineMatch extends MatchBase {
   private receive(message: ServerMessage): void {
     switch (message.t) {
       case "welcome":
-        this.setInfo({ status: "matching", motd: message.motd, timeLimits: message.timeLimits });
+        this.timeLimitMs = message.timeLimitMs;
+        this.setInfo({ status: "matching", motd: message.motd, timeLimitMs: message.timeLimitMs });
         break;
       case "rejected":
         this.fail(message.reason);
         break;
       case "matched": {
-        this.mySide = message.side;
         const names: [string, string] = [this.myName, this.myName];
         names[opponent(message.side)] = message.opponent;
         const controllable: [boolean, boolean] = [false, false];
@@ -142,20 +127,19 @@ export class OnlineMatch extends MatchBase {
       case "turn": {
         const receivedAt = performance.now();
         this.enqueue(() => {
-          this.holding = false;
-          const elapsed = performance.now() - receivedAt;
-          this.showTurn(message.side, message.timeLimitMs === null ? null : Math.max(0, message.timeLimitMs - elapsed));
+          this.showTurn(message.side, this.timeLeft(receivedAt));
           return 0;
         });
         break;
       }
-      case "pushed":
-        this.enqueue(() => this.showPush(message));
+      case "pushed": {
+        const receivedAt = performance.now();
+        this.enqueue(() => this.showPush(message, receivedAt));
         break;
+      }
       case "over":
         this.finished = true;
         this.enqueue(() => {
-          this.holding = false;
           this.showResult({ winner: message.winner, reason: message.reason });
           this.setInfo({ status: "over" });
           return 0;
@@ -167,32 +151,19 @@ export class OnlineMatch extends MatchBase {
     }
   }
 
-  private showPush(message: Extract<ServerMessage, { t: "pushed" }>): number {
+  private showPush(message: Extract<ServerMessage, { t: "pushed" }>, receivedAt: number): number {
     this.showShift(message.side, message.col, message.inserted, message.next, this.state.pushes + 1);
     if (this.mirror!.push(message.side, message.col, message.inserted) !== message.ejected) console.warn("Board out of sync with the server");
-    const mine = message.side === this.mySide;
-    if (mine) this.awaitingEcho = false;
     this.update({ phase: "moving" });
     // The effect is shown once the push animation is over.
     this.queue.unshift(() => {
       this.showEffect(message.ejected, this.mirror!.read());
+      // Otherwise the server follows with `turn` or `over`.
       const turnGoesOn = message.ejected !== Ball.Key && message.ejected !== Ball.Flip && this.state.pushes < RULES.maxPushesPerTurn;
-      if (mine && turnGoesOn) this.continueOwnTurn(message.col);
+      if (turnGoesOn) this.showAwaiting(this.timeLeft(receivedAt));
       return 0;
     });
     return this.timing.pushMs;
-  }
-
-  /** After our own push: push again while the ejector is held, else end the turn. */
-  private continueOwnTurn(col: number): void {
-    if (!this.holding) {
-      this.send({ t: "endTurn" });
-      return;
-    }
-    this.update({ phase: "cooling" });
-    this.cancelCool = this.later(() => {
-      if (this.holding && !this.awaitingEcho) this.sendPush(col);
-    }, this.timing.coolMs);
   }
 
   /** Runs display steps one after another; each returns how long it animates. */

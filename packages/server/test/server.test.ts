@@ -3,11 +3,11 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { Ball, Side } from "@myomyw/engine";
-import { PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage, type TimeLimits } from "@myomyw/protocol";
+import { PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
 import { createGameServer } from "../src/server.ts";
 
-const LIMITS: TimeLimits = { turnMs: 20_000, pushIntervalMs: 5_000 };
-const server = createGameServer("", LIMITS);
+const LIMIT_MS = 20_000;
+const server = createGameServer("", LIMIT_MS);
 let url = "";
 
 /** Starts a server on a free port and returns its URL. */
@@ -74,7 +74,7 @@ describe("game server", () => {
     expect(b.side).toBe(Side.Right);
     expect(a.opponent).toBe("Bob");
     expect(a.next).toBe(b.next);
-    expect(await alice.next("turn")).toEqual({ t: "turn", side: Side.Left, timeLimitMs: LIMITS.turnMs });
+    expect(await alice.next("turn")).toEqual({ t: "turn", side: Side.Left });
 
     // Bob cannot move out of turn; Alice pushes line 2 and ends her turn.
     bob.send({ t: "push", col: 0 });
@@ -93,23 +93,30 @@ describe("game server", () => {
     expect(await alice.next("over")).toEqual({ t: "over", winner: Side.Left, reason: "resign" });
   });
 
-  it("enforces its turn time limit", async () => {
-    const quick = createGameServer("", { turnMs: 100, pushIntervalMs: null });
+  it("times every action separately", async () => {
+    const quick = createGameServer("", 300);
     try {
-      const [alice, bob] = await pair(await listen(quick), { turnMs: 100, pushIntervalMs: null });
-      expect((await alice.next("turn")).timeLimitMs).toBe(100);
+      const [alice, bob] = await pair(await listen(quick), 300);
+      await alice.next("turn");
+      await sleep(200);
+      alice.send({ t: "push", col: 0 });
+      // The initial board holds only common balls, so this push does not end the turn.
+      expect((await alice.next("pushed")).ejected).toBe(Ball.Common);
+      // More than 300 ms since the turn started, but not since the push.
+      await sleep(200);
+      expect(bob.inbox.some((m) => m.t === "over")).toBe(false);
       expect(await bob.next("over")).toEqual({ t: "over", winner: Side.Right, reason: "timeout" });
     } finally {
       stop(quick);
     }
   });
 
-  it("can play without time limits", async () => {
-    const relaxed = createGameServer("", { turnMs: null, pushIntervalMs: null });
+  it("can play without a time limit", async () => {
+    const relaxed = createGameServer("", null);
     try {
-      const [alice] = await pair(await listen(relaxed), { turnMs: null, pushIntervalMs: null });
-      expect((await alice.next("turn")).timeLimitMs).toBeNull();
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      const [alice] = await pair(await listen(relaxed), null);
+      await alice.next("turn");
+      await sleep(200);
       expect(alice.inbox.some((m) => m.t === "over")).toBe(false);
     } finally {
       stop(relaxed);
@@ -117,14 +124,18 @@ describe("game server", () => {
   });
 });
 
-/** Connects Alice then Bob, checking that both are told the server's time limits. */
-async function pair(serverUrl: string, limits = LIMITS): Promise<[TestClient, TestClient]> {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Connects Alice then Bob, checking that both are told the server's time limit. */
+async function pair(serverUrl: string, limitMs: number | null = LIMIT_MS): Promise<[TestClient, TestClient]> {
   const alice = new TestClient(serverUrl);
   const bob = new TestClient(serverUrl);
   await Promise.all([alice.opened(), bob.opened()]);
   alice.send({ t: "hello", version: PROTOCOL_VERSION, name: "Alice" });
-  expect((await alice.next("welcome")).timeLimits).toEqual(limits);
+  expect((await alice.next("welcome")).timeLimitMs).toBe(limitMs);
   bob.send({ t: "hello", version: PROTOCOL_VERSION, name: "Bob" });
-  expect((await bob.next("welcome")).timeLimits).toEqual(limits);
+  expect((await bob.next("welcome")).timeLimitMs).toBe(limitMs);
   return [alice, bob];
 }

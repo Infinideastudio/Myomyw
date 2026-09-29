@@ -1,4 +1,4 @@
-# Network protocol (version 3)
+# Network protocol (version 4)
 
 Clients connect to the game server over a WebSocket (by default the same host
 and port that serves the web client). Every frame is a JSON object with a type
@@ -18,10 +18,10 @@ Boards are `BoardSnapshot`s: `{ cells, lCol, rCol }` with `cells[l][r]` (see [ru
 ```
 client                           server
   | -- hello {version, name} ----> |   within 10 s of connecting
-  | <-- welcome {motd, timeLimits} |   or: rejected {reason}, then close
+  | <- welcome {motd, timeLimitMs} |   or: rejected {reason}, then close
   |          … waiting …           |
   | <-- matched {…} -------------- |
-  | <-- turn {side, timeLimitMs} - |
+  | <-- turn {side} -------------- |
   |   … pushes, turns, chat …      |
   | <-- over {winner, reason} ---- |   then the server closes the connection
 ```
@@ -32,7 +32,7 @@ One connection plays one game; to play again, reconnect.
 
 | `t` | Fields | Meaning |
 | --- | --- | --- |
-| `hello` | `version: 3`, `name: string` (1–15 chars after trimming) | Join matchmaking. |
+| `hello` | `version: 4`, `name: string` (1–15 chars after trimming) | Join matchmaking. |
 | `push` | `col: number` | Push one of your lines. Ignored unless it is your turn and the push is legal (same line as earlier pushes this turn, fewer than 5 pushes). |
 | `endTurn` | — | End your turn (after at least one push). |
 | `resign` | — | Give up; you lose. |
@@ -42,10 +42,10 @@ One connection plays one game; to play again, reconnect.
 
 | `t` | Fields | Meaning |
 | --- | --- | --- |
-| `welcome` | `motd: string`, `timeLimits: {turnMs, pushIntervalMs}` | Accepted; waiting for an opponent. `timeLimits` are the server's [timers](#timers). |
+| `welcome` | `motd: string`, `timeLimitMs: number \| null` | Accepted; waiting for an opponent. `timeLimitMs` is the server's [time limit](#timers) per action. |
 | `rejected` | `reason: "version" \| "full" \| "badName" \| "badMessage"` | Connection refused. |
 | `matched` | `room`, `side` (yours), `opponent` (name), `board: {cells, lCol, rCol}`, `next`, `turn` | Game starts. |
-| `turn` | `side`, `timeLimitMs: number \| null` | A turn starts; `side` must make its first push within `timeLimitMs` (`null`: no limit). |
+| `turn` | `side` | A turn starts. |
 | `pushed` | `side`, `col`, `inserted`, `ejected`, `next` | A push happened (sent to both players, including the pusher). Replaying it on a copy of the board (`WasmBoard.push(side, col, inserted)`) gives the new position; `ejected` is what fell off. |
 | `over` | `winner`, `reason: "key" \| "timeout" \| "resign" \| "disconnect"` | Game over. |
 | `chat` | `text` | Message from the opponent. |
@@ -56,13 +56,14 @@ ends a turn by itself in those cases; otherwise it waits for `endTurn`.
 
 ## Timers
 
-Each server chooses its limits (environment variables `TURN_TIME_LIMIT` and
-`PUSH_INTERVAL_LIMIT`, in seconds; `0` disables a limit) and announces them in
-`welcome` as `timeLimits`, in milliseconds, with `null` for no limit:
+Every action is timed separately. Each server chooses the time per action
+(environment variable `TIME_LIMIT`, in seconds, default 20; `0` for no limit)
+and announces it in `welcome` as `timeLimitMs`, in milliseconds, or `null`
+for no limit. The player to move must send their next action within
+`timeLimitMs` of:
 
-- `turnMs` — first push of a turn, counted from the `turn` event (default
-  20 000). Each `turn` event repeats it as `timeLimitMs`.
-- `pushIntervalMs` — after each push, the next `push` or `endTurn` must arrive
-  within this time (default 5 000).
+- the `turn` event, for the first push of a turn;
+- each `pushed` event that does not end the turn, for the next `push` or
+  `endTurn`.
 
-Missing either limit loses the game (`reason: "timeout"`).
+Running out of time loses the game (`reason: "timeout"`).

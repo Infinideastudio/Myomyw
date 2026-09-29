@@ -160,6 +160,11 @@ select {
 .field small {
   color: var(--text-muted);
 }
+.custom-ai {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 .field .field-error {
   color: var(--danger);
 }
@@ -667,36 +672,54 @@ select {
   pointer-events: none;
 }
 .ejector {
-  opacity: 0.4;
+  opacity: 0.45;
   transition: opacity 0.2s;
   outline: none;
 }
-.ejector.is-turn {
+.ejector.is-lit {
   opacity: 1;
 }
 .ejector.is-active {
   cursor: pointer;
 }
-.ejector-left > path:first-child {
+.ejector-cell,
+.timer-cell {
+  fill: var(--surface-2);
+  stroke: var(--outline);
+  stroke-width: 2;
+}
+.ejector-water {
+  opacity: 0.85;
+}
+.ejector-left .ejector-water {
   fill: var(--left);
 }
-.ejector-right > path:first-child {
+.ejector-right .ejector-water {
   fill: var(--right);
 }
-.ejector.is-active:hover > path:first-child {
-  filter: brightness(1.15);
+.ejector.is-active:hover .ejector-water,
+.timer.is-active:hover .timer-cell {
+  filter: brightness(1.12);
 }
-.ejector:focus-visible > path:first-child {
+.ejector:focus-visible .ejector-cell,
+.timer:focus-visible .timer-cell {
   stroke: var(--focus);
   stroke-width: 8;
 }
 .ejector-arrow {
   fill: none;
-  stroke: #fff;
   stroke-width: 7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.9;
+}
+.ejector-left .ejector-arrow {
+  stroke: var(--left);
+}
+.ejector-right .ejector-arrow {
+  stroke: var(--right);
+}
+.ejector .ejector-arrow.is-under-water {
+  stroke: #fff;
 }
 .line-highlight {
   pointer-events: none;
@@ -707,10 +730,18 @@ select {
 .line-right {
   fill: var(--right-soft);
 }
-.timer-cell {
-  fill: var(--surface-2);
-  stroke: var(--outline);
-  stroke-width: 2;
+.timer {
+  outline: none;
+}
+.timer.is-active {
+  cursor: pointer;
+}
+.timer-end {
+  fill: none;
+  stroke: var(--text);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 .timer-fill {
   opacity: 0.7;

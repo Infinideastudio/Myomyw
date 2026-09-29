@@ -2,7 +2,7 @@
 export interface Timing {
   /** Duration of one push animation. */
   pushMs: number;
-  /** Pause between two pushes while an ejector is held (or an AI keeps pushing). */
+  /** Pause between two pushes of a computer player. */
   coolMs: number;
   /** Board grow/shrink animation. */
   resizeMs: number;

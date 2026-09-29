@@ -28,7 +28,8 @@ export const en = {
     easy: "Easy",
     normal: "Normal",
     hard: "Hard",
-    impossible: "Impossible",
+    impossible: "Impossible (MCTS)",
+    custom: "Custom (MCTS)",
   },
   names: {
     green: "Green",
@@ -43,7 +44,8 @@ export const en = {
     thinking: "Thinking…",
     winEstimate: "Estimated chances of winning",
     pushes: "Pushes",
-    holdHint: "Press and hold one of your ejectors. Each push inserts the next ball; release to end your turn (5 pushes at most).",
+    pushHint: "Click one of your ejectors to push its line. You may push the same line again, up to 5 times (the ejector's shading shows how many pushes are left). Click the timer at the top to end your turn.",
+    endTurn: "End turn",
     exit: "Exit",
     resign: "Give up",
     leaveTitle: "Leave this game?",
@@ -73,11 +75,8 @@ export const en = {
     findAnother: "Find another game",
     opponent: "Opponent",
     you: "You",
-    timeLimits: "Time limits: {limits}.",
-    turnLimit: "{seconds} s for the first push of a turn",
-    pushIntervalLimit: "{seconds} s between pushes",
-    listSeparator: ", ",
-    noTimeLimits: "No time limits.",
+    timeLimit: "Time limit: {seconds} s for each push and for ending your turn.",
+    noTimeLimit: "No time limit.",
     errors: {
       connection: "Could not connect to the server.",
       version: "The server runs an incompatible version.",
@@ -86,6 +85,12 @@ export const en = {
       badMessage: "The server did not understand this client.",
       disconnected: "The connection to the server was lost.",
     },
+  },
+  customAi: {
+    iters: "Search iterations per decision",
+    itersHint: "More is stronger but slower. Impossible uses {iters}.",
+    exploration: "Exploration",
+    explorationHint: "How much the search tries moves other than the ones it likes best (Impossible uses {puct}). Higher exploration with fewer iterations makes it easier.",
   },
   aiVsAi: {
     title: "AI vs AI",
@@ -97,7 +102,7 @@ export const en = {
   settings: {
     title: "Settings",
     timeLimit: "Time limit in offline games",
-    timeLimitHint: "How long each human player has to make the first push of their turn. The computer is never timed. Online games follow the server's limits.",
+    timeLimitHint: "How long each human player has for each push, and for ending their turn. The computer is never timed. Online games follow the server's limit.",
     seconds: "{seconds} seconds",
     noTimeLimit: "No time limit",
     language: "Language",
@@ -112,7 +117,7 @@ export const en = {
     title: "Tutorial",
     steps: [
       "Welcome! Two players take turns pushing balls into the board. The black balls are common balls. The rows of cells on the upper-left (green, you) and upper-right (blue) edges are the players' ejectors.",
-      "It's your turn. Press one of your green ejectors: the upcoming ball (shown as “Next ball”) is pushed into that line and the last ball of the line falls off. Hold to keep pushing, up to 5 times. The top cell is the timer: make your first push within 20 seconds.",
+      "It's your turn. Click one of your green ejectors: the upcoming ball (shown as “Next ball”) is pushed into that line and the last ball of the line falls off. You may push the same line again, up to 5 times; its shading shows how many pushes are left. Then click the timer (the top cell) to end your turn. You have 20 seconds for each push, and for ending your turn.",
       "Well done. The red ball you just pushed in is the Key ball. Whoever pushes a Key ball off the board loses — so your goal is to force your opponent to do it.",
       "Two more kinds: when the green “+” ball is pushed off, the pusher's opponent gets one more line; the yellow “−” ball takes one away. Each side has between 3 and 10 lines.",
       "The blue arrow ball mirrors the board when it is pushed off, and the pusher's turn ends immediately.",
@@ -129,7 +134,7 @@ export const en = {
     turnTitle: "Your turn",
     turn: [
       "Pick one of your ejectors. The next ball enters that line, every ball in it moves one cell, and the last one falls off the far edge.",
-      "You may push the same line again, up to 5 times per turn. Press and hold to keep pushing; release to end your turn. You must push at least once.",
+      "You may push the same line again, up to 5 times per turn: click its ejector once per push. Click the timer at the top to end your turn. You must push at least once.",
       "The ball that falls off takes effect immediately.",
     ],
     nextTitle: "The next ball",
@@ -141,7 +146,7 @@ export const en = {
     delCol: "Remove line — the pusher's opponent loses their last ejector, and its line leaves the board (at least 3 remain).",
     flip: "Flip — the board is mirrored left to right and the pusher's turn ends at once.",
     timerTitle: "Timer",
-    timer: "The top cell is the timer: by default you have 20 seconds from the start of your turn to make the first push, or you lose. In offline games the limit can be changed or turned off in Settings, and the computer is never timed. Online, the server sets the limits (usually 20 seconds for the first push, then 5 seconds after each push to push again or end your turn).",
+    timer: "The top cell is the timer: by default you have 20 seconds for each action — every push, and ending your turn — or you lose. In offline games the limit can be changed or turned off in Settings, and the computer is never timed. Online, the server sets the limit.",
   },
 };
 

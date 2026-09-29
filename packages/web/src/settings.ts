@@ -1,15 +1,18 @@
-import { RULES } from "@myomyw/engine";
+import { IMPOSSIBLE_MCTS, RULES, mctsSpec, type AgentSpec, type MctsSettings } from "@myomyw/engine";
 import { useSyncExternalStore } from "react";
 import type { LanguageSetting } from "./i18n/index.tsx";
+import type { Opponent } from "./routes.ts";
 
 export interface Settings {
   name: string;
   language: LanguageSetting;
   /**
-   * Offline games: seconds a human player has for the first push of each
-   * turn; null for no limit. Online games use the server's limits.
+   * Offline games: seconds a human player has for each action (every push,
+   * and ending the turn); null for no limit. Online games use the server's.
    */
   timeLimit: number | null;
+  /** The "Custom (MCTS)" computer player. */
+  customAi: MctsSettings;
   /** Custom WebSocket URL of the game server; empty for the default. */
   serverUrl: string;
   /** Whether the tutorial suggestion on the home screen has been dismissed. */
@@ -17,8 +20,16 @@ export interface Settings {
 }
 
 const KEY = "myomyw.settings";
-export const DEFAULT_TIME_LIMIT = RULES.turnTimeLimitMs / 1000;
-const DEFAULTS: Settings = { name: "", language: "auto", timeLimit: DEFAULT_TIME_LIMIT, serverUrl: "", tutorialOffered: false };
+export const DEFAULT_TIME_LIMIT = RULES.timeLimitMs / 1000;
+const DEFAULTS: Settings = {
+  name: "",
+  language: "auto",
+  timeLimit: DEFAULT_TIME_LIMIT,
+  // Starts out as the Impossible AI, for a comparable starting point.
+  customAi: { ...IMPOSSIBLE_MCTS },
+  serverUrl: "",
+  tutorialOffered: false,
+};
 
 function load(): Settings {
   try {
@@ -60,6 +71,11 @@ function subscribe(listener: () => void): () => void {
 
 export function useSettings(): Settings {
   return useSyncExternalStore(subscribe, getSettings);
+}
+
+/** The engine's agent spec for a computer opponent. */
+export function opponentSpec(opponent: Opponent, settings: Settings): AgentSpec {
+  return opponent === "custom" ? mctsSpec(settings.customAi) : opponent;
 }
 
 /**

@@ -53,7 +53,7 @@ pub const IMPOSSIBLE_ITERS: u32 = 50000;
 
 impl MctsParams {
     /// Parses comma-separated `key=value` overrides of the defaults: `iters`,
-    /// `ms`, `c`, `prior`, `net` (path of a weight file) and `eval=static`.
+    /// `ms`, `c`, `prior`, `puct`, `net` (path of a weight file) and `eval=static`.
     pub fn parse(spec: &str) -> Result<MctsParams, String> {
         let mut p = MctsParams::default();
         for item in spec.split(',').filter(|s| !s.is_empty()) {

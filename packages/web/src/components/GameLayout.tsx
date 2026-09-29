@@ -67,7 +67,7 @@ export function GameLayout({ match, title, computerSides = [], showWinChance = f
           ))}
         </div>
 
-        {humanTurn && s.phase === "idle" && s.tutorialStep === undefined && <p className="hint">{t.game.holdHint}</p>}
+        {humanTurn && s.phase === "idle" && s.tutorialStep === undefined && <p className="hint">{t.game.pushHint}</p>}
         {children}
 
         <div className="panel-bottom">

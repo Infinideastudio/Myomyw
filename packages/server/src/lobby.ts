@@ -1,4 +1,4 @@
-import { MAX_NAME_LENGTH, PROTOCOL_VERSION, type ClientMessage, type TimeLimits } from "@myomyw/protocol";
+import { MAX_NAME_LENGTH, PROTOCOL_VERSION, type ClientMessage } from "@myomyw/protocol";
 import type { Client } from "./client.ts";
 import { config } from "./config.ts";
 import { Room } from "./room.ts";
@@ -10,10 +10,11 @@ import { Room } from "./room.ts";
 export class Lobby {
   private waiting: Client | null = null;
   private readonly rooms = new Map<number, Room>();
-  private readonly timeLimits: TimeLimits;
+  /** Time for each action in a game; null for no limit. */
+  private readonly timeLimitMs: number | null;
 
-  constructor(timeLimits: TimeLimits) {
-    this.timeLimits = timeLimits;
+  constructor(timeLimitMs: number | null) {
+    this.timeLimitMs = timeLimitMs;
   }
 
   admit(client: Client): void {
@@ -48,7 +49,7 @@ export class Lobby {
     }
     client.name = name;
     client.onMessage(() => {}); // ignore anything until matched
-    client.send({ t: "welcome", motd: config.motd, timeLimits: this.timeLimits });
+    client.send({ t: "welcome", motd: config.motd, timeLimitMs: this.timeLimitMs });
     console.log(`${client} is looking for a game`);
 
     const opponent = this.waiting;
@@ -63,7 +64,7 @@ export class Lobby {
   private openRoom(left: Client, right: Client): void {
     let id = 0;
     while (this.rooms.has(id)) id++;
-    this.rooms.set(id, new Room(id, left, right, this.timeLimits, () => this.rooms.delete(id)));
+    this.rooms.set(id, new Room(id, left, right, this.timeLimitMs, () => this.rooms.delete(id)));
     console.log(`room ${id}: ${left} vs ${right}`);
   }
 }

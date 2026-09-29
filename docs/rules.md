@@ -78,8 +78,8 @@ To push, a player chooses **one of their own ejectors**. Then:
 
 1. The player to move must push **at least once**.
 2. They may keep pushing the **same line** (never another one), up to
-   **5 pushes** in total per turn. In the app: press and hold an ejector to
-   repeat; releasing it ends the turn.
+   **5 pushes** in total per turn. In the app: click an ejector once per push
+   (its shading shows the pushes left), and click the timer to end the turn.
 3. The turn ends when the player stops, after the 5th push, or immediately
    when a **Flip** ball falls off. Then the other player moves.
 4. The game ends immediately when a **Key** ball falls off.
@@ -125,17 +125,14 @@ Details:
 
 The top corner of the board is the **timer**.
 
-- A player must make the **first push of their turn within 20 seconds** of the
-  turn starting, or they **lose**. Once they have pushed, the timer stops for
-  the rest of the turn.
+- Every action is timed separately: a player has **20 seconds** from the start
+  of their turn for the first push, then 20 seconds after each push to push
+  again or end the turn. Running out of time **loses**.
 - In offline games (against the computer or two players on one screen) the
   limit can be changed or switched off in Settings. It applies to human
   players only: the computer is never timed.
-- Online, the server sets the limits and tells the players when they connect.
-  By default the 20-second limit applies, and one more: after each push the
-  player must push again or end the turn **within 5 seconds**, otherwise they
-  lose. (Holding an ejector repeats well within that limit; this only catches
-  stalled connections.)
+- Online, the server sets the limit and tells the players when they connect.
+- Once the player has pushed, the timer is also the button that ends the turn.
 
 ## 8. Other ways a game ends
 
@@ -277,4 +274,4 @@ about 45–75 turns).
 | Common / Key / Add line / Remove line / Flip | `Ball::Common` / `Key` / `AddCol` / `DelCol` / `Flip` | `Ball.Common` / … |
 | State, action, transition (§9) | `Game`, `Action`, `Game::apply` | `WasmGame` |
 | Next ball | `game.next` | `game.next` |
-| 20 s / 5 s limits (defaults) | — (real-time rules live in the hosts) | `RULES.turnTimeLimitMs` / `PUSH_INTERVAL_LIMIT_MS` (`@myomyw/protocol`) |
+| 20 s per action (default) | — (real-time rules live in the hosts) | `RULES.timeLimitMs` |

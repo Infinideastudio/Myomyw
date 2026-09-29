@@ -14,11 +14,12 @@ or as WebAssembly; the web client runs them in a Web Worker (see
 | Easy | `easy` | `WeakAi` — [`weak.rs`](../packages/engine/src/ai/weak.rs) |
 | Normal | `normal` | `StrongAi::new(1, 10, seed)` — [`strong.rs`](../packages/engine/src/ai/strong.rs) |
 | Hard | `hard` | `StrongAi::new(2, 10, seed)` — search in [`search.rs`](../packages/engine/src/ai/search.rs) |
-| Impossible | `impossible` | `MctsAi` — [`mcts.rs`](../packages/engine/src/ai/mcts.rs), network in [`value/`](../packages/engine/src/ai/value/) |
+| Impossible (MCTS) | `impossible` | `MctsAi` — [`mcts.rs`](../packages/engine/src/ai/mcts.rs), network in [`value/`](../packages/engine/src/ai/value/) |
+| Custom (MCTS) | `mcts:iters=…,puct=…` | `MctsAi` with the player's settings (stored in the web client's Settings) |
 
-Agents are created from a spec (`easy`, `normal`, `hard`, `impossible` or
-`strong:<maxDepth>,<fillout>`; natively also `mcts:<key>=<value>,…`, see
-below) and a 32-bit seed: `agent_from_spec(spec, seed)` in Rust,
+Agents are created from a spec (`easy`, `normal`, `hard`, `impossible`,
+`strong:<maxDepth>,<fillout>` or `mcts:<key>=<value>,…`, see below) and a
+32-bit seed: `agent_from_spec(spec, seed)` in Rust,
 `engine.createAgent(spec, seed)` in TypeScript. The same spec and seed always
 make the same decisions.
 
@@ -153,12 +154,16 @@ decision, so unlike `StrongAi` it never sees future balls it could not know.
   chance of winning (`Agent::win_estimate`), shown in the web client as a bar
   across the top of the game screen.
 
-The native spec `mcts:<key>=<value>,…` overrides these settings: `iters`,
-`ms` (time budget per decision, not reproducible), `puct`, `net=<file>`
-(another weight file), `eval=static` (`tanh(Board::evaluate / 10)` instead
-of the network), and `puct=0` for the earlier UCT search with constant `c`
-and a one-ply `prior` (see [Research notes](#research-notes)). `mcts` alone
-equals `impossible`.
+The spec `mcts:<key>=<value>,…` overrides these settings: `iters` and
+`puct` everywhere; natively also `ms` (time
+budget per decision, not reproducible), `net=<file>` (another weight file),
+`eval=static` (`tanh(Board::evaluate / 10)` instead of the network), and
+`puct=0` for the earlier UCT search with constant `c` and a one-ply `prior`
+(see [Research notes](#research-notes)). `mcts` alone equals `impossible`.
+
+**Weakening it.** The Custom (MCTS) opponent is made easier with fewer
+iterations and a larger exploration constant `puct`, which spreads the search
+over actions its policy prior likes less.
 
 ### The network (`src/ai/value/`)
 

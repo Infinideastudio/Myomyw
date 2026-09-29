@@ -40,8 +40,8 @@ export const RULES = {
   initialCols: 6,
   /** Maximum number of pushes in a single turn. */
   maxPushesPerTurn: 5,
-  /** Default time allowed from the start of a turn until its first push (players and servers may change it). */
-  turnTimeLimitMs: 20_000,
+  /** Default time a player has for each action: every push, and ending the turn (players and servers may change it). */
+  timeLimitMs: 20_000,
 } as const;
 
 /** Why a game ended. */

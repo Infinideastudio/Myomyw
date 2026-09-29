@@ -40,8 +40,8 @@ export abstract class MatchBase implements MatchController {
     };
   }
 
-  abstract press(col: number): void;
-  abstract release(): void;
+  abstract push(col: number): void;
+  abstract endTurn(): void;
 
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -124,13 +124,13 @@ export abstract class MatchBase implements MatchController {
   }
 
   protected showTurn(turn: Side, timerMs: number | null): void {
-    this.update({
-      phase: "idle",
-      turn,
-      pushes: 0,
-      activeLine: null,
-      timer: timerMs === null ? null : { endsAt: performance.now() + timerMs, totalMs: timerMs },
-    });
+    this.update({ turn, pushes: 0, activeLine: null });
+    this.showAwaiting(timerMs);
+  }
+
+  /** The player to move may act (first push, push again or end the turn), with `timerMs` to do so. */
+  protected showAwaiting(timerMs: number | null): void {
+    this.update({ phase: "idle", timer: timerMs === null ? null : { endsAt: performance.now() + timerMs, totalMs: timerMs } });
   }
 
   protected showResult(result: GameResult): void {

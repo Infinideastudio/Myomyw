@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { MAX_CHAT_LENGTH, type TimeLimits } from "@myomyw/protocol";
+import { MAX_CHAT_LENGTH } from "@myomyw/protocol";
 import { GameLayout, useMatchSnapshot } from "../components/GameLayout.tsx";
 import { Button } from "../components/ui.tsx";
-import { format, useMessages, type Messages } from "../i18n/index.tsx";
+import { format, useMessages } from "../i18n/index.tsx";
 import { OnlineMatch } from "../match/OnlineMatch.ts";
 import { useController } from "../match/useController.ts";
 import type { Navigate } from "../routes.ts";
@@ -59,20 +59,13 @@ function OnlineGame({ match, onHome, onAgain, title }: { match: OnlineMatch; onH
           </div>
         )}
         {online.motd && <p className="motd">{online.motd}</p>}
-        {online.timeLimits && <p className="time-limits">{describeTimeLimits(online.timeLimits, t)}</p>}
+        {online.timeLimitMs !== undefined && (
+          <p className="time-limits">{online.timeLimitMs === null ? t.online.noTimeLimit : format(t.online.timeLimit, { seconds: online.timeLimitMs / 1000 })}</p>
+        )}
         {(playing || online.chat.length > 0) && <Chat match={match} />}
       </section>
     </GameLayout>
   );
-}
-
-/** E.g. "Time limits: 20 s for the first push of a turn, 5 s between pushes." */
-function describeTimeLimits({ turnMs, pushIntervalMs }: TimeLimits, t: Messages): string {
-  const parts = [
-    turnMs !== null && format(t.online.turnLimit, { seconds: turnMs / 1000 }),
-    pushIntervalMs !== null && format(t.online.pushIntervalLimit, { seconds: pushIntervalMs / 1000 }),
-  ].filter((part) => part !== false);
-  return parts.length === 0 ? t.online.noTimeLimits : format(t.online.timeLimits, { limits: parts.join(t.online.listSeparator) });
 }
 
 function Chat({ match }: { match: OnlineMatch }) {

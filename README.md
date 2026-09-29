@@ -16,8 +16,8 @@ screen, or online. Available in English, 简体中文 and 正體中文.
   the upper-right edge. Each ejector pushes one line of balls across the board.
 - On your turn, pick one of your lines and push it 1–5 times. Each push inserts
   the **next ball** (shown to both players) and pushes the last ball of the
-  line off the far edge. Press and hold an ejector to keep pushing; release to
-  end your turn.
+  line off the far edge. Click the same ejector again to push again; click the
+  timer at the top to end your turn.
 - After every push a new next ball is drawn: common with probability 6/10,
   each of the four special balls below with probability 1/10.
 - What falls off takes effect:
@@ -50,9 +50,8 @@ npm start            # serves the client and the game server on http://localhost
 ```
 
 Server settings are environment variables: `PORT` (8650), `HOST`,
-`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`, `TURN_TIME_LIMIT` (20 seconds for the
-first push of a turn) and `PUSH_INTERVAL_LIMIT` (5 seconds between pushes);
-`0` disables a time limit.
+`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR` and `TIME_LIMIT` (20 seconds for each
+push and for ending a turn; `0` for no limit).
 
 ### GitHub Pages
 

@@ -40,6 +40,7 @@ interface Exports {
   game_forfeit(game: number, loser: number, reason: number): number;
   game_set_ball(game: number, l: number, r: number, ball: number): number;
   agent_new(kind: number, depth: number, fillout: number, seed: number): number;
+  agent_new_mcts(iters: number, puct: number, seed: number): number;
   agent_free(agent: number): void;
   agent_begin_turn(agent: number): number;
   agent_first_push(agent: number, next: number): number;
@@ -55,10 +56,32 @@ const N = RULES.maxCols;
 const BOARD_LEN = 2 + N * N;
 const NONE = 255;
 
-/** An agent spec: `easy` | `normal` | `hard` | `strong:<maxDepth>,<fillout>`. */
+/**
+ * An agent spec: `easy` | `normal` | `hard` | `impossible` |
+ * `strong:<maxDepth>,<fillout>` | `mcts:<key>=<value>,…` (see {@link mctsSpec}).
+ */
 export type AgentSpec = string;
 
-function parseSpec(spec: AgentSpec): { kind: number; depth: number; fillout: number } {
+/** Settings of a custom MCTS agent (the Impossible AI's search and network). */
+export interface MctsSettings {
+  /** Search iterations (tree expansions) per decision, 1 to {@link MAX_MCTS_ITERS}. */
+  iters: number;
+  /** PUCT exploration constant (> 0); the Impossible AI uses 0.5. */
+  puct: number;
+}
+
+/** The Impossible AI's settings. */
+export const IMPOSSIBLE_MCTS: MctsSettings = { iters: 50_000, puct: 0.5 };
+export const MAX_MCTS_ITERS = 200_000;
+
+/** The spec of a custom MCTS agent, e.g. `mcts:iters=5000,puct=0.5`. */
+export function mctsSpec({ iters, puct }: MctsSettings): AgentSpec {
+  return `mcts:iters=${iters},puct=${puct}`;
+}
+
+type ParsedSpec = { kind: number; depth: number; fillout: number } | ({ kind: "mcts" } & MctsSettings);
+
+function parseSpec(spec: AgentSpec): ParsedSpec {
   switch (spec) {
     case "easy":
       return { kind: 0, depth: 0, fillout: 0 };
@@ -71,6 +94,17 @@ function parseSpec(spec: AgentSpec): { kind: number; depth: number; fillout: num
   }
   const custom = /^strong:(\d+),(\d+)$/.exec(spec);
   if (custom) return { kind: 1, depth: Number(custom[1]), fillout: Number(custom[2]) };
+  if (spec.startsWith("mcts:")) {
+    const settings = { ...IMPOSSIBLE_MCTS };
+    const keys: Record<string, keyof MctsSettings> = { iters: "iters", puct: "puct" };
+    for (const item of spec.slice(5).split(",").filter(Boolean)) {
+      const [key, value] = item.split("=");
+      const field = keys[key ?? ""];
+      if (!field || value === undefined || value.trim() === "" || !Number.isFinite(Number(value))) throw new Error(`Bad MCTS option "${item}"`);
+      settings[field] = Number(value);
+    }
+    return { kind: "mcts", ...settings };
+  }
   throw new Error(`Unknown agent "${spec}"`);
 }
 
@@ -133,8 +167,11 @@ export class Engine {
 
   /** Creates an AI player; the same spec and seed always play the same way. */
   createAgent(spec: AgentSpec, seed: number = randomSeed()): WasmAgent {
-    const { kind, depth, fillout } = parseSpec(spec);
-    const ptr = this.exports.agent_new(kind, depth, fillout, seed >>> 0);
+    const parsed = parseSpec(spec);
+    const ptr =
+      parsed.kind === "mcts"
+        ? this.exports.agent_new_mcts(parsed.iters, parsed.puct, seed >>> 0)
+        : this.exports.agent_new(parsed.kind, parsed.depth, parsed.fillout, seed >>> 0);
     if (ptr === 0) throw new Error(`Invalid agent "${spec}"`);
     const agent = new WasmAgent(this, ptr, spec);
     this.track(agent, () => this.exports.agent_free(ptr));

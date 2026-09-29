@@ -54,7 +54,8 @@ pub fn create_agent(difficulty: Difficulty, seed: u32) -> Box<dyn Agent> {
 
 /// Parses an agent spec: `easy`, `normal`, `hard`, `impossible`,
 /// `strong:<maxDepth>,<fillout>` or `mcts[:<key>=<value>,…]` (see [`MctsParams::parse`]).
-/// `Engine.createAgent` in TypeScript accepts all but `mcts` options.
+/// `Engine.createAgent` in TypeScript accepts all of them, with only the
+/// `iters` and `puct` options of `mcts`.
 pub fn agent_from_spec(spec: &str, seed: u32) -> Result<Box<dyn Agent>, String> {
     match spec {
         "easy" => Ok(create_agent(Difficulty::Easy, seed)),

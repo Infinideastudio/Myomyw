@@ -1,16 +1,17 @@
-import { Ball, DIFFICULTIES, type Difficulty } from "@myomyw/engine";
+import { Ball } from "@myomyw/engine";
 import { MAX_NAME_LENGTH } from "@myomyw/protocol";
 import { useState } from "react";
 import { BallIcon } from "../components/BallGlyph.tsx";
+import { CustomAiFields } from "../components/CustomAiFields.tsx";
 import { Button, Dialog } from "../components/ui.tsx";
 import { useMessages } from "../i18n/index.tsx";
-import type { Navigate } from "../routes.ts";
+import { OPPONENTS, type Navigate, type Opponent } from "../routes.ts";
 import { serverUrl, updateSettings, useSettings } from "../settings.ts";
 
 export function HomeScreen({ navigate }: { navigate: Navigate }) {
   const t = useMessages();
   const settings = useSettings();
-  const [dialog, setDialog] = useState<"difficulty" | "aiVsAi" | null>(null);
+  const [dialog, setDialog] = useState<"difficulty" | "custom" | "aiVsAi" | null>(null);
   const [nameError, setNameError] = useState(false);
   const [noServer, setNoServer] = useState(false);
   const name = settings.name.trim();
@@ -100,8 +101,12 @@ export function HomeScreen({ navigate }: { navigate: Navigate }) {
 
       <Dialog open={dialog === "difficulty"} title={t.home.chooseDifficulty} onClose={() => setDialog(null)}>
         <div className="choice-row">
-          {DIFFICULTIES.map((difficulty) => (
-            <Button key={difficulty} variant="primary" onClick={() => navigate({ name: "vsComputer", difficulty })}>
+          {OPPONENTS.map((difficulty) => (
+            <Button
+              key={difficulty}
+              variant={difficulty === "custom" ? "secondary" : "primary"}
+              onClick={() => (difficulty === "custom" ? setDialog("custom") : navigate({ name: "vsComputer", difficulty }))}
+            >
               {t.difficulty[difficulty]}
             </Button>
           ))}
@@ -109,6 +114,18 @@ export function HomeScreen({ navigate }: { navigate: Navigate }) {
         <div className="dialog-actions">
           <Button variant="ghost" onClick={() => setDialog(null)}>
             {t.common.cancel}
+          </Button>
+        </div>
+      </Dialog>
+
+      <Dialog open={dialog === "custom"} title={t.difficulty.custom} onClose={() => setDialog(null)}>
+        <CustomAiFields />
+        <div className="dialog-actions">
+          <Button variant="ghost" onClick={() => setDialog("difficulty")}>
+            {t.common.back}
+          </Button>
+          <Button variant="primary" onClick={() => navigate({ name: "vsComputer", difficulty: "custom" })}>
+            {t.common.start}
           </Button>
         </div>
       </Dialog>
@@ -122,13 +139,13 @@ export function HomeScreen({ navigate }: { navigate: Navigate }) {
 
 function AiVsAiForm({ navigate, onCancel }: { navigate: Navigate; onCancel: () => void }) {
   const t = useMessages();
-  const [left, setLeft] = useState<Difficulty>("hard");
-  const [right, setRight] = useState<Difficulty>("normal");
+  const [left, setLeft] = useState<Opponent>("hard");
+  const [right, setRight] = useState<Opponent>("normal");
   const [quick, setQuick] = useState(false);
-  const picker = (label: string, value: Difficulty, set: (d: Difficulty) => void) => (
+  const picker = (label: string, value: Opponent, set: (d: Opponent) => void) => (
     <fieldset className="segmented">
       <legend>{label}</legend>
-      {DIFFICULTIES.map((d) => (
+      {OPPONENTS.map((d) => (
         <label key={d}>
           <input type="radio" checked={value === d} onChange={() => set(d)} />
           <span>{t.difficulty[d]}</span>
@@ -145,6 +162,7 @@ function AiVsAiForm({ navigate, onCancel }: { navigate: Navigate; onCancel: () =
     >
       {picker(t.aiVsAi.green, left, setLeft)}
       {picker(t.aiVsAi.blue, right, setRight)}
+      {(left === "custom" || right === "custom") && <CustomAiFields />}
       <label className="checkbox">
         <input type="checkbox" checked={quick} onChange={(e) => setQuick(e.target.checked)} />
         <span>{t.aiVsAi.quick}</span>

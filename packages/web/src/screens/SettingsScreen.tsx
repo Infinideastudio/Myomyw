@@ -4,7 +4,7 @@ import { LANGUAGES, format, useMessages, type LanguageSetting } from "../i18n/in
 import type { Navigate } from "../routes.ts";
 import { DEFAULT_TIME_LIMIT, defaultServerUrl, updateSettings, useSettings } from "../settings.ts";
 
-/** Choices for the offline turn time limit, in seconds. */
+/** Choices for the offline time limit per action, in seconds. */
 const TIME_LIMITS = [5, 10, 15, DEFAULT_TIME_LIMIT, 30, 45, 60, 90, 120];
 
 export function SettingsScreen({ navigate }: { navigate: Navigate }) {

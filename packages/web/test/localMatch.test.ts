@@ -67,7 +67,7 @@ describe("LocalMatch", () => {
     }
   });
 
-  it("repeats pushes while an ejector is held and ends the turn on release", () => {
+  it("pushes once per click, on the same line only, until the player ends the turn", () => {
     const match = new LocalMatch({
       seats: [{ kind: "human" }, { kind: "ai", agent: syncAgent(engine().createAgent("easy")) }],
       names: ["Human", "AI"],
@@ -75,15 +75,23 @@ describe("LocalMatch", () => {
       timing: QUICK_TIMING,
       ballSource: () => Ball.Common,
     });
-    match.press(2);
-    vi.advanceTimersByTime(QUICK_TIMING.pushMs + QUICK_TIMING.coolMs + QUICK_TIMING.pushMs + 10);
+    match.endTurn(); // must push at least once
+    match.push(2);
+    match.push(2); // ignored while the push is animated
+    vi.advanceTimersByTime(QUICK_TIMING.pushMs);
+    expect(match.getSnapshot()).toMatchObject({ phase: "idle", pushes: 1, activeLine: 2, turn: Side.Left });
+    match.push(3); // another line
+    vi.advanceTimersByTime(QUICK_TIMING.pushMs);
+    expect(match.getSnapshot().pushes).toBe(1);
+    match.push(2);
+    vi.advanceTimersByTime(QUICK_TIMING.pushMs);
     expect(match.getSnapshot().pushes).toBe(2);
-    match.release();
-    vi.advanceTimersByTime(QUICK_TIMING.coolMs + 1);
+    match.endTurn();
     expect(match.getSnapshot().turn).toBe(Side.Right);
+    match.dispose();
   });
 
-  it("stops after 5 pushes even if the ejector is still held", () => {
+  it("ends the turn by itself after 5 pushes", () => {
     const match = new LocalMatch({
       seats: [{ kind: "human" }, { kind: "human" }],
       names: ["G", "B"],
@@ -91,11 +99,44 @@ describe("LocalMatch", () => {
       timing: QUICK_TIMING,
       ballSource: () => Ball.Common,
     });
-    match.press(0);
-    vi.advanceTimersByTime(10 * (QUICK_TIMING.pushMs + QUICK_TIMING.coolMs));
-    const s = match.getSnapshot();
-    expect(s.turn).toBe(Side.Right);
-    expect(s.phase).toBe("idle");
+    for (let i = 0; i < 5; i++) {
+      match.push(0);
+      vi.advanceTimersByTime(QUICK_TIMING.pushMs);
+    }
+    expect(match.getSnapshot()).toMatchObject({ turn: Side.Right, phase: "idle", pushes: 0 });
+  });
+
+  it("lets the computer start thinking as soon as the human's turn ends, during the push animation", () => {
+    let asked = 0;
+    const agent: AsyncAgent = {
+      beginTurn: () => {},
+      firstPush: () => {
+        asked++;
+        return new Promise<number>(() => {});
+      },
+      pushAgain: () => Promise.resolve(false),
+      winEstimate: () => null,
+      dispose: () => {},
+    };
+    const match = new LocalMatch({
+      seats: [{ kind: "human" }, { kind: "ai", agent }],
+      names: ["Human", "AI"],
+      timeLimitMs: null,
+      timing: NORMAL_TIMING,
+      ballSource: () => Ball.Common,
+    });
+    for (let i = 0; i < 4; i++) {
+      match.push(0);
+      vi.advanceTimersByTime(NORMAL_TIMING.pushMs);
+    }
+    expect(asked).toBe(0);
+    match.push(0); // the 5th push ends the turn
+    expect(match.getSnapshot().phase).toBe("moving");
+    expect(asked).toBe(1);
+    vi.advanceTimersByTime(NORMAL_TIMING.pushMs);
+    expect(match.getSnapshot().turn).toBe(Side.Right);
+    expect(asked).toBe(1); // not asked twice
+    match.dispose();
   });
 
   it("lets a computer player think during the pause, the animation and the cool-down", async () => {
@@ -136,6 +177,19 @@ describe("LocalMatch", () => {
   it("makes a player who does not push in time lose", () => {
     const match = new LocalMatch({ seats: [{ kind: "human" }, { kind: "human" }], names: ["G", "B"], timeLimitMs: 10_000 });
     expect(match.getSnapshot().timer?.totalMs).toBe(10_000);
+    vi.advanceTimersByTime(9_999);
+    expect(match.getSnapshot().result).toBe(null);
+    vi.advanceTimersByTime(2);
+    expect(match.getSnapshot().result).toEqual({ winner: Side.Right, reason: "timeout" });
+  });
+
+  it("times each action separately", () => {
+    const match = new LocalMatch({ seats: [{ kind: "human" }, { kind: "human" }], names: ["G", "B"], timeLimitMs: 10_000, ballSource: () => Ball.Common });
+    vi.advanceTimersByTime(9_000);
+    match.push(0);
+    vi.advanceTimersByTime(NORMAL_TIMING.pushMs);
+    expect(match.getSnapshot().timer?.totalMs).toBe(10_000);
+    // Deciding whether to push again or end the turn has its own 10 s.
     vi.advanceTimersByTime(9_999);
     expect(match.getSnapshot().result).toBe(null);
     vi.advanceTimersByTime(2);

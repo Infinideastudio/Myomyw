@@ -1,9 +1,9 @@
-import { Side } from "@myomyw/engine";
+import { RULES, Side } from "@myomyw/engine";
 import { motion, type Transition } from "motion/react";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { format, useMessages } from "../i18n/index.tsx";
 import type { Cell } from "../match/display.ts";
-import { canPress, type MatchController, type MatchSnapshot } from "../match/types.ts";
+import { canEndTurn, canPush, type MatchController, type MatchSnapshot } from "../match/types.ts";
 import { BallDefs, BallShape } from "./BallGlyph.tsx";
 
 /** The SVG is drawn in a 1000 × 1000 box. */
@@ -48,8 +48,42 @@ class Layout {
 }
 
 const DIAMOND = `M0 ${-BASE}L${BASE} 0L0 ${BASE}L${-BASE} 0Z`;
-const INSET_DIAMOND = `M0 ${-BASE + 5}L${BASE - 5} 0L0 ${BASE - 5}L${-BASE + 5} 0Z`;
+/** Half-diagonal of an ejector, drawn slightly smaller than a cell. */
+const EJECTOR = BASE - 5;
+const INSET_DIAMOND = `M0 ${-EJECTOR}L${EJECTOR} 0L0 ${EJECTOR}L${-EJECTOR} 0Z`;
 const SIDE_CLASS = ["left", "right"] as const;
+
+/**
+ * The "water" in an ejector: `level` (0–1) of it, filled from the side facing
+ * the board, with its surface parallel to the board edge. In the ejector's own
+ * coordinates `u` runs along Left's push direction and `v` along Right's, both
+ * from −½ to ½.
+ */
+function waterPath(side: Side, level: number): string {
+  const p = (u: number, v: number) => `${((u - v) * EJECTOR).toFixed(2)} ${((u + v) * EJECTOR).toFixed(2)}`;
+  const surface = 0.5 - level;
+  return side === Side.Left
+    ? `M${p(surface, -0.5)}L${p(0.5, -0.5)}L${p(0.5, 0.5)}L${p(surface, 0.5)}Z`
+    : `M${p(-0.5, surface)}L${p(0.5, surface)}L${p(0.5, 0.5)}L${p(-0.5, 0.5)}Z`;
+}
+
+/**
+ * Share of this turn's pushes still available on an ejector: every line of
+ * the side to move is full before its first push; afterwards only the line
+ * being pushed holds the pushes left.
+ */
+function pushesLeft(s: MatchSnapshot, side: Side, col: number): number {
+  if (side !== s.turn || s.phase === "over" || s.phase === "waiting") return 0;
+  if (s.pushes === 0) return 1;
+  return col === s.activeLine ? (RULES.maxPushesPerTurn - s.pushes) / RULES.maxPushesPerTurn : 0;
+}
+
+/** Whether a key press activates a button (Enter or Space, not auto-repeated). */
+function activates(e: KeyboardEvent): boolean {
+  if ((e.key !== "Enter" && e.key !== " ") || e.repeat) return false;
+  e.preventDefault();
+  return true;
+}
 
 interface Props {
   match: MatchController;
@@ -61,54 +95,26 @@ export function BoardView({ match, snapshot: s }: Props) {
   const layout = new Layout(s.lCol, s.rCol);
   const transition: Transition = { duration: s.animMs / 1000, ease: "easeOut" };
   const [hover, setHover] = useState<{ side: Side; col: number } | null>(null);
-  const pressing = useRef(false);
   const mounted = useRef(false);
   useEffect(() => {
     mounted.current = true;
   }, []);
 
-  const interactive = canPress(s);
   const turn = s.turn;
-
-  // Release wherever the pointer goes up, even outside the board.
-  useEffect(() => {
-    const up = () => {
-      if (!pressing.current) return;
-      pressing.current = false;
-      match.release();
-    };
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
-    window.addEventListener("blur", up);
-    return () => {
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      window.removeEventListener("blur", up);
-    };
-  }, [match]);
-
-  const press = (side: Side, col: number) => {
-    if (!interactive || side !== turn) return;
-    pressing.current = true;
-    setHover(null);
-    match.press(col);
+  const passable = canEndTurn(s);
+  const pushable = (side: Side, col: number) => side === turn && canPush(s, col);
+  const push = (side: Side, col: number) => {
+    if (pushable(side, col)) match.push(col);
+  };
+  const endTurn = () => {
+    if (passable) match.endTurn();
   };
 
-  /** Hover highlighting; works for touch too (press outside, then slide onto an ejector). */
+  /** Hover highlighting; works for touch too (touch outside, then slide onto an ejector). */
   const onPointerMove = (e: PointerEvent) => {
     const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<SVGElement>("[data-side]");
-    const side = el ? (Number(el.dataset.side) as Side) : null;
-    setHover(el && side === turn && interactive ? { side: side!, col: Number(el.dataset.col) } : null);
-  };
-
-  const onKey = (side: Side, col: number) => (e: KeyboardEvent) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    e.preventDefault();
-    if (e.type === "keydown" && !e.repeat) press(side, col);
-    if (e.type === "keyup" && pressing.current) {
-      pressing.current = false;
-      match.release();
-    }
+    const target = el ? { side: Number(el.dataset.side) as Side, col: Number(el.dataset.col) } : null;
+    setHover(target && pushable(target.side, target.col) ? target : null);
   };
 
   const lineOf = (side: Side, col: number): string =>
@@ -116,7 +122,7 @@ export function BoardView({ match, snapshot: s }: Props) {
       ? layout.path([[-1, col], [s.rCol, col], [s.rCol, col + 1], [-1, col + 1]])
       : layout.path([[col, -1], [col + 1, -1], [col + 1, s.lCol], [col, s.lCol]]);
 
-  const highlighted = hover && interactive ? hover : turn !== null && s.activeLine !== null ? { side: turn, col: s.activeLine } : null;
+  const highlighted = hover && pushable(hover.side, hover.col) ? hover : turn !== null && s.activeLine !== null ? { side: turn, col: s.activeLine } : null;
 
   const cells = [];
   for (let y = 0; y < s.lCol; y++) {
@@ -130,32 +136,40 @@ export function BoardView({ match, snapshot: s }: Props) {
   const ejectors = [];
   for (const side of [Side.Left, Side.Right]) {
     const count = side === Side.Left ? s.lCol : s.rCol;
+    // Chevron pointing in the push direction: ↘ for Left, ↙ for Right.
+    const arrow = { d: side === Side.Left ? "M-4 -14L10 0L-4 14" : "M4 -14L-10 0L4 14", transform: side === Side.Left ? "rotate(45)" : "rotate(-45)" };
     for (let col = 0; col < count; col++) {
       const cell = side === Side.Left ? { x: -1, y: col } : { x: col, y: -1 };
-      const active = side === turn && interactive;
+      const level = pushesLeft(s, side, col);
+      const active = pushable(side, col);
+      const water = waterPath(side, level);
+      const clipId = `water-${side}-${col}`;
       ejectors.push(
         <motion.g
           key={`e${side}_${col}`}
-          className={`ejector ejector-${SIDE_CLASS[side]}${side === turn ? " is-turn" : ""}${active ? " is-active" : ""}`}
+          className={`ejector ejector-${SIDE_CLASS[side]}${level > 0 ? " is-lit" : ""}${active ? " is-active" : ""}`}
           data-side={side}
           data-col={col}
           role="button"
           tabIndex={active ? 0 : -1}
           aria-disabled={!active}
           aria-label={format(t.game.ejector, { side: side === Side.Left ? t.names.green : t.names.blue, n: col + 1 })}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            press(side, col);
-          }}
-          onKeyDown={onKey(side, col)}
-          onKeyUp={onKey(side, col)}
+          onClick={() => push(side, col)}
+          onKeyDown={(e) => activates(e) && push(side, col)}
           initial={mounted.current ? { ...layout.place(cell), scale: 0 } : false}
           animate={layout.place(cell)}
           transition={transition}
         >
-          <path d={INSET_DIAMOND} />
-          {/* Chevron pointing in the push direction: ↘ for Left, ↙ for Right. */}
-          <path className="ejector-arrow" d={side === Side.Left ? "M-4 -14L10 0L-4 14" : "M4 -14L-10 0L4 14"} transform={side === Side.Left ? "rotate(45)" : "rotate(-45)"} />
+          <clipPath id={clipId}>
+            <motion.path initial={false} animate={{ d: water }} transition={transition} />
+          </clipPath>
+          <path className="ejector-cell" d={INSET_DIAMOND} />
+          <motion.path className="ejector-water" initial={false} animate={{ d: water }} transition={transition} />
+          {/* The chevron is in the side's colour above the water and white under it. */}
+          <path className="ejector-arrow" {...arrow} />
+          <g clipPath={`url(#${clipId})`}>
+            <path className="ejector-arrow is-under-water" {...arrow} />
+          </g>
         </motion.g>,
       );
     }
@@ -164,15 +178,10 @@ export function BoardView({ match, snapshot: s }: Props) {
   const timerCenter = layout.center({ x: -1, y: -1 });
   const h = layout.h;
   const boardPath = layout.path([[0, 0], [s.rCol, 0], [s.rCol, s.lCol], [0, s.lCol]]);
+  const { x: cx, y: cy } = timerCenter;
 
   return (
-    <svg
-      className={`board${interactive ? " is-interactive" : ""}`}
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
-      onPointerMove={onPointerMove}
-      onPointerLeave={() => setHover(null)}
-      onContextMenu={(e) => e.preventDefault()}
-    >
+    <svg className="board" viewBox={`0 0 ${SIZE} ${SIZE}`} onPointerMove={onPointerMove} onPointerLeave={() => setHover(null)} onContextMenu={(e) => e.preventDefault()}>
       <BallDefs />
       <defs>
         <clipPath id="board-clip">
@@ -187,13 +196,24 @@ export function BoardView({ match, snapshot: s }: Props) {
 
       {highlighted && <path className={`line-highlight line-${SIDE_CLASS[highlighted.side]}`} d={lineOf(highlighted.side, highlighted.col)} />}
 
-      <g className="timer">
+      {/* Once the player has pushed, the timer doubles as the "end turn" button, like a chess clock. */}
+      <g
+        className={`timer${passable ? " is-active" : ""}`}
+        role="button"
+        tabIndex={passable ? 0 : -1}
+        aria-disabled={!passable}
+        aria-label={t.game.endTurn}
+        onClick={endTurn}
+        onKeyDown={(e) => activates(e) && endTurn()}
+      >
+        {passable && <title>{t.game.endTurn}</title>}
         <path d={layout.path([[-1, -1], [0, -1], [0, 0], [-1, 0]])} className="timer-cell" />
         {s.timer && turn !== null && (
           <g clipPath="url(#timer-clip)">
-            <TimerFill key={s.timer.endsAt} timer={s.timer} x={timerCenter.x - h} top={timerCenter.y - h} size={2 * h} side={turn} />
+            <TimerFill key={s.timer.endsAt} timer={s.timer} x={cx - h} top={cy - h} size={2 * h} side={turn} />
           </g>
         )}
+        {passable && <path className="timer-end" d={`M${cx - 0.32 * h} ${cy}L${cx - 0.08 * h} ${cy + 0.24 * h}L${cx + 0.34 * h} ${cy - 0.2 * h}`} strokeWidth={0.12 * h} />}
       </g>
 
       <g>{ejectors}</g>
