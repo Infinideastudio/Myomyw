@@ -1,7 +1,10 @@
-//! Trains the value network on self-play data (see `selfplay`).
+//! Trains the network on self-play data (see `selfplay`): the value head on
+//! game results, and with `--policy <weight>` a policy head on the visit
+//! distributions of the `.pol` files next to the data files, where present.
 //!
 //!   cargo run --release --bin train -- --data a.bin,b.bin --out net.bin --epochs 4
 
+use std::path::Path;
 use std::process::ExitCode;
 use std::thread;
 use std::time::Instant;
@@ -9,7 +12,10 @@ use std::time::Instant;
 use myomyw_engine::Rng;
 use myomyw_engine::ai::value::features::{SAMPLE_BYTES, Sample};
 use myomyw_engine::ai::value::net::Net;
-use myomyw_engine::ai::value::train::{Adam, Grad, random_net};
+use myomyw_engine::ai::value::train::{Adam, Grad, PolicyTarget, random_net};
+
+/// A training position and its policy target, if any.
+type Item = (Sample, Option<PolicyTarget>);
 
 fn main() -> ExitCode {
     let mut data: Vec<String> = Vec::new();
@@ -22,6 +28,7 @@ fn main() -> ExitCode {
     let mut wd = 0.0f32;
     let mut mix = 0.0f32;
     let mut lambda = 1.0f32;
+    let mut policy = 0.0f32;
     let mut seed = 1u32;
     let mut threads = thread::available_parallelism().map_or(1, |n| n.get());
     let mut args = std::env::args().skip(1);
@@ -42,6 +49,7 @@ fn main() -> ExitCode {
             "--wd" => wd = v.parse().unwrap(),
             "--mix" => mix = v.parse().unwrap(),
             "--lambda" => lambda = v.parse().unwrap(),
+            "--policy" => policy = v.parse().unwrap(),
             "--seed" => seed = v.parse().unwrap(),
             "--threads" => threads = v.parse().unwrap(),
             _ => {
@@ -51,44 +59,71 @@ fn main() -> ExitCode {
         }
     }
     // Hold out the last 5% of each file (whole games, roughly) for validation.
-    let (mut train, mut valid) = (Vec::new(), Vec::new());
+    let (mut train, mut valid): (Vec<Item>, Vec<Item>) = (Vec::new(), Vec::new());
     for path in &data {
         let bytes = std::fs::read(path).expect("cannot read data");
         let mut samples: Vec<Sample> = bytes.chunks_exact(SAMPLE_BYTES).map(|c| Sample::from_bytes(c).expect("bad sample")).collect();
         if lambda < 1.0 {
             td_lambda(&mut samples, lambda);
         }
-        let cut = samples.len() * 95 / 100;
-        valid.extend_from_slice(&samples[cut..]);
-        train.extend_from_slice(&samples[..cut]);
+        let policies: Vec<Option<PolicyTarget>> = match std::fs::read(Path::new(path).with_extension("pol")) {
+            Ok(pol) => {
+                assert_eq!(pol.len(), samples.len() * PolicyTarget::BYTES, "{path}: .pol file does not match");
+                pol.chunks_exact(PolicyTarget::BYTES).map(PolicyTarget::decode).collect()
+            }
+            Err(_) => vec![None; samples.len()],
+        };
+        let items: Vec<Item> = samples.into_iter().zip(policies).collect();
+        let cut = items.len() * 95 / 100;
+        valid.extend_from_slice(&items[cut..]);
+        train.extend_from_slice(&items[..cut]);
     }
-    println!("{} training and {} validation positions", train.len(), valid.len());
+    let with_policy = train.iter().filter(|x| x.1.is_some()).count();
+    println!("{} training ({with_policy} with a policy target) and {} validation positions", train.len(), valid.len());
     // Training target: (1 − mix) · result + mix · search value.
-    for x in train.iter_mut().chain(valid.iter_mut()) {
+    for (x, _) in train.iter_mut().chain(valid.iter_mut()) {
         x.target = (1.0 - mix) * x.target + mix * x.search;
     }
     let mut net = match &init {
         Some(p) => Net::from_bytes(&std::fs::read(p).unwrap()).unwrap(),
-        None => random_net(h1, h2, seed),
+        None => random_net(h1, h2, policy > 0.0, seed),
     };
+    if policy > 0.0 && !net.has_policy() {
+        // Give an initial network a fresh policy head.
+        let fresh = random_net(net.h1, net.h2, true, seed);
+        (net.wp, net.bp) = (fresh.wp, fresh.bp);
+    }
     let mut adam = Adam::new(&net, lr);
     adam.weight_decay = wd;
     let mut rng = Rng::new(seed);
-    let evaluate = |net: &Net, set: &[Sample]| -> (f64, f64) {
+    // Validation: value loss and mean squared error; policy cross-entropy and
+    // how often the policy's favourite first push is the search's.
+    let evaluate = |net: &Net, set: &[Item]| -> String {
         let chunk = set.len().div_ceil(threads).max(1);
-        let parts: Vec<(f64, f64)> = thread::scope(|s| {
+        let parts: Vec<[f64; 6]> = thread::scope(|s| {
             set.chunks(chunk)
                 .map(|part| {
                     s.spawn(move || {
                         let mut grad = Grad::zeros(net);
-                        let (mut loss, mut mse) = (0.0f64, 0.0f64);
-                        for x in part {
+                        let mut acc = [0.0f64; 6];
+                        for (x, pol) in part {
                             let f = x.features();
-                            let v = net.value(&f);
-                            mse += f64::from((v - x.target).powi(2));
-                            loss += f64::from(grad_loss(&mut grad, net, x));
+                            let target = (x.target + 1.0) * 0.5;
+                            let value_loss = grad.accumulate(net, &f, target, None, 0.0);
+                            acc[0] += f64::from(value_loss);
+                            acc[1] += f64::from((net.value(&f) - x.target).powi(2));
+                            if let (Some(t), true) = (pol, net.has_policy()) {
+                                acc[2] += f64::from(grad.accumulate(net, &f, target, Some(t), 1.0) - value_loss);
+                                acc[3] += 1.0;
+                                if t.lines > 0 {
+                                    let logits = net.forward(&f).policy;
+                                    let best = |p: &[f32]| (0..t.lines).max_by(|&a, &b| p[a].total_cmp(&p[b])).unwrap();
+                                    acc[4] += f64::from(u8::from(best(&logits) == best(&t.probs)));
+                                    acc[5] += 1.0;
+                                }
+                            }
                         }
-                        (loss, mse)
+                        acc
                     })
                 })
                 .collect::<Vec<_>>()
@@ -96,11 +131,15 @@ fn main() -> ExitCode {
                 .map(|h| h.join().unwrap())
                 .collect()
         });
+        let sum = |i: usize| parts.iter().map(|p| p[i]).sum::<f64>();
         let n = set.len() as f64;
-        (parts.iter().map(|p| p.0).sum::<f64>() / n, parts.iter().map(|p| p.1).sum::<f64>() / n)
+        let mut report = format!("valid loss {:.4}, mse {:.4}", sum(0) / n, sum(1) / n);
+        if sum(3) > 0.0 {
+            report += &format!(", policy CE {:.4}, top-1 {:.1}%", sum(2) / sum(3), 100.0 * sum(4) / sum(5).max(1.0));
+        }
+        report
     };
-    let (l, m) = evaluate(&net, &valid);
-    println!("start: valid loss {l:.4}, mse {m:.4}");
+    println!("start: {}", evaluate(&net, &valid));
     for epoch in 0..epochs {
         let started = Instant::now();
         // Fisher–Yates shuffle.
@@ -119,8 +158,8 @@ fn main() -> ExitCode {
                         s.spawn(move || {
                             let mut g = Grad::zeros(net_ref);
                             let mut loss = 0.0;
-                            for x in part {
-                                loss += grad_loss(&mut g, net_ref, x);
+                            for (x, pol) in part {
+                                loss += g.accumulate(net_ref, &x.features(), (x.target + 1.0) * 0.5, pol.as_ref(), policy);
                             }
                             (g, loss)
                         })
@@ -140,11 +179,11 @@ fn main() -> ExitCode {
             total += f64::from(loss);
             adam.step(&mut net, &mut g);
         }
-        let (l, m) = evaluate(&net, &valid);
         println!(
-            "epoch {}: train loss {:.4}, valid loss {l:.4}, mse {m:.4} ({:.1}s)",
+            "epoch {}: train loss {:.4}, {} ({:.1}s)",
             epoch + 1,
             total / train.len() as f64,
+            evaluate(&net, &valid),
             started.elapsed().as_secs_f64()
         );
         adam.lr *= 0.5;
@@ -172,8 +211,4 @@ fn td_lambda(samples: &mut [Sample], lambda: f32) {
         }
         end = i;
     }
-}
-
-fn grad_loss(g: &mut Grad, net: &Net, x: &Sample) -> f32 {
-    g.accumulate(net, &x.features(), (x.target + 1.0) * 0.5)
 }

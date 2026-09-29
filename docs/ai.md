@@ -29,7 +29,6 @@ pub trait Agent: Send {
     fn begin_turn(&mut self, view: &Board);   // start of each of the agent's turns
     fn first_push(&mut self, next: Ball) -> usize; // which of its lines to push
     fn push_again(&mut self, next: Ball) -> bool;  // push the same line again, or end the turn?
-    fn last_value(&self) -> Option<f32> { None }   // optional: the agent's estimate of its last decision
 }
 ```
 
@@ -151,8 +150,10 @@ decision, so unlike `StrongAi` it never sees future balls it could not know.
 
 The native spec `mcts:<key>=<value>,…` overrides these settings: `iters`,
 `ms` (time budget per decision, not reproducible), `c`, `prior`, `net=<file>`
-(another weight file) and `eval=static` (`tanh(Board::evaluate / 10)` instead
-of the network). `mcts` alone equals `impossible`.
+(another weight file), `eval=static` (`tanh(Board::evaluate / 10)` instead
+of the network) and `puct=<constant>` (AlphaZero-style selection with the
+network's policy head; see [Research notes](#research-notes)). `mcts` alone
+equals `impossible`.
 
 ### The value network (`src/ai/value/`)
 
@@ -177,8 +178,10 @@ features, 0.45 µs for the network). The WebAssembly build enables SIMD
 ### Training
 
 `packages/engine/scripts/train.sh FIRST LAST` runs self-play generations
-(`bin/selfplay.rs` writes every decision position with the final result;
-`bin/train.rs` trains with Adam on the logistic loss). Generation *g* plays
+(`bin/selfplay.rs` writes every decision position with the final result,
+and the search's visit distribution to a `.pol` file beside it;
+`bin/train.rs` trains with Adam on the logistic loss, plus with `--policy
+<weight>` an optional policy head on the visit distributions). Generation *g* plays
 20 000 games with the search above at 1600 iterations using network *g − 1*,
 then trains network *g* from scratch on the positions of generations
 *g − 2 … g* (about 15 million) for 5 epochs, holding out 5% for validation;
@@ -332,7 +335,35 @@ is shipped.
 decision in the browser as the first version's 3000, and beats that version
 73.0%.
 
-Ideas not tried yet: a policy head to replace the one-ply prior (PUCT, as in
-AlphaZero; with the lazy prior it would save at most about 40% of the network
-evaluations), and features or targets that make the value network learn
-faster than more data does.
+**Third round: an AlphaZero policy head does not pay off.** The network can
+carry a policy head on its second hidden layer: 10 logits for the first push
+(one per line, counted from the bottom corner like the features) and one for
+pushing again. It is trained with a cross-entropy loss on the search's root
+visit distributions, and the search can then select with AlphaZero's PUCT
+rule, Q + `puct` · P · √N / (1 + n), getting value and policy from the same
+evaluation of each new node (`puct=…`, optionally with the one-ply prior
+too). All comparisons below use the same network on both sides, 1000 games:
+
+- Trained on 10 000 self-play games of the current search, the policy head
+  picks the search's first push 41.7% of the time — exactly as often as the
+  one-ply prior does (42.0%).
+- At equal iterations (3000) PUCT alone is weaker than the current search
+  (`puct` = 0.25 / 0.5 / 1 / 2 / 4: 44.8% / 46.4% / 42.2% / 36.3% / 32.8%);
+  PUCT together with the one-ply prior is a little stronger (52.8–54.0%)
+  but slower. At equal time (5 ms per decision) both tie (49.1%, 51.1%).
+- One AlphaZero iteration (10 000 self-play games with PUCT, then
+  retraining) made the policy agree more with its own search (47.8% versus
+  42.1% for the one-ply prior), but not stronger: 46.3% at equal iterations,
+  50.0% / 49.3% at 5 ms and 50.8% at 20 ms per decision.
+- A larger network (128 and 64 hidden units) learns a better policy
+  (48.5%), and there PUCT does beat the one-ply prior at equal time (52.7%
+  over 3000 games) — but the larger network is slower, and the combination
+  only ties the shipped AI (50.2% over 2000 games at 5 ms).
+
+The one-ply prior is already a good policy: pushing the Key off is an exact
+loss, and the value network judges the rest. The policy code is kept (off by
+default) for future experiments.
+
+Ideas not tried yet: features or targets that make the value network learn
+faster than more data does — the value network, not the search, now limits
+the AI.

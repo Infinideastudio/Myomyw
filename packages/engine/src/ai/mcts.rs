@@ -10,6 +10,7 @@ use crate::game::{Action, Game};
 use crate::rng::Rng;
 
 use super::Agent;
+use super::value::net::{POLICY, PUSH_AGAIN, line_slot};
 use super::value::{Net, builtin_net, extract};
 
 const NONE: u32 = u32::MAX;
@@ -34,13 +35,16 @@ pub struct MctsParams {
     /// Virtual visits given to each action of a new node, valued by the leaf
     /// evaluation of its result (0: unvisited actions are simply tried in order).
     pub prior: f32,
+    /// PUCT constant (AlphaZero-style selection with the network's policy
+    /// head as prior probabilities); 0 = plain UCT with `c`.
+    pub puct: f32,
     pub leaf: Leaf,
 }
 
 impl Default for MctsParams {
     /// The tuned settings of the Impossible AI.
     fn default() -> MctsParams {
-        MctsParams { iters: IMPOSSIBLE_ITERS, ms: 0, c: 0.3, prior: 10.0, leaf: Leaf::Net(builtin_net()) }
+        MctsParams { iters: IMPOSSIBLE_ITERS, ms: 0, c: 0.3, prior: 10.0, puct: 0.0, leaf: Leaf::Net(builtin_net()) }
     }
 }
 
@@ -60,6 +64,7 @@ impl MctsParams {
                 "ms" => p.ms = v.parse().map_err(|_| bad())?,
                 "c" => p.c = v.parse().map_err(|_| bad())?,
                 "prior" => p.prior = v.parse().map_err(|_| bad())?,
+                "puct" => p.puct = v.parse().map_err(|_| bad())?,
                 "net" => {
                     let bytes = std::fs::read(v).map_err(|e| format!("{v}: {e}"))?;
                     p.leaf = Leaf::Net(Arc::new(Net::from_bytes(&bytes)?));
@@ -84,6 +89,8 @@ struct Edge {
     /// Value for Left of the position the prior evaluated (NaN before the prior is
     /// set); reused when the same position is expanded.
     prior_value: f32,
+    /// Prior probability from the policy head (PUCT only).
+    p: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -95,6 +102,8 @@ struct Node {
     /// Whether the prior has been given to the actions (done on the first
     /// visit through the node, since most leaves are never visited again).
     primed: bool,
+    /// Network value for Left, computed with the policy at creation (PUCT only; NaN otherwise).
+    value: f32,
 }
 
 /// The search tree. Nodes are positions (after the next ball is drawn);
@@ -187,12 +196,32 @@ impl Mcts {
 
     fn add_node(&mut self, game: Game) -> u32 {
         let first = self.edges.len() as u32;
-        for &action in game.actions().iter() {
-            self.edges.push(Edge { action, n: 0.0, w: 0.0, child: [NONE; 5], prior_value: f32::NAN });
+        let actions = game.actions();
+        let mut value = f32::NAN;
+        let mut priors = [1.0 / actions.len().max(1) as f32; POLICY];
+        if let (true, false, Leaf::Net(net)) = (self.params.puct > 0.0, game.is_over(), &self.params.leaf) {
+            let (v, logits) = net.evaluate(&extract(&game));
+            value = if game.turn == Side::Left { v } else { -v };
+            if net.has_policy() {
+                policy_priors(&game, &logits, &mut priors);
+            }
+        }
+        for (i, &action) in actions.iter().enumerate() {
+            self.edges.push(Edge { action, n: 0.0, w: 0.0, child: [NONE; 5], prior_value: f32::NAN, p: priors[i] });
         }
         let len = self.edges.len() as u32 - first;
-        self.nodes.push(Node { game, first, len, n: 0, primed: self.params.prior <= 0.0 });
+        self.nodes.push(Node { game, first, len, n: 0, primed: self.params.prior <= 0.0, value });
         self.nodes.len() as u32 - 1
+    }
+
+    /// Visits of each action at the root of the last search, without the prior's virtual visits.
+    pub fn root_visits(&self) -> Vec<(Action, f32)> {
+        let Some(node) = self.nodes.get(self.root as usize) else { return Vec::new() };
+        let virtual_visits = if node.primed { self.params.prior.max(0.0) } else { 0.0 };
+        self.edges[node.first as usize..(node.first + node.len) as usize]
+            .iter()
+            .map(|e| (e.action, (e.n - virtual_visits).max(0.0)))
+            .collect()
     }
 
     /// Gives each action of `node` its prior: virtual visits valued by the
@@ -254,7 +283,13 @@ impl Mcts {
                 self.edges[e as usize].child[slot] = c;
                 // The prior evaluated exactly this position after a Stop, or after a push followed by a common ball.
                 let known = edge.prior_value;
-                value = if !known.is_nan() && (edge.action == Action::Stop || ball == Ball::Common) { known } else { self.evaluate(&g) };
+                value = if !self.nodes[c as usize].value.is_nan() {
+                    self.nodes[c as usize].value
+                } else if !known.is_nan() && (edge.action == Action::Stop || ball == Ball::Common) {
+                    known
+                } else {
+                    self.evaluate(&g)
+                };
                 break;
             }
             node = child;
@@ -267,6 +302,9 @@ impl Mcts {
     }
 
     fn select(&self, n: &Node) -> u32 {
+        if self.params.puct > 0.0 {
+            return self.select_puct(n);
+        }
         let log_n = ((n.n + 1) as f32).ln();
         let mut best = n.first;
         let mut best_score = f32::NEG_INFINITY;
@@ -276,6 +314,26 @@ impl Mcts {
                 return e;
             }
             let score = edge.w / edge.n + self.params.c * (log_n / edge.n).sqrt();
+            if score > best_score {
+                best_score = score;
+                best = e;
+            }
+        }
+        best
+    }
+
+    /// AlphaZero's rule: Q + puct · P · √N / (1 + n); an unvisited action is
+    /// valued at the network's value of the node ("first-play urgency").
+    fn select_puct(&self, n: &Node) -> u32 {
+        let sign = if n.game.turn == Side::Left { 1.0 } else { -1.0 };
+        let fpu = if n.value.is_nan() { 0.0 } else { sign * n.value };
+        let sqrt_n = (n.n.max(1) as f32).sqrt();
+        let mut best = n.first;
+        let mut best_score = f32::NEG_INFINITY;
+        for e in n.first..n.first + n.len {
+            let edge = &self.edges[e as usize];
+            let q = if edge.n > 0.0 { edge.w / edge.n } else { fpu };
+            let score = q + self.params.puct * edge.p * sqrt_n / (1.0 + edge.n);
             if score > best_score {
                 best_score = score;
                 best = e;
@@ -299,6 +357,28 @@ impl Mcts {
     }
 }
 
+/// Prior probabilities of the actions of `game` (in `Game::actions` order) from policy logits.
+fn policy_priors(game: &Game, logits: &[f32; POLICY], out: &mut [f32; POLICY]) {
+    match game.column {
+        None => {
+            let lines = game.board.ejectors(game.turn);
+            let slot = |line: usize| logits[line_slot(lines, line)];
+            let max = (0..lines).map(slot).fold(f32::MIN, f32::max);
+            let mut sum = 0.0;
+            for (line, o) in out.iter_mut().enumerate().take(lines) {
+                *o = (slot(line) - max).exp();
+                sum += *o;
+            }
+            out[..lines].iter_mut().for_each(|o| *o /= sum);
+        }
+        Some(_) => {
+            // Actions are [Push, Stop].
+            out[0] = 1.0 / (1.0 + (-logits[PUSH_AGAIN]).exp());
+            out[1] = 1.0 - out[0];
+        }
+    }
+}
+
 /// The agent: searches before every push decision.
 pub struct MctsAi {
     mcts: Mcts,
@@ -310,6 +390,16 @@ impl MctsAi {
     pub fn new(params: MctsParams, seed: u32) -> MctsAi {
         MctsAi { mcts: Mcts::new(params, seed), game: Game::from_position(Board::initial(), Side::Left, Ball::Common), col: 0 }
     }
+
+    /// The search's estimate of its last decision for the agent, in [−1, 1] (for training).
+    pub fn last_value(&self) -> f32 {
+        self.mcts.value()
+    }
+
+    /// Visits of each action in the last search (for training).
+    pub fn root_visits(&self) -> Vec<(Action, f32)> {
+        self.mcts.root_visits()
+    }
 }
 
 impl Agent for MctsAi {
@@ -319,7 +409,7 @@ impl Agent for MctsAi {
             Leaf::Net(_) => "net",
             Leaf::Static { .. } => "static",
         };
-        format!("MCTS(iters:{},ms:{},c:{},prior:{},eval:{leaf})", p.iters, p.ms, p.c, p.prior)
+        format!("MCTS(iters:{},ms:{},c:{},prior:{},puct:{},eval:{leaf})", p.iters, p.ms, p.c, p.prior, p.puct)
     }
 
     fn begin_turn(&mut self, view: &Board) {
@@ -337,10 +427,6 @@ impl Agent for MctsAi {
     fn push_again(&mut self, next: Ball) -> bool {
         self.game.push_then(self.col, next);
         self.mcts.search(&self.game) != Action::Stop
-    }
-
-    fn last_value(&self) -> Option<f32> {
-        Some(self.mcts.value())
     }
 }
 
@@ -375,6 +461,23 @@ mod tests {
         let mut ai = MctsAi::new(fast(), 2);
         ai.begin_turn(&board);
         assert_eq!(ai.first_push(Ball::Common), 3);
+    }
+
+    #[test]
+    fn puct_with_a_policy_head_avoids_a_line_that_loses_at_once() {
+        let mut net = (*builtin_net()).clone();
+        let head = crate::ai::value::train::random_net(net.h1, net.h2, true, 7);
+        (net.wp, net.bp) = (head.wp, head.bp);
+        let params = MctsParams { puct: 0.5, prior: 0.0, leaf: Leaf::Net(Arc::new(net)), ..fast() };
+        let mut board = Board::initial();
+        for l in [0, 1, 2, 4, 5] {
+            board.set(l, 5, Ball::Key);
+        }
+        let mut ai = MctsAi::new(params, 3);
+        ai.begin_turn(&board);
+        assert_eq!(ai.first_push(Ball::Common), 3);
+        let visits = ai.root_visits();
+        assert_eq!(visits.iter().map(|v| v.1).sum::<f32>(), 200.0);
     }
 
     #[test]
