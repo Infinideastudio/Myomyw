@@ -1,11 +1,15 @@
+import { RULES } from "@myomyw/engine";
 import { useSyncExternalStore } from "react";
 import type { LanguageSetting } from "./i18n/index.tsx";
 
 export interface Settings {
   name: string;
   language: LanguageSetting;
-  /** Turn timer in offline games. */
-  timer: boolean;
+  /**
+   * Offline games: seconds a human player has for the first push of each
+   * turn; null for no limit. Online games use the server's limits.
+   */
+  timeLimit: number | null;
   /** Custom WebSocket URL of the game server; empty for the default. */
   serverUrl: string;
   /** Whether the tutorial suggestion on the home screen has been dismissed. */
@@ -13,12 +17,19 @@ export interface Settings {
 }
 
 const KEY = "myomyw.settings";
-const DEFAULTS: Settings = { name: "", language: "auto", timer: true, serverUrl: "", tutorialOffered: false };
+export const DEFAULT_TIME_LIMIT = RULES.turnTimeLimitMs / 1000;
+const DEFAULTS: Settings = { name: "", language: "auto", timeLimit: DEFAULT_TIME_LIMIT, serverUrl: "", tutorialOffered: false };
 
 function load(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) };
+    if (raw) {
+      const stored = JSON.parse(raw) as Partial<Settings> & { timer?: boolean };
+      // Older versions only had an on/off switch.
+      if (stored.timer === false && !("timeLimit" in stored)) stored.timeLimit = null;
+      delete stored.timer;
+      return { ...DEFAULTS, ...stored };
+    }
   } catch {
     // Storage unavailable or corrupted: fall back to defaults.
   }

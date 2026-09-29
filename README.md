@@ -50,7 +50,9 @@ npm start            # serves the client and the game server on http://localhost
 ```
 
 Server settings are environment variables: `PORT` (8650), `HOST`,
-`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`.
+`MAX_ROOMS` (100), `MOTD`, `STATIC_DIR`, `TURN_TIME_LIMIT` (20 seconds for the
+first push of a turn) and `PUSH_INTERVAL_LIMIT` (5 seconds between pushes);
+`0` disables a time limit.
 
 ### GitHub Pages
 

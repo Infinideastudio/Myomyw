@@ -1,4 +1,4 @@
-import { Ball, Side } from "@myomyw/engine";
+import { Ball, RULES, Side } from "@myomyw/engine";
 import { LocalMatch } from "./LocalMatch.ts";
 
 /** Number of tutorial steps; texts live in i18n under `tutorial.steps`. */
@@ -18,7 +18,8 @@ export class TutorialMatch extends LocalMatch {
     super({
       seats: [{ kind: "human" }, { kind: "idle" }],
       names: [playerName, opponentName],
-      timer: true,
+      // The tutorial teaches the standard limit, whatever the settings say.
+      timeLimitMs: RULES.turnTimeLimitMs,
       autoStart: false,
       ballSource: () => {
         if (!first) return Ball.Common;

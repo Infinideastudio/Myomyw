@@ -1,21 +1,30 @@
+import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { Ball, Side } from "@myomyw/engine";
-import { PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
+import { PROTOCOL_VERSION, decode, encode, type ClientMessage, type ServerMessage, type TimeLimits } from "@myomyw/protocol";
 import { createGameServer } from "../src/server.ts";
 
-const server = createGameServer("");
+const LIMITS: TimeLimits = { turnMs: 20_000, pushIntervalMs: 5_000 };
+const server = createGameServer("", LIMITS);
 let url = "";
 
+/** Starts a server on a free port and returns its URL. */
+async function listen(s: Server): Promise<string> {
+  await new Promise<void>((resolve) => s.listen(0, "127.0.0.1", resolve));
+  return `ws://127.0.0.1:${(s.address() as AddressInfo).port}`;
+}
+
+function stop(s: Server): void {
+  s.closeAllConnections();
+  s.close();
+}
+
 beforeAll(async () => {
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  url = `ws://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  url = await listen(server);
 });
-afterAll(() => {
-  server.closeAllConnections();
-  server.close();
-});
+afterAll(() => stop(server));
 
 /** Test client that records every message it receives. */
 class TestClient {
@@ -23,8 +32,8 @@ class TestClient {
   readonly inbox: ServerMessage[] = [];
   private waiters: (() => void)[] = [];
 
-  constructor() {
-    this.ws = new WebSocket(url);
+  constructor(serverUrl = url) {
+    this.ws = new WebSocket(serverUrl);
     this.ws.on("message", (data) => {
       this.inbox.push(decode<ServerMessage>(data.toString())!);
       for (const w of this.waiters.splice(0)) w();
@@ -58,21 +67,14 @@ describe("game server", () => {
   });
 
   it("matches two players and relays an authoritative game", async () => {
-    const alice = new TestClient();
-    const bob = new TestClient();
-    await Promise.all([alice.opened(), bob.opened()]);
-    alice.send({ t: "hello", version: PROTOCOL_VERSION, name: "Alice" });
-    await alice.next("welcome");
-    bob.send({ t: "hello", version: PROTOCOL_VERSION, name: "Bob" });
-    await bob.next("welcome");
-
+    const [alice, bob] = await pair(url);
     const a = await alice.next("matched");
     const b = await bob.next("matched");
     expect(a.side).toBe(Side.Left);
     expect(b.side).toBe(Side.Right);
     expect(a.opponent).toBe("Bob");
     expect(a.next).toBe(b.next);
-    expect((await alice.next("turn")).side).toBe(Side.Left);
+    expect(await alice.next("turn")).toEqual({ t: "turn", side: Side.Left, timeLimitMs: LIMITS.turnMs });
 
     // Bob cannot move out of turn; Alice pushes line 2 and ends her turn.
     bob.send({ t: "push", col: 0 });
@@ -90,4 +92,39 @@ describe("game server", () => {
     bob.send({ t: "resign" });
     expect(await alice.next("over")).toEqual({ t: "over", winner: Side.Left, reason: "resign" });
   });
+
+  it("enforces its turn time limit", async () => {
+    const quick = createGameServer("", { turnMs: 100, pushIntervalMs: null });
+    try {
+      const [alice, bob] = await pair(await listen(quick), { turnMs: 100, pushIntervalMs: null });
+      expect((await alice.next("turn")).timeLimitMs).toBe(100);
+      expect(await bob.next("over")).toEqual({ t: "over", winner: Side.Right, reason: "timeout" });
+    } finally {
+      stop(quick);
+    }
+  });
+
+  it("can play without time limits", async () => {
+    const relaxed = createGameServer("", { turnMs: null, pushIntervalMs: null });
+    try {
+      const [alice] = await pair(await listen(relaxed), { turnMs: null, pushIntervalMs: null });
+      expect((await alice.next("turn")).timeLimitMs).toBeNull();
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(alice.inbox.some((m) => m.t === "over")).toBe(false);
+    } finally {
+      stop(relaxed);
+    }
+  });
 });
+
+/** Connects Alice then Bob, checking that both are told the server's time limits. */
+async function pair(serverUrl: string, limits = LIMITS): Promise<[TestClient, TestClient]> {
+  const alice = new TestClient(serverUrl);
+  const bob = new TestClient(serverUrl);
+  await Promise.all([alice.opened(), bob.opened()]);
+  alice.send({ t: "hello", version: PROTOCOL_VERSION, name: "Alice" });
+  expect((await alice.next("welcome")).timeLimits).toEqual(limits);
+  bob.send({ t: "hello", version: PROTOCOL_VERSION, name: "Bob" });
+  expect((await bob.next("welcome")).timeLimits).toEqual(limits);
+  return [alice, bob];
+}

@@ -2,12 +2,16 @@ import { MAX_NAME_LENGTH } from "@myomyw/protocol";
 import { Page } from "../components/ui.tsx";
 import { LANGUAGES, format, useMessages, type LanguageSetting } from "../i18n/index.tsx";
 import type { Navigate } from "../routes.ts";
-import { defaultServerUrl, updateSettings, useSettings } from "../settings.ts";
+import { DEFAULT_TIME_LIMIT, defaultServerUrl, updateSettings, useSettings } from "../settings.ts";
+
+/** Choices for the offline turn time limit, in seconds. */
+const TIME_LIMITS = [5, 10, 15, DEFAULT_TIME_LIMIT, 30, 45, 60, 90, 120];
 
 export function SettingsScreen({ navigate }: { navigate: Navigate }) {
   const t = useMessages();
   const settings = useSettings();
   const defaultServer = defaultServerUrl();
+  const timeLimits = settings.timeLimit === null || TIME_LIMITS.includes(settings.timeLimit) ? TIME_LIMITS : [...TIME_LIMITS, settings.timeLimit].sort((a, b) => a - b);
   return (
     <Page title={t.settings.title} onBack={() => navigate({ name: "home" })}>
       <div className="settings">
@@ -28,12 +32,20 @@ export function SettingsScreen({ navigate }: { navigate: Navigate }) {
           </select>
         </label>
 
-        <label className="checkbox">
-          <input type="checkbox" checked={settings.timer} onChange={(e) => updateSettings({ timer: e.target.checked })} />
-          <span>
-            {t.settings.timer}
-            <small>{t.settings.timerHint}</small>
-          </span>
+        <label className="field">
+          <span>{t.settings.timeLimit}</span>
+          <select
+            value={settings.timeLimit ?? "off"}
+            onChange={(e) => updateSettings({ timeLimit: e.target.value === "off" ? null : Number(e.target.value) })}
+          >
+            {timeLimits.map((seconds) => (
+              <option key={seconds} value={seconds}>
+                {format(t.settings.seconds, { seconds })}
+              </option>
+            ))}
+            <option value="off">{t.settings.noTimeLimit}</option>
+          </select>
+          <small>{t.settings.timeLimitHint}</small>
         </label>
 
         <label className="field">

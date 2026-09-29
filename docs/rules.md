@@ -129,11 +129,13 @@ The top corner of the board is the **timer**.
   turn starting, or they **lose**. Once they have pushed, the timer stops for
   the rest of the turn.
 - In offline games (against the computer or two players on one screen) the
-  timer can be switched off in Settings.
-- Online, the timer is always on, and one more limit applies: after each push
-  the player must push again or end the turn **within 5 seconds**, otherwise
-  they lose. (Holding an ejector repeats well within that limit; this only
-  catches stalled connections.)
+  limit can be changed or switched off in Settings. It applies to human
+  players only: the computer is never timed.
+- Online, the server sets the limits and tells the players when they connect.
+  By default the 20-second limit applies, and one more: after each push the
+  player must push again or end the turn **within 5 seconds**, otherwise they
+  lose. (Holding an ejector repeats well within that limit; this only catches
+  stalled connections.)
 
 ## 8. Other ways a game ends
 
@@ -275,4 +277,4 @@ about 45–75 turns).
 | Common / Key / Add line / Remove line / Flip | `Ball::Common` / `Key` / `AddCol` / `DelCol` / `Flip` | `Ball.Common` / … |
 | State, action, transition (§9) | `Game`, `Action`, `Game::apply` | `WasmGame` |
 | Next ball | `game.next` | `game.next` |
-| 20 s / 5 s limits | — (real-time rules live in the hosts) | `RULES.turnTimeLimitMs` / `PUSH_INTERVAL_LIMIT_MS` (`@myomyw/protocol`) |
+| 20 s / 5 s limits (defaults) | — (real-time rules live in the hosts) | `RULES.turnTimeLimitMs` / `PUSH_INTERVAL_LIMIT_MS` (`@myomyw/protocol`) |

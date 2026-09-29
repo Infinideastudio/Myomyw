@@ -44,7 +44,7 @@ async function runLocal(seed: number) {
       { kind: "ai", agent: syncAgent(engine().createAgent("normal", seed + 2)) },
     ],
     names: ["A", "B"],
-    timer: true,
+    timeLimitMs: 20_000,
     timing: QUICK_TIMING,
     seed,
   });
@@ -71,7 +71,7 @@ describe("LocalMatch", () => {
     const match = new LocalMatch({
       seats: [{ kind: "human" }, { kind: "ai", agent: syncAgent(engine().createAgent("easy")) }],
       names: ["Human", "AI"],
-      timer: false,
+      timeLimitMs: null,
       timing: QUICK_TIMING,
       ballSource: () => Ball.Common,
     });
@@ -87,7 +87,7 @@ describe("LocalMatch", () => {
     const match = new LocalMatch({
       seats: [{ kind: "human" }, { kind: "human" }],
       names: ["G", "B"],
-      timer: false,
+      timeLimitMs: null,
       timing: QUICK_TIMING,
       ballSource: () => Ball.Common,
     });
@@ -112,7 +112,7 @@ describe("LocalMatch", () => {
     const match = new LocalMatch({
       seats: [{ kind: "ai", agent: slow }, { kind: "human" }],
       names: ["AI", "Human"],
-      timer: false,
+      timeLimitMs: null,
       timing: NORMAL_TIMING,
       ballSource: () => Ball.Common,
     });
@@ -134,8 +134,33 @@ describe("LocalMatch", () => {
   });
 
   it("makes a player who does not push in time lose", () => {
-    const match = new LocalMatch({ seats: [{ kind: "human" }, { kind: "human" }], names: ["G", "B"], timer: true });
-    vi.advanceTimersByTime(20_001);
+    const match = new LocalMatch({ seats: [{ kind: "human" }, { kind: "human" }], names: ["G", "B"], timeLimitMs: 10_000 });
+    expect(match.getSnapshot().timer?.totalMs).toBe(10_000);
+    vi.advanceTimersByTime(9_999);
+    expect(match.getSnapshot().result).toBe(null);
+    vi.advanceTimersByTime(2);
     expect(match.getSnapshot().result).toEqual({ winner: Side.Right, reason: "timeout" });
+  });
+
+  it("does not time players when there is no time limit", () => {
+    const match = new LocalMatch({ seats: [{ kind: "human" }, { kind: "human" }], names: ["G", "B"], timeLimitMs: null });
+    expect(match.getSnapshot().timer).toBe(null);
+    vi.advanceTimersByTime(10 * 60_000);
+    expect(match.getSnapshot().result).toBe(null);
+  });
+
+  it("never times a computer player", async () => {
+    const never: AsyncAgent = {
+      beginTurn: () => {},
+      firstPush: () => new Promise<number>(() => {}),
+      pushAgain: () => new Promise<boolean>(() => {}),
+      winEstimate: () => null,
+      dispose: () => {},
+    };
+    const match = new LocalMatch({ seats: [{ kind: "ai", agent: never }, { kind: "human" }], names: ["AI", "Human"], timeLimitMs: 1_000 });
+    expect(match.getSnapshot().timer).toBe(null);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(match.getSnapshot().result).toBe(null);
+    match.dispose();
   });
 });

@@ -74,6 +74,11 @@ export const zhCN: Messages = {
     findAnother: "再匹配一局",
     opponent: "对手",
     you: "你",
+    timeLimits: "限时：{limits}。",
+    turnLimit: "每回合第一次推球 {seconds} 秒",
+    pushIntervalLimit: "两次推球间隔 {seconds} 秒",
+    listSeparator: "，",
+    noTimeLimits: "不限时。",
     errors: {
       connection: "无法连接到服务器。",
       version: "服务器版本不兼容。",
@@ -92,8 +97,10 @@ export const zhCN: Messages = {
   },
   settings: {
     title: "设置",
-    timer: "单机游戏限时",
-    timerHint: "每回合第一次推球限时 20 秒。在线对战始终限时。",
+    timeLimit: "单机游戏限时",
+    timeLimitHint: "玩家每回合第一次推球的限时。电脑玩家不受限时。在线对战采用服务器的限时。",
+    seconds: "{seconds} 秒",
+    noTimeLimit: "不限时",
     language: "语言",
     auto: "自动",
     server: "在线服务器",
@@ -135,6 +142,6 @@ export const zhCN: Messages = {
     delCol: "减列球——推球者的对手失去最后一个发射器，该列的球随之离开棋盘（最少保留 3 列）。",
     flip: "翻转球——棋盘左右翻转，推球者的回合立即结束。",
     timerTitle: "计时器",
-    timer: "顶上的格子是计时器：回合开始后 20 秒内必须完成第一次推球，否则判负。单机游戏可在设置中关闭。在线对战始终限时，并且每次推球后必须在 5 秒内继续推球或结束回合。",
+    timer: "顶上的格子是计时器：默认情况下，回合开始后 20 秒内必须完成第一次推球，否则判负。单机游戏可在设置中更改或关闭限时，电脑玩家不受限时。在线对战的限时由服务器决定（通常第一次推球限时 20 秒，此后每次推球后必须在 5 秒内继续推球或结束回合）。",
   },
 };

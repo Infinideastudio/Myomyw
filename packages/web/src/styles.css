@@ -560,7 +560,8 @@ select {
 }
 .hint,
 .tutorial-progress,
-.motd {
+.motd,
+.time-limits {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin: 0;

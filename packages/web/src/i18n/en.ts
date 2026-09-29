@@ -73,6 +73,11 @@ export const en = {
     findAnother: "Find another game",
     opponent: "Opponent",
     you: "You",
+    timeLimits: "Time limits: {limits}.",
+    turnLimit: "{seconds} s for the first push of a turn",
+    pushIntervalLimit: "{seconds} s between pushes",
+    listSeparator: ", ",
+    noTimeLimits: "No time limits.",
     errors: {
       connection: "Could not connect to the server.",
       version: "The server runs an incompatible version.",
@@ -91,8 +96,10 @@ export const en = {
   },
   settings: {
     title: "Settings",
-    timer: "Turn timer in offline games",
-    timerHint: "20 seconds for the first push of each turn. Always on online.",
+    timeLimit: "Time limit in offline games",
+    timeLimitHint: "How long each human player has to make the first push of their turn. The computer is never timed. Online games follow the server's limits.",
+    seconds: "{seconds} seconds",
+    noTimeLimit: "No time limit",
     language: "Language",
     auto: "Automatic",
     server: "Online server",
@@ -134,7 +141,7 @@ export const en = {
     delCol: "Remove line — the pusher's opponent loses their last ejector, and its line leaves the board (at least 3 remain).",
     flip: "Flip — the board is mirrored left to right and the pusher's turn ends at once.",
     timerTitle: "Timer",
-    timer: "The top cell is the timer: you have 20 seconds from the start of your turn to make the first push, or you lose. It can be turned off for offline games in Settings. Online it is always on, and after each push you must push again or end your turn within 5 seconds.",
+    timer: "The top cell is the timer: by default you have 20 seconds from the start of your turn to make the first push, or you lose. In offline games the limit can be changed or turned off in Settings, and the computer is never timed. Online, the server sets the limits (usually 20 seconds for the first push, then 5 seconds after each push to push again or end your turn).",
   },
 };
 

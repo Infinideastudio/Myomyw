@@ -1,5 +1,5 @@
-import { RULES, Side, opponent, type GameResult } from "@myomyw/engine";
-import { MAX_CHAT_LENGTH, PUSH_INTERVAL_LIMIT_MS, type ClientMessage, type ServerMessage } from "@myomyw/protocol";
+import { Side, opponent, type GameResult } from "@myomyw/engine";
+import { MAX_CHAT_LENGTH, type ClientMessage, type ServerMessage, type TimeLimits } from "@myomyw/protocol";
 import type { Client } from "./client.ts";
 import { engine } from "./engine.ts";
 
@@ -9,10 +9,10 @@ import { engine } from "./engine.ts";
  * draws the balls, enforces the timers and broadcasts every change. Clients
  * only send intents (push / end turn / resign / chat).
  *
- * Timers:
- * - a turn's first push must come within RULES.turnTimeLimitMs;
+ * Timers (from the server's `TimeLimits`; either may be disabled):
+ * - a turn's first push must come within `turnMs`;
  * - after a push, the next push or "end turn" must come within
- *   PUSH_INTERVAL_LIMIT_MS (clients auto-repeat faster than that while the
+ *   `pushIntervalMs` (clients auto-repeat faster than that while the
  *   ejector is held, so this only catches stalled clients).
  * Running out of either timer loses the game.
  */
@@ -20,13 +20,15 @@ export class Room {
   readonly id: number;
   private readonly game = engine.newGame();
   private readonly players: readonly [Client, Client];
+  private readonly timeLimits: TimeLimits;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private closed = false;
   private readonly onClose: () => void;
 
-  constructor(id: number, left: Client, right: Client, onClose: () => void) {
+  constructor(id: number, left: Client, right: Client, timeLimits: TimeLimits, onClose: () => void) {
     this.id = id;
     this.players = [left, right];
+    this.timeLimits = timeLimits;
     this.onClose = onClose;
     for (const side of [Side.Left, Side.Right]) {
       const client = this.players[side];
@@ -83,17 +85,18 @@ export class Room {
     });
     if (outcome.result) this.finish(outcome.result);
     else if (outcome.turnEnded) this.beginTurn();
-    else this.startTimer(PUSH_INTERVAL_LIMIT_MS);
+    else this.startTimer(this.timeLimits.pushIntervalMs);
   }
 
   private beginTurn(): void {
-    this.broadcast({ t: "turn", side: this.game.turn, timeLimitMs: RULES.turnTimeLimitMs });
-    this.startTimer(RULES.turnTimeLimitMs);
+    this.broadcast({ t: "turn", side: this.game.turn, timeLimitMs: this.timeLimits.turnMs });
+    this.startTimer(this.timeLimits.turnMs);
   }
 
-  private startTimer(ms: number): void {
+  /** Restarts the timer; `null` stops it (no limit). */
+  private startTimer(ms: number | null): void {
     if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.finish(this.game.timeout()), ms);
+    this.timer = ms === null ? null : setTimeout(() => this.finish(this.game.timeout()), ms);
   }
 
   private finish(result: GameResult): void {

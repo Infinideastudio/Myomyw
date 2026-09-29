@@ -37,7 +37,7 @@ export class OnlineMatch extends MatchBase {
   constructor(url: string, name: string) {
     super({ names: [name, "…"], controllable: [false, false], timing: NORMAL_TIMING });
     this.myName = name;
-    this.update({ online: { status: "connecting", error: null, side: null, room: null, motd: "", chat: [] } });
+    this.update({ online: { status: "connecting", error: null, side: null, room: null, motd: "", timeLimits: null, chat: [] } });
     this.ws = new WebSocket(url);
     this.ws.onopen = () => this.send({ t: "hello", version: PROTOCOL_VERSION, name });
     this.ws.onmessage = (event) => {
@@ -122,7 +122,7 @@ export class OnlineMatch extends MatchBase {
   private receive(message: ServerMessage): void {
     switch (message.t) {
       case "welcome":
-        this.setInfo({ status: "matching", motd: message.motd });
+        this.setInfo({ status: "matching", motd: message.motd, timeLimits: message.timeLimits });
         break;
       case "rejected":
         this.fail(message.reason);
@@ -144,7 +144,7 @@ export class OnlineMatch extends MatchBase {
         this.enqueue(() => {
           this.holding = false;
           const elapsed = performance.now() - receivedAt;
-          this.showTurn(message.side, Math.max(0, message.timeLimitMs - elapsed));
+          this.showTurn(message.side, message.timeLimitMs === null ? null : Math.max(0, message.timeLimitMs - elapsed));
           return 0;
         });
         break;

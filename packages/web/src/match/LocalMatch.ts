@@ -1,4 +1,4 @@
-import { RULES, Side, type Ball, type GameResult, type PushOutcome, type WasmGame } from "@myomyw/engine";
+import { Side, type Ball, type GameResult, type PushOutcome, type WasmGame } from "@myomyw/engine";
 import type { AsyncAgent } from "../ai/agents.ts";
 import { engine } from "../engine.ts";
 import { MatchBase } from "./MatchBase.ts";
@@ -14,8 +14,8 @@ export type Seat =
 export interface LocalMatchOptions {
   seats: readonly [Seat, Seat];
   names: readonly [string, string];
-  /** Enforce the 20-second limit for the first push of each turn. */
-  timer: boolean;
+  /** Time a human player has for the first push of each turn; null for no limit. Computer players are never timed. */
+  timeLimitMs: number | null;
   timing?: Timing;
   /** Seed of the ball generator (random if omitted). */
   seed?: number;
@@ -43,7 +43,7 @@ export interface LocalMatchOptions {
 export class LocalMatch extends MatchBase {
   protected readonly game: WasmGame;
   private readonly seats: readonly [Seat, Seat];
-  private readonly timerEnabled: boolean;
+  private readonly timeLimitMs: number | null;
   private holding = false;
   private cancelPhase: (() => void) | null = null;
   private cancelTurnTimer: (() => void) | null = null;
@@ -53,7 +53,7 @@ export class LocalMatch extends MatchBase {
     const human = (seat: Seat) => seat.kind === "human";
     super({ names: options.names, controllable: [human(options.seats[0]), human(options.seats[1])], timing });
     this.seats = options.seats;
-    this.timerEnabled = options.timer;
+    this.timeLimitMs = options.timeLimitMs;
     this.game = engine().newGame({ seed: options.seed, ballSource: options.ballSource });
     this.update({ next: this.game.next });
     if (options.autoStart ?? true) this.start();
@@ -97,10 +97,11 @@ export class LocalMatch extends MatchBase {
   private startTurn(): void {
     this.holding = false;
     const side = this.game.turn;
-    this.showTurn(side, this.timerEnabled ? RULES.turnTimeLimitMs : null);
-    this.cancelTurnTimer?.();
-    this.cancelTurnTimer = this.timerEnabled ? this.later(() => this.finish(this.game.timeout()), RULES.turnTimeLimitMs) : null;
     const seat = this.seats[side];
+    const limitMs = seat.kind === "human" ? this.timeLimitMs : null;
+    this.showTurn(side, limitMs);
+    this.cancelTurnTimer?.();
+    this.cancelTurnTimer = limitMs === null ? null : this.later(() => this.finish(this.game.timeout()), limitMs);
     if (seat.kind === "ai") {
       seat.agent.beginTurn(this.game.view());
       const decision = seat.agent.firstPush(this.game.next).then((col) => {

@@ -74,6 +74,11 @@ export const zhTW: Messages = {
     findAnother: "再配對一局",
     opponent: "對手",
     you: "你",
+    timeLimits: "限時：{limits}。",
+    turnLimit: "每回合第一次推球 {seconds} 秒",
+    pushIntervalLimit: "兩次推球間隔 {seconds} 秒",
+    listSeparator: "，",
+    noTimeLimits: "不限時。",
     errors: {
       connection: "無法連接到伺服器。",
       version: "伺服器版本不相容。",
@@ -92,8 +97,10 @@ export const zhTW: Messages = {
   },
   settings: {
     title: "設定",
-    timer: "單機遊戲限時",
-    timerHint: "每回合第一次推球限時 20 秒。線上對戰始終限時。",
+    timeLimit: "單機遊戲限時",
+    timeLimitHint: "玩家每回合第一次推球的限時。電腦玩家不受限時。線上對戰採用伺服器的限時。",
+    seconds: "{seconds} 秒",
+    noTimeLimit: "不限時",
     language: "語言",
     auto: "自動",
     server: "線上伺服器",
@@ -135,6 +142,6 @@ export const zhTW: Messages = {
     delCol: "減列球——推球者的對手失去最後一個發射器，該列的球隨之離開棋盤（最少保留 3 列）。",
     flip: "翻轉球——棋盤左右翻轉，推球者的回合立即結束。",
     timerTitle: "計時器",
-    timer: "頂上的格子是計時器：回合開始後 20 秒內必須完成第一次推球，否則判負。單機遊戲可在設定中關閉。線上對戰始終限時，並且每次推球後必須在 5 秒內繼續推球或結束回合。",
+    timer: "頂上的格子是計時器：預設情況下，回合開始後 20 秒內必須完成第一次推球，否則判負。單機遊戲可在設定中更改或關閉限時，電腦玩家不受限時。線上對戰的限時由伺服器決定（通常第一次推球限時 20 秒，此後每次推球後必須在 5 秒內繼續推球或結束回合）。",
   },
 };

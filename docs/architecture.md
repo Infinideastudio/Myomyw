@@ -78,11 +78,12 @@ Message types and `encode`/`decode` for the WebSocket protocol
   pairs players first-come-first-served. The first player of a pair is Green.
 - `room.ts` — one game. The room owns a `WasmGame`; clients only send intents
   and the room broadcasts every resulting event, so clients cannot desync or
-  cheat. It enforces the 20 s turn timer and the 5 s between-push limit.
+  cheat. It enforces the server's time limits (by default 20 s for a turn's
+  first push and 5 s between pushes), which clients learn from `welcome`.
 - `client.ts` — typed wrapper around a socket.
 
 Configuration is via environment variables (`PORT`, `HOST`, `MAX_ROOMS`,
-`MOTD`, `STATIC_DIR`); see `config.ts`.
+`MOTD`, `STATIC_DIR`, `TURN_TIME_LIMIT`, `PUSH_INTERVAL_LIMIT`); see `config.ts`.
 
 ## `@myomyw/web`
 

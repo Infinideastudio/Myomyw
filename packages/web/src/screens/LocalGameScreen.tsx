@@ -13,15 +13,16 @@ import { useSettings, type Settings } from "../settings.ts";
 type LocalRoute = Extract<Route, { name: "vsComputer" | "twoPlayers" | "aiVsAi" }>;
 
 function matchOptions(route: LocalRoute, t: Messages, settings: Settings): LocalMatchOptions {
+  const timeLimitMs = settings.timeLimit === null ? null : settings.timeLimit * 1000;
   switch (route.name) {
     case "vsComputer":
       return {
         seats: [{ kind: "human" }, { kind: "ai", agent: workerAgent(route.difficulty) }],
         names: [settings.name || t.names.you, `${t.names.computer} · ${t.difficulty[route.difficulty]}`],
-        timer: settings.timer,
+        timeLimitMs,
       };
     case "twoPlayers":
-      return { seats: [{ kind: "human" }, { kind: "human" }], names: [t.names.green, t.names.blue], timer: settings.timer };
+      return { seats: [{ kind: "human" }, { kind: "human" }], names: [t.names.green, t.names.blue], timeLimitMs };
     case "aiVsAi":
       return {
         seats: [
@@ -29,7 +30,7 @@ function matchOptions(route: LocalRoute, t: Messages, settings: Settings): Local
           { kind: "ai", agent: workerAgent(route.right) },
         ],
         names: [`${t.names.green} · ${t.difficulty[route.left]}`, `${t.names.blue} · ${t.difficulty[route.right]}`],
-        timer: settings.timer,
+        timeLimitMs: null,
         timing: route.quick ? QUICK_TIMING : NORMAL_TIMING,
       };
   }

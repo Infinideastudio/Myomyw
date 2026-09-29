@@ -6,11 +6,19 @@ import type { Ball, BoardSnapshot, EndReason, Side } from "@myomyw/engine";
 
 export type { BoardSnapshot };
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 export const MAX_NAME_LENGTH = 15;
 export const MAX_CHAT_LENGTH = 200;
-/** Online only: after a push, the player must push again or end the turn within this time. */
+/** Default limit, online: after a push, the player must push again or end the turn within this time. */
 export const PUSH_INTERVAL_LIMIT_MS = 5_000;
+
+/** A server's time limits, in milliseconds; `null` means no limit. */
+export interface TimeLimits {
+  /** From the start of a turn until its first push. */
+  turnMs: number | null;
+  /** After a push, until the next push or the end of the turn. */
+  pushIntervalMs: number | null;
+}
 
 export type ClientMessage =
   | { t: "hello"; version: number; name: string }
@@ -22,7 +30,7 @@ export type ClientMessage =
 export type RejectReason = "version" | "full" | "badName" | "badMessage";
 
 export type ServerMessage =
-  | { t: "welcome"; motd: string }
+  | { t: "welcome"; motd: string; timeLimits: TimeLimits }
   | { t: "rejected"; reason: RejectReason }
   | {
       t: "matched";
@@ -36,8 +44,8 @@ export type ServerMessage =
     }
   /** A push by either player (echoed to the pusher too). */
   | { t: "pushed"; side: Side; col: number; inserted: Ball; ejected: Ball; next: Ball }
-  /** A new turn begins; `timeLimitMs` is the time for its first push. */
-  | { t: "turn"; side: Side; timeLimitMs: number }
+  /** A new turn begins; `timeLimitMs` is the time for its first push (`null`: no limit). */
+  | { t: "turn"; side: Side; timeLimitMs: number | null }
   | { t: "over"; winner: Side; reason: EndReason }
   | { t: "chat"; text: string };
 

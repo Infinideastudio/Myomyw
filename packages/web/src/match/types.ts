@@ -1,4 +1,5 @@
 import type { Ball, GameResult, Side } from "@myomyw/engine";
+import type { TimeLimits } from "@myomyw/protocol";
 import type { BallSprite, Cell, Ghost } from "./display.ts";
 
 export type Phase =
@@ -65,6 +66,8 @@ export interface OnlineInfo {
   side: Side | null;
   room: number | null;
   motd: string;
+  /** The server's time limits, once connected. */
+  timeLimits: TimeLimits | null;
   chat: readonly ChatLine[];
 }
 

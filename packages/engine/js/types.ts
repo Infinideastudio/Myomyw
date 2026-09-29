@@ -40,7 +40,7 @@ export const RULES = {
   initialCols: 6,
   /** Maximum number of pushes in a single turn. */
   maxPushesPerTurn: 5,
-  /** Time allowed from the start of a turn until its first push (when the timer is enabled). */
+  /** Default time allowed from the start of a turn until its first push (players and servers may change it). */
   turnTimeLimitMs: 20_000,
 } as const;
 
