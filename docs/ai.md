@@ -223,8 +223,8 @@ enough for identical agents to land anywhere between 47% and 53%).
 | Normal vs Easy | 91.6% | 51 |
 | Hard vs Easy | 97.1% | 47 |
 | Hard vs Hard | 49.9% | 72 |
-| Impossible (20 000-iteration version) vs Hard\* | 97.3% | 59 |
-| Impossible (20 000-iteration version) vs Normal\* | 98.4% | 50 |
+| Impossible vs Hard\* | 97.2% | 53 |
+| Impossible vs Normal\* | 98.8% | 46 |
 | Impossible vs its 20 000-iteration version† | 73.5% | 83 |
 
 \* 1000 games. † 200 games.
