@@ -15,6 +15,8 @@ interface Props {
   title: string;
   /** Sides played by a computer (shows "Thinking…"). */
   computerSides?: readonly Side[];
+  /** Show the computer's estimated chances of winning (a computer player that estimates them is playing). */
+  showWinChance?: boolean;
   /** Extra panel content (tutorial text, chat...). */
   children?: ReactNode;
   /** Label of the leave button and whether leaving needs confirmation. */
@@ -25,8 +27,8 @@ interface Props {
   resultTitle?: (s: MatchSnapshot) => string;
 }
 
-/** The in-game screen: board plus a side panel with players, next ball and actions. */
-export function GameLayout({ match, title, computerSides = [], children, leave, resultActions, resultTitle }: Props) {
+/** The in-game screen: the next ball and the board, plus a side panel with the players and actions. */
+export function GameLayout({ match, title, computerSides = [], showWinChance = false, children, leave, resultActions, resultTitle }: Props) {
   const t = useMessages();
   const s = useMatchSnapshot(match);
   const [confirming, setConfirming] = useState(false);
@@ -42,15 +44,20 @@ export function GameLayout({ match, title, computerSides = [], children, leave, 
   const humanTurn = s.turn !== null && s.controllable[s.turn];
 
   return (
-    <div className="game">
-      <div className="game-board">
-        <BoardView match={match} snapshot={s} />
+    <div className={showWinChance ? "game has-win-bar" : "game"}>
+      {showWinChance && <WinBar chance={s.winChance} />}
+      <div className="game-main">
+        <div className="next-ball">
+          <span>{t.game.next}</span>
+          <span className="next-ball-slot">{s.next !== null && <BallIcon key={`${s.next}-${s.pushes}-${s.turn}`} ball={s.next} size={40} />}</span>
+          <Countdown snapshot={s} />
+        </div>
+        <div className="game-board">
+          <BoardView match={match} snapshot={s} />
+        </div>
       </div>
       <aside className="game-panel">
         <div className="panel-top">
-          <Button variant="ghost" onClick={askLeave}>
-            ← {leave.label}
-          </Button>
           <span className="panel-title">{title}</span>
         </div>
 
@@ -60,14 +67,14 @@ export function GameLayout({ match, title, computerSides = [], children, leave, 
           ))}
         </div>
 
-        <div className="next-ball">
-          <span>{t.game.next}</span>
-          {s.next !== null && <BallIcon key={`${s.next}-${s.pushes}-${s.turn}`} ball={s.next} size={40} />}
-          <Countdown snapshot={s} />
-        </div>
-
         {humanTurn && s.phase === "idle" && s.tutorialStep === undefined && <p className="hint">{t.game.holdHint}</p>}
         {children}
+
+        <div className="panel-bottom">
+          <Button variant="ghost" onClick={askLeave}>
+            {leave.label}
+          </Button>
+        </div>
       </aside>
 
       <Dialog open={confirming} title={t.game.leaveTitle} onClose={() => setConfirming(false)}>
@@ -109,6 +116,20 @@ function PlayerCard({ side, snapshot: s, computer }: { side: Side; snapshot: Mat
           <span key={i} className={isTurn && i < s.pushes ? "pip is-on" : "pip"} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Green's (left) and Blue's (right) estimated chances of winning; even until the first estimate. */
+function WinBar({ chance }: { chance: number | null }) {
+  const t = useMessages();
+  const green = Math.round((chance ?? 0.5) * 100);
+  return (
+    <div className="win-bar" role="meter" aria-label={t.game.winEstimate} aria-valuemin={0} aria-valuemax={100} aria-valuenow={green} title={t.game.winEstimate}>
+      <div className="win-bar-left" style={{ width: `${green}%` }}>
+        {chance !== null && `${green}%`}
+      </div>
+      <div className="win-bar-right">{chance !== null && `${100 - green}%`}</div>
     </div>
   );
 }

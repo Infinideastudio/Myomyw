@@ -44,6 +44,7 @@ interface Exports {
   agent_begin_turn(agent: number): number;
   agent_first_push(agent: number, next: number): number;
   agent_push_again(agent: number, next: number): number;
+  agent_win_estimate(agent: number): number;
 }
 
 /** `u32::MAX` error result. WebAssembly i32 results arrive signed, so they are read with `>>> 0`. */
@@ -367,6 +368,12 @@ export class WasmAgent extends Handle {
 
   pushAgain(next: Ball): boolean {
     return this.check(this.engine.raw.agent_push_again(this.live, next)) === 1;
+  }
+
+  /** The agent's estimated probability of winning as of its latest decision (0–1), if it computes one. */
+  winEstimate(): number | null {
+    const p = this.engine.raw.agent_win_estimate(this.live);
+    return p >= 0 ? p : null;
   }
 
   private check(result: number): number {

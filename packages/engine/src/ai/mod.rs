@@ -26,6 +26,11 @@ pub trait Agent: Send {
     fn begin_turn(&mut self, view: &Board);
     fn first_push(&mut self, next: Ball) -> usize;
     fn push_again(&mut self, next: Ball) -> bool;
+    /// The agent's estimate, as of its latest decision, of its probability of
+    /// winning, if it computes one.
+    fn win_estimate(&self) -> Option<f32> {
+        None
+    }
 }
 
 /// The built-in opponents.

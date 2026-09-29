@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Ball, Side, type WasmGame } from "@myomyw/engine";
 import { loadEngineSync } from "@myomyw/engine/node";
-import { syncAgent } from "../src/ai/agents.ts";
+import { syncAgent, type AsyncAgent } from "../src/ai/agents.ts";
 import { engine, setEngine } from "../src/engine.ts";
 import { LocalMatch } from "../src/match/LocalMatch.ts";
-import { QUICK_TIMING } from "../src/match/timing.ts";
+import { NORMAL_TIMING, QUICK_TIMING } from "../src/match/timing.ts";
 
 beforeAll(() => {
   setEngine(loadEngineSync());
@@ -96,6 +96,41 @@ describe("LocalMatch", () => {
     const s = match.getSnapshot();
     expect(s.turn).toBe(Side.Right);
     expect(s.phase).toBe("idle");
+  });
+
+  it("lets a computer player think during the pause, the animation and the cool-down", async () => {
+    const after = <T>(ms: number, value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    let asked = 0;
+    // Every decision takes 600 ms: push line 0, push again once, then stop.
+    const slow: AsyncAgent = {
+      beginTurn: () => {},
+      firstPush: () => after(600, 0),
+      pushAgain: () => after(600, ++asked === 1),
+      winEstimate: () => 0.7,
+      dispose: () => {},
+    };
+    const match = new LocalMatch({
+      seats: [{ kind: "ai", agent: slow }, { kind: "human" }],
+      names: ["AI", "Human"],
+      timer: false,
+      timing: NORMAL_TIMING,
+      ballSource: () => Ball.Common,
+    });
+    const { aiThinkMs, pushMs, coolMs } = NORMAL_TIMING;
+    expect(match.getSnapshot().winChance).toBe(null);
+    await vi.advanceTimersByTimeAsync(aiThinkMs - 1);
+    expect(match.getSnapshot().pushes).toBe(0);
+    // The AI plays Green, so its estimate is Green's chance.
+    expect(match.getSnapshot().winChance).toBe(0.7);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(match.getSnapshot().pushes).toBe(1);
+    await vi.advanceTimersByTimeAsync(pushMs + coolMs - 1);
+    expect(match.getSnapshot().pushes).toBe(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(match.getSnapshot().pushes).toBe(2);
+    await vi.advanceTimersByTimeAsync(pushMs + 600);
+    expect(match.getSnapshot().turn).toBe(Side.Right);
+    match.dispose();
   });
 
   it("makes a player who does not push in time lose", () => {

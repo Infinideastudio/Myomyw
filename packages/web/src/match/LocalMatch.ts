@@ -1,4 +1,4 @@
-import { RULES, type Ball, type GameResult, type PushOutcome, type Side, type WasmGame } from "@myomyw/engine";
+import { RULES, Side, type Ball, type GameResult, type PushOutcome, type WasmGame } from "@myomyw/engine";
 import type { AsyncAgent } from "../ai/agents.ts";
 import { engine } from "../engine.ts";
 import { MatchBase } from "./MatchBase.ts";
@@ -33,9 +33,12 @@ export interface LocalMatchOptions {
  *
  *   press → push (animated) → [hold? cool down → push again] → release → next turn
  *
- * A computer player follows the same rhythm, asking its agent after every
- * push whether to continue. Agents answer asynchronously (they may think in a
- * Web Worker); answers that arrive after the situation changed are ignored.
+ * A computer player follows the same rhythm. It is asked for its first push
+ * when its turn starts and whether to push again as soon as each push is made,
+ * so it thinks during the pause before its turn and during the push animation
+ * and the cool-down after it: a decision only delays the game if it takes
+ * longer than those. Agents answer asynchronously (they may think in a Web
+ * Worker); answers that arrive after the situation changed are ignored.
  */
 export class LocalMatch extends MatchBase {
   protected readonly game: WasmGame;
@@ -99,9 +102,13 @@ export class LocalMatch extends MatchBase {
     this.cancelTurnTimer = this.timerEnabled ? this.later(() => this.finish(this.game.timeout()), RULES.turnTimeLimitMs) : null;
     const seat = this.seats[side];
     if (seat.kind === "ai") {
+      seat.agent.beginTurn(this.game.view());
+      const decision = seat.agent.firstPush(this.game.next).then((col) => {
+        this.showEstimate(side, seat.agent);
+        return col;
+      });
       this.cancelPhase = this.later(() => {
-        seat.agent.beginTurn(this.game.view());
-        seat.agent.firstPush(this.game.next).then((col) => {
+        decision.then((col) => {
           if (this.stillDeciding(side, 0)) this.push(col);
         }, agentFailed);
       }, this.timing.aiThinkMs);
@@ -113,29 +120,43 @@ export class LocalMatch extends MatchBase {
     this.cancelTurnTimer?.();
     this.cancelTurnTimer = null;
     const outcome = this.game.push(col);
+    const seat = this.seats[outcome.side];
+    // A computer player decides whether to push again while this push is animated.
+    const again =
+      seat.kind === "ai" && !outcome.result && !outcome.turnEnded
+        ? seat.agent.pushAgain(this.game.next).then((pushAgain) => {
+            this.showEstimate(outcome.side, seat.agent);
+            return pushAgain;
+          })
+        : null;
     this.showShift(outcome.side, col, outcome.inserted, this.game.next, outcome.pushes);
     this.update({ phase: "moving" });
-    this.cancelPhase = this.later(() => this.afterPush(outcome), this.timing.pushMs);
+    this.cancelPhase = this.later(() => this.afterPush(outcome, again), this.timing.pushMs);
   }
 
-  private afterPush(outcome: PushOutcome): void {
+  private afterPush(outcome: PushOutcome, again: Promise<boolean> | null): void {
     this.showEffect(outcome.ejected, this.game.board);
     if (outcome.result) return this.finish(outcome.result);
     if (outcome.turnEnded) return this.startTurn();
 
-    const seat = this.seats[outcome.side];
-    if (seat.kind === "human") return this.continueTurn(outcome.col, this.holding);
-    if (seat.kind === "ai") {
-      seat.agent.pushAgain(this.game.next).then((again) => {
-        if (this.stillDeciding(outcome.side, outcome.pushes)) this.continueTurn(outcome.col, again);
-      }, agentFailed);
-    }
+    if (this.seats[outcome.side].kind === "human") return this.continueTurn(outcome.col, this.holding, this.timing.coolMs);
+    // The cool-down runs while the agent may still be thinking.
+    const cooled = Date.now() + this.timing.coolMs;
+    again?.then((pushAgain) => {
+      if (this.stillDeciding(outcome.side, outcome.pushes)) this.continueTurn(outcome.col, pushAgain, Math.max(0, cooled - Date.now()));
+    }, agentFailed);
   }
 
-  private continueTurn(col: number, again: boolean): void {
+  private continueTurn(col: number, again: boolean, coolMs: number): void {
     if (!again) return this.endTurn();
     this.update({ phase: "cooling" });
-    this.cancelPhase = this.later(() => this.push(col), this.timing.coolMs);
+    this.cancelPhase = this.later(() => this.push(col), coolMs);
+  }
+
+  /** Shows the estimate of the agent playing `side`, as Green's chance of winning. */
+  private showEstimate(side: Side, agent: AsyncAgent): void {
+    const estimate = agent.winEstimate();
+    if (estimate !== null) this.update({ winChance: side === Side.Left ? estimate : 1 - estimate });
   }
 
   /** Whether an agent's answer still applies: same turn, same number of pushes, match running. */

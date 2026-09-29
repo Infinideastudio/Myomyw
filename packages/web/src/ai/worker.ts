@@ -33,7 +33,7 @@ async function handle(request: WorkerRequest): Promise<void> {
         const agent = agents.get(request.agent);
         if (!agent) throw new Error(`No agent ${request.agent}`);
         const value = request.op === "first" ? agent.firstPush(request.next) : Number(agent.pushAgain(request.next));
-        response = { id: request.id, value };
+        response = { id: request.id, value, estimate: agent.winEstimate() };
       } catch (error) {
         response = { id: request.id, error: String(error) };
       }

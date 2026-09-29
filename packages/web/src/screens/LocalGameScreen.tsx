@@ -51,12 +51,16 @@ export function LocalGameScreen({ route, navigate }: { route: LocalRoute; naviga
 
   const home = () => navigate({ name: "home" });
   const computerSides = route.name === "vsComputer" ? [Side.Right] : route.name === "aiVsAi" ? [Side.Left, Side.Right] : [];
+  // Only the Impossible AI estimates its chances.
+  const difficulties = route.name === "vsComputer" ? [route.difficulty] : route.name === "aiVsAi" ? [route.left, route.right] : [];
+  const showWinChance = difficulties.includes("impossible");
 
   return (
     <GameLayout
       match={match}
       title={title(route, t)}
       computerSides={computerSides}
+      showWinChance={showWinChance}
       leave={{ label: t.game.exit, confirmBody: route.name === "aiVsAi" ? null : t.game.leaveBody, onLeave: home }}
       resultTitle={route.name === "vsComputer" ? (s) => (s.result!.winner === Side.Left ? t.result.youWin : t.result.youLose) : undefined}
       resultActions={

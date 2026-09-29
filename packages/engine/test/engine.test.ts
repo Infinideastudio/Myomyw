@@ -144,6 +144,23 @@ describe("WasmAgent", () => {
     }
   });
 
+  it("reports the Impossible AI's estimated chance of winning", () => {
+    const impossible = engine.createAgent("impossible", 1);
+    const hard = engine.createAgent("hard", 1);
+    expect(impossible.winEstimate()).toBe(null);
+    for (const agent of [impossible, hard]) {
+      agent.beginTurn(initialBoard());
+      agent.firstPush(Ball.Common);
+    }
+    const p = impossible.winEstimate();
+    expect(p).not.toBe(null);
+    expect(p!).toBeGreaterThan(0);
+    expect(p!).toBeLessThan(1);
+    expect(hard.winEstimate()).toBe(null);
+    impossible.free();
+    hard.free();
+  });
+
   it("plays the Impossible AI reproducibly", { timeout: 120_000 }, () => {
     const first = play("impossible", "easy", 4);
     expect(first.decisions.length).toBeGreaterThan(5);

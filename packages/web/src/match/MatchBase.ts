@@ -36,6 +36,7 @@ export abstract class MatchBase implements MatchController {
       activeLine: null,
       timer: null,
       result: null,
+      winChance: null,
     };
   }
 

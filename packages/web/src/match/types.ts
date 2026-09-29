@@ -41,6 +41,8 @@ export interface MatchSnapshot {
   activeLine: number | null;
   timer: TurnTimer | null;
   result: GameResult | null;
+  /** Green's chance of winning (0–1) as estimated by the computer player that decided last, if it estimates. */
+  winChance: number | null;
   /** Tutorial only: the current step. */
   tutorialStep?: number;
   /** Online only. */

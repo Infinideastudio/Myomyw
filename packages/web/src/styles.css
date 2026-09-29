@@ -385,9 +385,49 @@ select {
 
 /* ---------- Game screen ---------- */
 .game {
+  --next-ball-height: 52px;
+  --win-bar-height: 0px;
   height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.game.has-win-bar {
+  --win-bar-height: 22px;
+}
+.game-main,
+.game-panel {
+  grid-row: 2;
+}
+.game-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+}
+/* Estimated chances of winning: Green's share on the left, Blue's on the right. */
+.win-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  height: var(--win-bar-height);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: var(--win-bar-height);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.win-bar-left {
+  background: var(--left);
+  padding-left: 8px;
+  white-space: nowrap;
+  transition: width 0.6s ease;
+}
+.win-bar-right {
+  flex: 1;
+  background: var(--right);
+  padding-right: 8px;
+  text-align: right;
+  white-space: nowrap;
 }
 .game-board {
   display: grid;
@@ -412,8 +452,10 @@ select {
 }
 .panel-title {
   font-weight: 700;
-  margin-left: auto;
-  text-align: right;
+}
+.panel-bottom {
+  margin-top: auto;
+  display: flex;
 }
 .players {
   display: grid;
@@ -482,11 +524,21 @@ select {
 .player-right .pip.is-on {
   background: var(--right);
 }
+/* The strip above the board: next ball and countdown. */
 .next-ball {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
+  height: var(--next-ball-height);
+  padding: 8px 16px 0;
   font-weight: 600;
+}
+.next-ball-slot {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
 }
 .next-ball svg {
   animation: drop-in 0.3s ease-out;
@@ -498,7 +550,7 @@ select {
   }
 }
 .countdown {
-  margin-left: auto;
+  min-width: 3ch;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
@@ -593,7 +645,7 @@ select {
 
 /* ---------- Board (SVG) ---------- */
 .board {
-  width: min(100%, calc(100dvh - 32px));
+  width: min(100%, calc(100dvh - 32px - var(--next-ball-height) - var(--win-bar-height)));
   aspect-ratio: 1;
   touch-action: none;
   user-select: none;
@@ -677,9 +729,12 @@ select {
 @media (max-width: 820px), (orientation: portrait) {
   .game {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     height: auto;
     min-height: 100%;
+  }
+  .game-panel {
+    grid-row: 3;
   }
   .game-board {
     padding: 8px;
@@ -690,9 +745,6 @@ select {
   .game-panel {
     border-left: 0;
     border-top: 1px solid var(--border);
-  }
-  .panel-top {
-    order: -1;
   }
 }
 

@@ -307,3 +307,13 @@ pub unsafe extern "C" fn agent_push_again(agent: *mut AgentHandle, next: u32) ->
     let agent = unsafe { &mut *agent };
     ball(next).map_or(INVALID, |next| u32::from(agent.0.push_again(next)))
 }
+
+/// The agent's estimated probability of winning as of its latest decision, or −1 if it has none.
+///
+/// # Safety
+/// `agent` must come from `agent_new` and not have been freed.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn agent_win_estimate(agent: *mut AgentHandle) -> f32 {
+    let agent = unsafe { &*agent };
+    agent.0.win_estimate().unwrap_or(-1.0)
+}

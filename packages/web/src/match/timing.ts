@@ -8,7 +8,7 @@ export interface Timing {
   resizeMs: number;
   /** Board mirror animation. */
   flipMs: number;
-  /** Delay before a computer player starts its turn. */
+  /** Pause before a computer player's first push (it thinks meanwhile). */
   aiThinkMs: number;
 }
 

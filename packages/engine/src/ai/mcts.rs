@@ -115,7 +115,8 @@ pub struct Mcts {
     edges: Vec<Edge>,
     path: Vec<(u32, Side)>,
     root: u32,
-    value: f32,
+    /// Mean value of the action chosen by the last search, if it was visited.
+    value: Option<f32>,
 }
 
 /// Value of a finished game for Left.
@@ -129,7 +130,7 @@ fn terminal_value(game: &Game) -> f32 {
 
 impl Mcts {
     pub fn new(params: MctsParams, seed: u32) -> Mcts {
-        Mcts { params, rng: Rng::new(seed), nodes: Vec::new(), edges: Vec::new(), path: Vec::new(), root: 0, value: 0.0 }
+        Mcts { params, rng: Rng::new(seed), nodes: Vec::new(), edges: Vec::new(), path: Vec::new(), root: 0, value: None }
     }
 
     /// Runs the search from `game` and returns the action with the most visits.
@@ -167,12 +168,13 @@ impl Mcts {
                 best = i;
             }
         }
-        self.value = if edges[best].n > 0.0 { edges[best].w / edges[best].n } else { 0.0 };
+        self.value = (edges[best].n > 0.0).then(|| edges[best].w / edges[best].n);
         edges[best].action
     }
 
-    /// Value of the last search for the player to move (mean value of the chosen action).
-    pub fn value(&self) -> f32 {
+    /// Value of the last search for the player to move (mean value of the chosen
+    /// action), or `None` if that action had no visits.
+    pub fn value(&self) -> Option<f32> {
         self.value
     }
 
@@ -384,16 +386,24 @@ pub struct MctsAi {
     mcts: Mcts,
     game: Game,
     col: usize,
+    /// Value of the latest decision that had one, in [−1, 1].
+    value: Option<f32>,
 }
 
 impl MctsAi {
     pub fn new(params: MctsParams, seed: u32) -> MctsAi {
-        MctsAi { mcts: Mcts::new(params, seed), game: Game::from_position(Board::initial(), Side::Left, Ball::Common), col: 0 }
+        MctsAi { mcts: Mcts::new(params, seed), game: Game::from_position(Board::initial(), Side::Left, Ball::Common), col: 0, value: None }
     }
 
-    /// The search's estimate of its last decision for the agent, in [−1, 1] (for training).
+    /// The search's estimate of its last decision for the agent, in [−1, 1] (0 if none).
     pub fn last_value(&self) -> f32 {
-        self.mcts.value()
+        self.mcts.value().unwrap_or(0.0)
+    }
+
+    fn search(&mut self) -> Action {
+        let action = self.mcts.search(&self.game);
+        self.value = self.mcts.value().or(self.value);
+        action
     }
 
     /// Visits of each action in the last search (for training).
@@ -419,14 +429,18 @@ impl Agent for MctsAi {
 
     fn first_push(&mut self, next: Ball) -> usize {
         self.game.next = next;
-        let Action::Push(col) = self.mcts.search(&self.game) else { unreachable!("the first action of a turn is a push") };
+        let Action::Push(col) = self.search() else { unreachable!("the first action of a turn is a push") };
         self.col = col as usize;
         self.col
     }
 
     fn push_again(&mut self, next: Ball) -> bool {
         self.game.push_then(self.col, next);
-        self.mcts.search(&self.game) != Action::Stop
+        self.search() != Action::Stop
+    }
+
+    fn win_estimate(&self) -> Option<f32> {
+        self.value.map(|v| ((v + 1.0) / 2.0).clamp(0.0, 1.0))
     }
 }
 
@@ -459,8 +473,11 @@ mod tests {
             board.set(l, 5, Ball::Key);
         }
         let mut ai = MctsAi::new(fast(), 2);
+        assert_eq!(ai.win_estimate(), None);
         ai.begin_turn(&board);
         assert_eq!(ai.first_push(Ball::Common), 3);
+        let p = ai.win_estimate().unwrap();
+        assert!((0.0..=1.0).contains(&p));
     }
 
     #[test]

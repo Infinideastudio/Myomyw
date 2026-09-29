@@ -41,6 +41,7 @@ export const en = {
     yourTurn: "Your turn",
     turnOf: "{name}'s turn",
     thinking: "Thinking…",
+    winEstimate: "Estimated chances of winning",
     pushes: "Pushes",
     holdHint: "Press and hold one of your ejectors. Each push inserts the next ball; release to end your turn (5 pushes at most).",
     exit: "Exit",

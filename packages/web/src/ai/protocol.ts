@@ -8,5 +8,5 @@ export type WorkerRequest =
   | { op: "again"; id: number; agent: number; next: Ball }
   | { op: "free"; agent: number };
 
-/** Replies to "first" / "again" requests. */
-export type WorkerResponse = { id: number; value: number } | { id: number; error: string };
+/** Replies to "first" / "again" requests, with the agent's estimated chance of winning afterwards. */
+export type WorkerResponse = { id: number; value: number; estimate: number | null } | { id: number; error: string };

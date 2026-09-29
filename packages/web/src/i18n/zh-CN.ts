@@ -42,6 +42,7 @@ export const zhCN: Messages = {
     yourTurn: "你的回合",
     turnOf: "{name}的回合",
     thinking: "思考中…",
+    winEstimate: "估计胜率",
     pushes: "推球次数",
     holdHint: "按住你的一个发射器。每推一次会放入下一个球；松开即结束回合（最多推 5 次）。",
     exit: "退出",
