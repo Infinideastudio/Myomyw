@@ -721,6 +721,9 @@ select {
 .ejector .ejector-arrow.is-under-water {
   stroke: #fff;
 }
+.next-preview {
+  opacity: 0.45;
+}
 .line-highlight {
   pointer-events: none;
 }

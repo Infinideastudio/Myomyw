@@ -218,6 +218,17 @@ export function BoardView({ match, snapshot: s }: Props) {
 
       <g>{ejectors}</g>
 
+      {/* Hint: the next ball, faded, just outside the hovered ejector it would be pushed in by. */}
+      {hover && pushable(hover.side, hover.col) && s.next !== null && (
+        <g
+          className="next-preview"
+          pointerEvents="none"
+          transform={(({ x, y, scale }) => `translate(${x} ${y}) scale(${scale})`)(layout.place(hover.side === Side.Left ? { x: -2, y: hover.col } : { x: hover.col, y: -2 }))}
+        >
+          <BallShape ball={s.next} />
+        </g>
+      )}
+
       <g clipPath="url(#board-clip)" pointerEvents="none">
         {s.balls.map((b) => {
           const target = layout.place(b);
